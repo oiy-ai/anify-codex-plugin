@@ -1,0 +1,40 @@
+{
+  "name": "anify",
+  "version": "0.1.0",
+  "description": "AI-driven DnD-style TRPG adventure orchestration for Codex.",
+  "author": {
+    "name": "Local developer"
+  },
+  "license": "MIT",
+  "keywords": [
+    "trpg",
+    "dnd",
+    "roleplay",
+    "gm",
+    "dice",
+    "storytelling"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Anify",
+    "shortDescription": "Run AI-driven DnD-style TRPG adventures.",
+    "longDescription": "Anify provides a GM AI and configurable character AI orchestration framework for running DnD-style TRPG adventures. It uses world books, campaign state, hidden quest frameworks, character memory templates, personality consistency checks, and a D20 MCP tool so checks are resolved outside the GM model.",
+    "developerName": "Local developer",
+    "category": "Entertainment",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "启动一个 Anify DnD 风格 TRPG 冒险。",
+      "用我的角色卡继续 Anify 跑团。",
+      "创建 Anify 战役和角色模板。"
+    ],
+    "brandColor": "#7C3AED",
+    "composerIcon": "./assets/anify-small.svg",
+    "logo": "./assets/anify-logo.svg",
+    "screenshots": []
+  }
+}

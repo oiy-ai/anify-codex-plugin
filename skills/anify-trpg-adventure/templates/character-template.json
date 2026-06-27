@@ -1,0 +1,54 @@
+{
+  "character_id": "replace-with-kebab-case-id",
+  "name": "Character Name",
+  "pronouns": "",
+  "ancestry_or_species": "",
+  "class_or_archetype": "",
+  "level": 1,
+  "appearance": "",
+  "public_concept": "",
+  "private_truths": [],
+  "past_experiences": [
+    {
+      "summary": "",
+      "emotional_weight": 1,
+      "known_to_party": false
+    }
+  ],
+  "personality": {
+    "core_values": [],
+    "fears": [],
+    "desires": [],
+    "flaws": [],
+    "taboos": [],
+    "speech_style": "",
+    "default_emotional_tone": ""
+  },
+  "behavior_controls": {
+    "agency_boundary": "Never choose the player's action; only react or suggest.",
+    "reply_frequency": "medium",
+    "use_no_reply_when": [
+      "The character would plausibly stay silent.",
+      "The GM consequence should remain the focus.",
+      "The user is asking an administrative question."
+    ],
+    "risk_tolerance": "medium",
+    "party_loyalty": "medium"
+  },
+  "rules": {
+    "ability_modifiers": {},
+    "skills": {},
+    "proficiencies": [],
+    "inventory": [],
+    "conditions": []
+  },
+  "memory": {
+    "episodic_memory": [],
+    "relationship_memory": {},
+    "session_memory": [],
+    "long_term_memory_policy": {
+      "write_when_salience_at_least": 3,
+      "max_retrieved_memories_per_turn": 5
+    }
+  }
+}
