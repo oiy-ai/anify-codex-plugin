@@ -33,6 +33,7 @@ FIREBASE_API_KEY = os.environ.get(
 FIREBASE_PROJECT_ID = os.environ.get("ANIFY_FIREBASE_PROJECT_ID", "anify-oiy-ai")
 FIREBASE_AUTH_BASE_URL = "https://identitytoolkit.googleapis.com/v1"
 FIREBASE_REFRESH_URL = "https://securetoken.googleapis.com/v1/token"
+ANIFY_LOGIN_URL = "https://anify.ai"
 REQUEST_TIMEOUT_SECONDS = 20
 TOKEN_REFRESH_SKEW_SECONDS = 300
 SESSION_PATH = Path(
@@ -49,22 +50,6 @@ class AnifyAuthError(RuntimeError):
 class AnifyInputError(RuntimeError):
     """Raised when a tool receives invalid user input."""
 
-
-AUTH_LOGIN_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "email": {
-            "type": "string",
-            "description": "Anify Firebase account email.",
-        },
-        "password": {
-            "type": "string",
-            "description": "Anify Firebase account password. Never returned or persisted.",
-        },
-    },
-    "required": ["email", "password"],
-    "additionalProperties": False,
-}
 
 EMPTY_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -134,6 +119,10 @@ ROLL_CHECK_SCHEMA: dict[str, Any] = {
     "required": ["dc", "action"],
     "additionalProperties": False,
 }
+
+
+def login_required_message() -> str:
+    return f"Anify Firebase login required. Open {ANIFY_LOGIN_URL} to log in, then retry."
 
 
 def utc_timestamp() -> str:
@@ -337,40 +326,6 @@ def build_session(
     }
 
 
-def login_with_password(arguments: dict[str, Any]) -> dict[str, Any]:
-    email = str(arguments.get("email", "")).strip()
-    password = str(arguments.get("password", ""))
-    if not email or not password:
-        raise AnifyInputError("email and password are required.")
-
-    response = post_json(
-        firebase_endpoint("accounts:signInWithPassword"),
-        {
-            "email": email,
-            "password": password,
-            "returnSecureToken": True,
-        },
-    )
-    id_token = str(response.get("idToken", ""))
-    refresh_token = str(response.get("refreshToken", ""))
-    expires_in = response.get("expiresIn")
-    if not id_token or not refresh_token or expires_in is None:
-        raise AnifyAuthError("Firebase Auth login did not return a complete session.")
-
-    firebase_user = lookup_firebase_user(id_token)
-    session = build_session(
-        id_token=id_token,
-        refresh_token=refresh_token,
-        expires_in=expires_in,
-        firebase_user=firebase_user,
-        fallback_uid=str(response.get("localId", "")),
-    )
-    write_session(session)
-    public = session_public_payload(session)
-    public["message"] = "Anify Firebase login succeeded."
-    return public
-
-
 def refresh_session(session: dict[str, Any]) -> dict[str, Any]:
     refresh_token = str(session.get("refreshToken", ""))
     if not refresh_token:
@@ -406,7 +361,7 @@ def refresh_session(session: dict[str, Any]) -> dict[str, Any]:
 def require_authenticated_session() -> dict[str, Any]:
     session = read_session()
     if session is None:
-        raise AnifyAuthError("Anify login required. Call anify_auth_login before using adventure tools.")
+        raise AnifyAuthError(login_required_message())
 
     if session.get("source") == "shell_bearer":
         return session_from_shell_bearer(session)
@@ -475,6 +430,9 @@ def auth_status() -> dict[str, Any]:
             "authenticated": False,
             "project_id": FIREBASE_PROJECT_ID,
             "sessionPath": str(SESSION_PATH),
+            "code": "ANIFY_LOGIN_REQUIRED",
+            "action": "open_login_url",
+            "loginUrl": ANIFY_LOGIN_URL,
             "message": str(error),
         }
     public = session_public_payload(session)
@@ -579,13 +537,8 @@ def list_tools() -> dict[str, Any]:
     return {
         "tools": [
             {
-                "name": "anify_auth_login",
-                "description": "Log in to Anify with the same Firebase email/password account used by the web app.",
-                "inputSchema": AUTH_LOGIN_SCHEMA,
-            },
-            {
                 "name": "anify_auth_status",
-                "description": "Check the stored Anify Firebase session. Does not expose tokens.",
+                "description": "Check the Anify Firebase session and return the web login URL when login is required.",
                 "inputSchema": EMPTY_SCHEMA,
             },
             {
@@ -627,8 +580,6 @@ def call_tool(params: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(arguments, dict):
         raise AnifyInputError("arguments must be an object")
 
-    if name == "anify_auth_login":
-        return tool_response(login_with_password(arguments))
     if name == "anify_auth_status":
         return tool_response(auth_status())
     if name == "anify_auth_logout":

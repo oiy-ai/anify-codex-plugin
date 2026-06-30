@@ -5,45 +5,38 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 - Firebase project: `anify-oiy-ai`
 - Auth token type: Firebase ID token
 - Transport convention: `Authorization: Bearer <idToken>`
-- Plugin login tool: `anify_auth_login`
+- Login URL: `https://anify.ai`
 
 There is exactly one plugin authentication path: a Firebase ID token from the Anify Firebase project. Do not add PATs, CLI login, mock users, local-only sessions, or offline play.
 
-The Anify Codex shell verifies `Authorization: Bearer <idToken>` at the public API boundary, writes a request-scoped Anify session file, and points the MCP server at that file. Direct plugin use creates the same session shape through `anify_auth_login`. Both routes hit the same Firebase ID token gate; there is no separate environment-token, offline, or local identity path.
+The Anify Codex shell verifies `Authorization: Bearer <idToken>` at the public API boundary, writes a request-scoped Anify session file, and points the MCP server at that file. If the token is missing or invalid, the shell must return a fixed login response with `loginUrl: "https://anify.ai"` before starting Codex. There is no separate environment-token, email/password, offline, or local identity path.
 
 ## Required Flow
 
 Before starting or continuing an adventure:
 
 1. Call `anify_auth_status`.
-2. If it returns `authenticated: false`, call `anify_auth_login`.
+2. If it returns `authenticated: false`, stop and return the login URL from the tool response.
 3. Call `anify_start_adventure`.
 4. Continue the GM loop only if `anify_start_adventure` returns `readyForGameplay: true`.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.
 
-## Login Tool
+## Login Response
 
-`anify_auth_login`
-
-Input:
+The shell and MCP status tool use this fixed login target:
 
 ```json
 {
-  "email": "player@example.com",
-  "password": "account password"
+  "code": "ANIFY_LOGIN_REQUIRED",
+  "action": "open_login_url",
+  "loginUrl": "https://anify.ai"
 }
 ```
 
-Behavior:
+Do not ask the user to paste Firebase email/password into Codex. The web app owns login and token issuance.
 
-- Calls Firebase Identity Toolkit `accounts:signInWithPassword`.
-- Verifies the returned ID token with `accounts:lookup`.
-- Requires `emailVerified: true`, matching the Anify web password login behavior.
-- Stores the Firebase ID token and refresh token in a local session file with owner-only permissions.
-- Never returns tokens in tool output.
-
-Default session path:
+Default MCP session path:
 
 ```text
 ~/.anify/codex/auth-session.json

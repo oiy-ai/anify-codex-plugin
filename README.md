@@ -10,6 +10,6 @@ It provides:
 - A configurable character AI template.
 - Long-term memory and personality consistency controls.
 - A stable turn loop: GM narration, three options, user action, D20 check, character reaction, GM advancement.
-- A bundled `anify` MCP server for login, adventure start, and D20 checks outside the GM model.
+- A bundled `anify` MCP server for auth status, adventure start, and D20 checks outside the GM model.
 
-Use the `anify-trpg-adventure` skill to log in, start, or continue a campaign. There is no offline, single-player, or local `.anify` save fallback path; gameplay waits for authenticated server-side state MCP tools.
+Use the `anify-trpg-adventure` skill to start or continue a campaign after logging in at `https://anify.ai`. There is no offline, single-player, or local `.anify` save fallback path; gameplay waits for authenticated server-side state MCP tools.
