@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "anify-d20": {
+    "anify": {
       "command": "python3",
       "args": [
-        "./mcp/anify_d20_mcp.py"
+        "./mcp/anify_mcp.py"
       ],
       "cwd": "."
     }

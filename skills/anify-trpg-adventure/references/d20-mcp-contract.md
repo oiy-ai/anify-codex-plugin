@@ -1,6 +1,10 @@
 # D20 MCP Contract
 
-Anify requires D20 checks to be resolved outside the GM model. The bundled MCP server is `anify-d20`, with one tool: `roll_check`.
+Anify requires D20 checks to be resolved outside the GM model. The bundled MCP server is `anify`, with one D20 tool: `roll_check`.
+
+`roll_check` requires a valid Anify Firebase session. It must fail before rolling if the user is not authenticated.
+
+Do not call `roll_check` to start or continue gameplay until `anify_start_adventure` has returned `readyForGameplay: true`.
 
 ## Tool
 
@@ -63,6 +67,8 @@ Output:
 
 ## GM Usage Rules
 
+- Call `anify_auth_status` and `anify_start_adventure` before the first check in a session.
+- Stop instead of rolling if `anify_start_adventure` returns `readyForGameplay: false`.
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - If `secret` is true, summarize the fictional consequence without revealing the raw roll unless the user asks to inspect state.

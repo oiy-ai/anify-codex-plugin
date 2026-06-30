@@ -1,7 +1,7 @@
 {
   "name": "anify",
-  "version": "0.1.0",
-  "description": "AI-driven DnD-style TRPG adventure orchestration for Codex.",
+  "version": "0.1.0+codex.20260630045658",
+  "description": "Firebase-authenticated AI-driven DnD-style TRPG adventure orchestration for Codex.",
   "author": {
     "name": "Local developer"
   },
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Anify",
     "shortDescription": "Run AI-driven DnD-style TRPG adventures.",
-    "longDescription": "Anify provides a GM AI and configurable character AI orchestration framework for running DnD-style TRPG adventures. It uses world books, campaign state, hidden quest frameworks, character memory templates, personality consistency checks, and a D20 MCP tool so checks are resolved outside the GM model.",
+    "longDescription": "Anify provides a Firebase-authenticated GM AI and configurable character AI orchestration framework for running DnD-style TRPG adventures. It uses the same Firebase Auth project as the Anify web app, gates adventure tools in MCP code before play can start, and supports world books, campaign state, hidden quest frameworks, character memory templates, personality consistency checks, and D20 checks resolved outside the GM model.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
@@ -28,9 +28,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "启动一个 Anify DnD 风格 TRPG 冒险。",
-      "用我的角色卡继续 Anify 跑团。",
-      "创建 Anify 战役和角色模板。"
+      "\u767b\u5f55 Anify \u5e76\u542f\u52a8 DnD \u98ce\u683c TRPG \u5192\u9669\u3002",
+      "\u7528\u6211\u7684\u89d2\u8272\u5361\u7ee7\u7eed Anify \u8dd1\u56e2\u3002",
+      "\u521b\u5efa Anify \u6218\u5f79\u548c\u89d2\u8272\u6a21\u677f\u3002"
     ],
     "brandColor": "#7C3AED",
     "composerIcon": "./assets/anify-small.svg",

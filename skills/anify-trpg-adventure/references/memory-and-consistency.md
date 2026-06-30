@@ -11,7 +11,9 @@ Use four layers:
 - `relationship_memory`: standing opinions, trust, debts, conflicts, and promises.
 - `session_memory`: recent scene facts that should influence immediate reactions.
 
-Persist durable updates to `.anify/memory/<character-id>.jsonl`. Each line should be one event:
+Persist durable updates only through authenticated Anify memory/state MCP tools. Do not write local `.anify/memory/<character-id>.jsonl` files during gameplay.
+
+Memory events should use this shape when sent to the server:
 
 ```json
 {
@@ -23,7 +25,7 @@ Persist durable updates to `.anify/memory/<character-id>.jsonl`. Each line shoul
 }
 ```
 
-Use `salience` from 1 to 5. Only write durable memory for events likely to matter later.
+Use `salience` from 1 to 5. Only persist durable memory for events likely to matter later.
 
 ## Personality Consistency Control
 
@@ -65,3 +67,5 @@ For each turn, retrieve:
 - Relationship memory for present NPCs or party members.
 
 Keep the prompt small. Prefer relevant, high-salience memories over exhaustive history.
+
+If authenticated memory retrieval tools are not available, stop gameplay instead of reconstructing memory from local files.

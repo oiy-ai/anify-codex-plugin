@@ -1,6 +1,6 @@
 ---
 name: anify-trpg-adventure
-description: Run an AI-driven DnD-style TRPG adventure with a GM AI, configurable character AI, stable turn-packet orchestration, long-term memory, personality consistency control, and mandatory D20 checks through the Anify D20 MCP tool.
+description: Run a Firebase-authenticated AI-driven DnD-style TRPG adventure with a GM AI, configurable character AI, stable turn-packet orchestration, long-term memory, personality consistency control, and mandatory MCP-gated D20 checks.
 ---
 
 # Anify TRPG Adventure
@@ -11,6 +11,7 @@ Use this skill when the user wants to start, continue, configure, or run an AI-d
 
 Before running or modifying an Anify session, read:
 
+- `references/authentication.md`
 - `references/orchestration.md`
 - `references/d20-mcp-contract.md`
 - `references/memory-and-consistency.md`
@@ -22,6 +23,8 @@ When creating a new campaign or character profile, also use:
 
 ## Operating Model
 
+Anify is server-backed and requires Firebase login before play. Do not run a local-only adventure and do not invent an offline fallback.
+
 Anify has two independent AI roles coupled by stable packets:
 
 - **GM AI** owns the world, rules interpretation, NPCs, pacing, hidden quest framework, scene framing, D20 check request, consequences, and campaign state.
@@ -30,6 +33,15 @@ Anify has two independent AI roles coupled by stable packets:
 Keep these roles logically separate even when one Codex assistant is executing both phases. Iterate them separately through the packet contracts in `references/orchestration.md`.
 
 ## Prototype Loop
+
+Before the prototype loop starts, use the Anify MCP server:
+
+1. Call `anify_auth_status`.
+2. If not authenticated, call `anify_auth_login` with the user's Anify Firebase email/password.
+3. Call `anify_start_adventure`.
+4. Continue only if `anify_start_adventure` returns `readyForGameplay: true`.
+
+If `anify_start_adventure` returns `readyForGameplay: false`, stop before narration and report the blocker. Do not load local saves, create a local campaign, or run an offline scene.
 
 Run every active turn in this exact order:
 
@@ -42,20 +54,19 @@ Run every active turn in this exact order:
 
 Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to save, inspect state, or adjust configuration.
 
-## State Files
+## Cloud State Requirement
 
-Persist campaign data under the active workspace unless the user asks for another location:
+Anify gameplay state is server-backed. The GM must not read or write local `.anify` campaign, character, session log, or memory files as a source of truth.
 
-- `.anify/campaign-state.json`
-- `.anify/session-log.md`
-- `.anify/characters/<character-id>.json`
-- `.anify/memory/<character-id>.jsonl`
+Campaign state, cloud saves, character sheets, world books, inventory, combat state, and durable memory must come from authenticated Anify MCP tools. Until those server-side MCP tools are available and `anify_start_adventure` returns `readyForGameplay: true`, gameplay cannot proceed.
 
-If these files do not exist, offer to create them from the templates. If the user wants to start immediately, create a minimal default campaign and a placeholder character, then continue.
+Templates are only schema references for future server payloads or explicit user-authored configuration. They are not a local-play fallback.
 
 ## D20 Tool Requirement
 
-Use the MCP server named `anify-d20` and its `roll_check` tool when available. If the tool is not exposed yet, search available tools for `anify d20 roll_check`. If no D20 MCP tool is available, stop the session and tell the user that Anify needs the D20 MCP server connected before checks can be resolved.
+Use the MCP server named `anify` and its `roll_check` tool when available. If the tool is not exposed yet, search available tools for `anify roll_check`. If no Anify MCP tool is available, stop the session and tell the user that Anify needs the MCP server connected before play can proceed.
+
+The `roll_check` tool is also Firebase-gated. If it returns an authentication error, stop play and log in through `anify_auth_login`; do not roll locally.
 
 The GM may hide raw roll details in narration when `secret` is true, but the persisted state must keep the structured result.
 
