@@ -37,7 +37,7 @@ Keep these roles logically separate even when one Codex assistant is executing b
 Before the prototype loop starts, use the Anify MCP server:
 
 1. Call `anify_auth_status`.
-2. If not authenticated, stop immediately and direct the client to open `https://anify.ai`; do not ask for email/password and do not start a model-driven login exchange.
+2. If not authenticated, stop immediately and direct the client to open the `loginUrl` returned by `anify_auth_status`; do not ask for email/password and do not start a model-driven login exchange.
 3. Call `anify_start_adventure`.
 4. Continue only if `anify_start_adventure` returns `readyForGameplay: true`.
 
@@ -66,7 +66,7 @@ Templates are only schema references for future server payloads or explicit user
 
 Use the MCP server named `anify` and its `roll_check` tool when available. If the tool is not exposed yet, search available tools for `anify roll_check`. If no Anify MCP tool is available, stop the session and tell the user that Anify needs the MCP server connected before play can proceed.
 
-The `roll_check` tool is also Firebase-gated. If it returns an authentication error, stop play and direct the client to `https://anify.ai`; do not roll locally.
+The `roll_check` tool is also Firebase-gated. If it returns an authentication error, stop play and direct the client to the current Anify Web login link; do not roll locally.
 
 The GM may hide raw roll details in narration when `secret` is true, but the persisted state must keep the structured result.
 

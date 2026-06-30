@@ -9,7 +9,7 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 
 There is exactly one plugin authentication path: a Firebase ID token from the Anify Firebase project. Do not add PATs, CLI login, mock users, local-only sessions, or offline play.
 
-The Anify Codex shell verifies `Authorization: Bearer <idToken>` at the public API boundary, writes a request-scoped Anify session file, and points the MCP server at that file. If the token is missing or invalid, the shell must return a fixed login response with `loginUrl: "https://anify.ai"` before starting Codex. There is no separate environment-token, email/password, offline, or local identity path.
+The Anify Codex shell verifies `Authorization: Bearer <idToken>` at the public API boundary, writes a request-scoped Anify session file, and points the MCP server at that file. If the token is missing or invalid, the plugin or shell must return an Anify Web link at `https://anify.ai/codex-auth` with a local callback URL and one-time state before starting Codex. There is no separate environment-token, email/password, offline, or local identity path.
 
 ## Required Flow
 
@@ -24,13 +24,15 @@ All adventure tools must enforce auth in MCP code. Prompt instructions are not e
 
 ## Login Response
 
-The shell and MCP status tool use this fixed login target:
+The shell and MCP status tool use this web-link shape:
 
 ```json
 {
   "code": "ANIFY_LOGIN_REQUIRED",
   "action": "open_login_url",
-  "loginUrl": "https://anify.ai"
+  "loginUrl": "https://anify.ai/codex-auth?callback_url=http%3A%2F%2F127.0.0.1%3A...&state=...",
+  "callbackUrl": "http://127.0.0.1:.../anify/codex/auth/callback",
+  "expiresAt": "2026-07-01T00:00:00Z"
 }
 ```
 

@@ -13,7 +13,9 @@ import os
 import secrets
 import sys
 import tempfile
+import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -34,6 +36,8 @@ FIREBASE_PROJECT_ID = os.environ.get("ANIFY_FIREBASE_PROJECT_ID", "anify-oiy-ai"
 FIREBASE_AUTH_BASE_URL = "https://identitytoolkit.googleapis.com/v1"
 FIREBASE_REFRESH_URL = "https://securetoken.googleapis.com/v1/token"
 ANIFY_LOGIN_URL = "https://anify.ai"
+AUTH_CALLBACK_PATH = "/anify/codex/auth/callback"
+AUTH_LINK_TTL_SECONDS = 600
 REQUEST_TIMEOUT_SECONDS = 20
 TOKEN_REFRESH_SKEW_SECONDS = 300
 SESSION_PATH = Path(
@@ -42,6 +46,9 @@ SESSION_PATH = Path(
         str(Path.home() / ".anify" / "codex" / "auth-session.json"),
     )
 )
+
+_auth_link_lock = threading.Lock()
+_auth_link: dict[str, Any] | None = None
 
 class AnifyAuthError(RuntimeError):
     """Raised when the single Firebase Auth path cannot authorize a request."""
@@ -122,7 +129,150 @@ ROLL_CHECK_SCHEMA: dict[str, Any] = {
 
 
 def login_required_message() -> str:
-    return f"Anify Firebase login required. Open {ANIFY_LOGIN_URL} to log in, then retry."
+    return "Anify Firebase login required. Open the returned loginUrl to link Anify Web login, then retry."
+
+
+def iso_from_seconds(timestamp: int) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
+
+
+def ensure_web_auth_link() -> dict[str, Any]:
+    global _auth_link
+
+    with _auth_link_lock:
+        if _auth_link and int(_auth_link["expiresAt"]) > now_seconds():
+            return public_auth_link(_auth_link)
+
+        state = secrets.token_urlsafe(32)
+        expires_at = now_seconds() + AUTH_LINK_TTL_SECONDS
+        server = ThreadingHTTPServer(("127.0.0.1", 0), AnifyAuthCallbackHandler)
+        server.daemon_threads = True
+        server.anify_state = state  # type: ignore[attr-defined]
+        server.anify_expires_at = expires_at  # type: ignore[attr-defined]
+
+        port = server.server_address[1]
+        callback_url = f"http://127.0.0.1:{port}{AUTH_CALLBACK_PATH}"
+        login_url = build_codex_auth_url(callback_url, state)
+        thread = threading.Thread(target=server.serve_forever, name="anify-auth-callback", daemon=True)
+        thread.start()
+
+        _auth_link = {
+            "state": state,
+            "expiresAt": expires_at,
+            "callbackUrl": callback_url,
+            "loginUrl": login_url,
+            "server": server,
+        }
+        return public_auth_link(_auth_link)
+
+
+def public_auth_link(auth_link: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "loginUrl": auth_link["loginUrl"],
+        "expiresAt": iso_from_seconds(int(auth_link["expiresAt"])),
+        "callbackUrl": auth_link["callbackUrl"],
+    }
+
+
+def build_codex_auth_url(callback_url: str, state: str) -> str:
+    query = urllib.parse.urlencode(
+        {
+            "callback_url": callback_url,
+            "state": state,
+        }
+    )
+    return f"{ANIFY_LOGIN_URL.rstrip('/')}/codex-auth?{query}"
+
+
+def complete_web_auth(id_token: str) -> dict[str, Any]:
+    firebase_user = lookup_firebase_user(id_token)
+    user = normalize_user(firebase_user)
+    if not user["emailVerified"]:
+        raise AnifyAuthError("Email verification is required before Anify Codex login.")
+
+    session = {
+        "schemaVersion": 1,
+        "projectId": FIREBASE_PROJECT_ID,
+        "uid": user["uid"],
+        "email": user["email"],
+        "displayName": user["displayName"],
+        "emailVerified": user["emailVerified"],
+        "idToken": id_token,
+        "refreshToken": None,
+        "expiresAt": None,
+        "issuedAt": now_seconds(),
+        "source": "web_link",
+    }
+    write_session(session)
+    return session
+
+
+class AnifyAuthCallbackHandler(BaseHTTPRequestHandler):
+    server_version = "AnifyCodexAuth/1.0"
+
+    def log_message(self, _format: str, *_args: Any) -> None:
+        return
+
+    def do_OPTIONS(self) -> None:  # noqa: N802 - stdlib callback name
+        self.send_json(204, None)
+
+    def do_POST(self) -> None:  # noqa: N802 - stdlib callback name
+        if urllib.parse.urlparse(self.path).path != AUTH_CALLBACK_PATH:
+            self.send_json(404, {"error": "not_found"})
+            return
+
+        try:
+            payload = self.read_json()
+            state = str(payload.get("state", ""))
+            id_token = str(payload.get("idToken", "")).strip()
+            expected_state = str(getattr(self.server, "anify_state", ""))
+            expires_at = int(getattr(self.server, "anify_expires_at", 0))
+            if not expected_state or state != expected_state or expires_at <= now_seconds():
+                self.send_json(400, {"error": "invalid_or_expired_state"})
+                return
+            if not id_token:
+                self.send_json(400, {"error": "missing_id_token"})
+                return
+
+            session = complete_web_auth(id_token)
+        except AnifyAuthError as error:
+            self.send_json(401, {"error": str(error)})
+            return
+        except Exception:
+            self.send_json(400, {"error": "invalid_request"})
+            return
+
+        self.send_json(
+            200,
+            {
+                "ok": True,
+                "uid": session.get("uid"),
+                "email": session.get("email"),
+                "message": "Anify Codex login linked.",
+            },
+        )
+
+    def read_json(self) -> dict[str, Any]:
+        length = int(self.headers.get("content-length", "0") or "0")
+        body = self.rfile.read(length)
+        payload = json.loads(body.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be an object")
+        return payload
+
+    def send_json(self, status: int, payload: dict[str, Any] | None) -> None:
+        raw = b"" if payload is None else json.dumps(payload, separators=(",", ":")).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        if raw:
+            self.wfile.write(raw)
 
 
 def utc_timestamp() -> str:
@@ -363,8 +513,8 @@ def require_authenticated_session() -> dict[str, Any]:
     if session is None:
         raise AnifyAuthError(login_required_message())
 
-    if session.get("source") == "shell_bearer":
-        return session_from_shell_bearer(session)
+    if session.get("source") in {"shell_bearer", "web_link"}:
+        return session_from_bearer_session(session)
 
     expires_at = int(session.get("expiresAt") or 0)
     if expires_at <= now_seconds() + TOKEN_REFRESH_SKEW_SECONDS:
@@ -394,10 +544,10 @@ def require_authenticated_session() -> dict[str, Any]:
     return session
 
 
-def session_from_shell_bearer(session: dict[str, Any]) -> dict[str, Any]:
+def session_from_bearer_session(session: dict[str, Any]) -> dict[str, Any]:
     id_token = str(session.get("idToken", "")).strip()
     if not id_token:
-        raise AnifyAuthError("Anify login required. Shell Firebase session is incomplete.")
+        raise AnifyAuthError("Anify login required. Firebase session is incomplete.")
 
     firebase_user = lookup_firebase_user(id_token)
     user = normalize_user(firebase_user, fallback_uid=str(session.get("uid", "")))
@@ -418,7 +568,7 @@ def session_from_shell_bearer(session: dict[str, Any]) -> dict[str, Any]:
         "refreshToken": None,
         "expiresAt": session.get("expiresAt"),
         "issuedAt": session.get("issuedAt") or now_seconds(),
-        "source": "shell_bearer",
+        "source": session.get("source") or "web_link",
     }
 
 
@@ -426,13 +576,16 @@ def auth_status() -> dict[str, Any]:
     try:
         session = require_authenticated_session()
     except AnifyAuthError as error:
+        auth_link = ensure_web_auth_link()
         return {
             "authenticated": False,
             "project_id": FIREBASE_PROJECT_ID,
             "sessionPath": str(SESSION_PATH),
             "code": "ANIFY_LOGIN_REQUIRED",
             "action": "open_login_url",
-            "loginUrl": ANIFY_LOGIN_URL,
+            "loginUrl": auth_link["loginUrl"],
+            "callbackUrl": auth_link["callbackUrl"],
+            "expiresAt": auth_link["expiresAt"],
             "message": str(error),
         }
     public = session_public_payload(session)
