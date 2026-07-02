@@ -10,8 +10,8 @@ It provides:
 - A configurable character AI template.
 - Long-term memory and personality consistency controls.
 - A stable turn loop: GM narration, three options, user action, D20 check, character reaction, GM advancement.
-- A bundled `anify` MCP server for auth status, adventure start, and D20 checks outside the GM model.
+- A remote `anify` HTTP MCP server for auth status, adventure start, and D20 checks outside the GM model.
 
-Use the `anify-trpg-adventure` skill to start or continue a campaign after linking Anify Web login through the `https://anify.ai/codex-auth` URL returned by `anify_auth_status`. There is no offline, single-player, or local `.anify` save fallback path; gameplay waits for authenticated server-side state MCP tools.
+Use the `anify-trpg-adventure` skill to start or continue a campaign after Codex completes the Anify MCP OAuth flow at `https://anify.ai/mcp`. There is no offline, single-player, local callback, or local `.anify` save fallback path; gameplay waits for authenticated server-side state MCP tools.
 
 Run `python3 scripts/update_cachebuster.py .` after plugin changes to rewrite `.codex-plugin/plugin.json` as `<base-version>+codex.<UTC timestamp>`.

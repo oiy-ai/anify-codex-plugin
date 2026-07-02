@@ -1,11 +1,9 @@
 {
   "mcpServers": {
     "anify": {
-      "command": "python3",
-      "args": [
-        "./mcp/anify_mcp.py"
-      ],
-      "cwd": "."
+      "type": "http",
+      "url": "https://anify.ai/mcp",
+      "note": "Official Anify MCP server. Uses Firebase-backed OAuth discovery on first connection and exposes authenticated adventure orchestration tools."
     }
   }
 }
