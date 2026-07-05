@@ -10,7 +10,7 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 - OAuth dynamic registration endpoint: `/register`
 - Bearer token type: Firebase ID token
 
-The Codex client can use normal remote MCP OAuth discovery. The Codex shell development runtime uses a preconfigured OAuth cache and does not open a browser login during `/v1/thread/run`.
+The Codex client can use normal remote MCP OAuth discovery. The Codex shell runtime receives the caller's Firebase bearer token on `/v1/thread/run` and exposes it to Codex MCP as `ANIFY_ENGINE_BEARER_TOKEN`.
 
 ## Required Flow
 
@@ -48,4 +48,4 @@ Codex must read and write the local Markdown files in:
 CODEX_HOME/anify/users/userA
 ```
 
-Engine MCP returns context, checks, and rule deltas. Codex applies them to local Markdown.
+Engine MCP returns context, checks, and rule deltas. Codex applies them to local Markdown. In Codex shell runs, the Engine MCP bearer is the same Firebase token that authenticated the shell request.

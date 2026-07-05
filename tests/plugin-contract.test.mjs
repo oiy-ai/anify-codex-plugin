@@ -37,5 +37,6 @@ test('skill references the coarse Engine MCP tools', () => {
 test('plugin MCP config points at the Anify Engine MCP server', () => {
   assert.equal(mcpConfig.mcpServers.anify.type, 'http');
   assert.equal(mcpConfig.mcpServers.anify.url, 'https://anify.ai/mcp');
+  assert.equal(mcpConfig.mcpServers.anify.bearer_token_env_var, 'ANIFY_ENGINE_BEARER_TOKEN');
   assert.match(mcpConfig.mcpServers.anify.note, /Engine MCP/);
 });
