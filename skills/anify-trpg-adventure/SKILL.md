@@ -50,18 +50,19 @@ Engine MCP is the deterministic rule service. It owns authenticated access, worl
 
 ## Prototype Loop
 
-Before the prototype loop starts:
+Before any start or continue request:
 
 1. Read `profile.md`, `save.md`, `gm-memory.md`, `character-memory.md`, and the last relevant entries of `turn-log.md`.
 2. Call `anify_auth_status`.
 3. If the MCP server is not authenticated, stop immediately and let the Codex host reconnect the Anify MCP server.
-4. Call `anify_start_adventure` with no arguments unless the user explicitly supplied a world or language.
-5. Continue only if `anify_start_adventure` returns `readyForGameplay: true`.
+4. If `save.md` has no `Adventure session` or the user explicitly asks to start a new adventure, call `anify_start_adventure` with no arguments unless the user supplied a world or language.
+5. If `save.md` already has an `Adventure session` and the user asks to continue, do not call `anify_start_adventure`; preserve the saved session and use `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
+6. Continue only if the new start returned `readyForGameplay: true`, or the existing save already records `Engine ready for gameplay: true`.
 
 Run every active turn in this exact order:
 
 1. **Load local state**: reread the local Markdown files.
-2. **Engine context**: call `anify_get_context` when area, world, quest, enemy, or character facts are needed.
+2. **Engine context**: call `anify_get_context` when area, world, quest, enemy, or character facts are needed. Do not use `anify_start_adventure` as a context refresh for continued turns.
 3. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
 4. **GM options**: provide exactly three viable options. Also state that the user may choose another action.
 5. **User action**: wait for or parse the user's selected/custom action.

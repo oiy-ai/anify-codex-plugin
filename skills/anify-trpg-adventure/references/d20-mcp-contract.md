@@ -4,7 +4,7 @@ Anify requires D20 checks to be resolved outside the GM model. The MCP server is
 
 `roll_check` requires a valid Anify Firebase session. It must fail before rolling if the MCP request is not authenticated.
 
-Do not call `roll_check` to start or continue gameplay until `anify_start_adventure` has returned `readyForGameplay: true`.
+Do not call `roll_check` until the adventure has been started and local `save.md` records `Engine ready for gameplay: true`. For continued turns, the saved readiness satisfies this requirement; do not call `anify_start_adventure` again just to unlock a roll.
 
 ## Tool
 
@@ -67,7 +67,7 @@ Output:
 
 ## GM Usage Rules
 
-- Call `anify_auth_status` and `anify_start_adventure` before the first check in a session.
+- Call `anify_auth_status` before checks. Call `anify_start_adventure` only when `save.md` has no `Adventure session`.
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - Persist the full `CheckResult` into `turn-log.md`.

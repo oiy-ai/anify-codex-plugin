@@ -7,6 +7,14 @@ const orchestration = readFileSync(
   new URL('../skills/anify-trpg-adventure/references/orchestration.md', import.meta.url),
   'utf8',
 );
+const authentication = readFileSync(
+  new URL('../skills/anify-trpg-adventure/references/authentication.md', import.meta.url),
+  'utf8',
+);
+const d20 = readFileSync(
+  new URL('../skills/anify-trpg-adventure/references/d20-mcp-contract.md', import.meta.url),
+  'utf8',
+);
 const memory = readFileSync(
   new URL('../skills/anify-trpg-adventure/references/memory-and-consistency.md', import.meta.url),
   'utf8',
@@ -32,6 +40,14 @@ test('skill references the coarse Engine MCP tools', () => {
   ]) {
     assert.match(skill, new RegExp(tool));
   }
+});
+
+test('skill preserves the local adventure session on continued turns', () => {
+  assert.match(skill, /do not call `anify_start_adventure`/i);
+  assert.match(skill, /preserve the saved session/i);
+  assert.match(authentication, /do not call `anify_start_adventure`/i);
+  assert.match(authentication, /keep the saved session id/i);
+  assert.match(d20, /do not call `anify_start_adventure` again/i);
 });
 
 test('plugin MCP config points at the Anify Engine MCP server', () => {
