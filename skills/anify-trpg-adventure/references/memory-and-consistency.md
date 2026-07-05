@@ -1,31 +1,34 @@
 # Character Memory And Consistency
 
-Anify character AI is configured by user-authored profiles, but the plugin owns the behavior controls for long-term memory, consistency, and in-session reaction logic.
+Anify character AI is configured by user-authored profiles, while the plugin owns behavior controls for local long-term memory, consistency, and in-session reaction logic.
 
-## Memory Layers
+## Memory Files
 
-Use four layers:
+All first-version durable memory lives under:
 
-- `profile`: stable facts, identity, stats, voice, values, boundaries, and backstory.
-- `episodic_memory`: important past events with timestamps and emotional tags.
-- `relationship_memory`: standing opinions, trust, debts, conflicts, and promises.
-- `session_memory`: recent scene facts that should influence immediate reactions.
-
-Persist durable updates only through authenticated Anify memory/state MCP tools. Do not write local `.anify/memory/<character-id>.jsonl` files during gameplay.
-
-Memory events should use this shape when sent to the server:
-
-```json
-{
-  "timestamp": "UTC timestamp",
-  "type": "episodic | relationship | preference | vow | trauma | clue",
-  "salience": 1,
-  "content": "memory text",
-  "source_turn_id": "turn id"
-}
+```text
+CODEX_HOME/anify/users/userA
 ```
 
-Use `salience` from 1 to 5. Only persist durable memory for events likely to matter later.
+Use:
+
+- `profile.md`: stable facts, identity, stats, voice, values, boundaries, and backstory.
+- `gm-memory.md`: GM-only campaign continuity, hidden clocks, unresolved hooks, and world-state notes.
+- `character-memory.md`: character-facing episodic and relationship memory.
+- `turn-log.md`: append-only visible session chronology.
+
+Do not write `.anify` memory files. Do not invent a second save root.
+
+## Memory Update Rules
+
+Update Markdown after each resolved player action:
+
+- Append a concise turn entry to `turn-log.md`.
+- Update `save.md` with current location, stats, inventory, flags, active quests, and scene summary.
+- Add only durable GM facts to `gm-memory.md`.
+- Add only character-known durable memories to `character-memory.md`.
+
+Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 
 ## Personality Consistency Control
 
@@ -61,11 +64,9 @@ Character AI must not:
 
 For each turn, retrieve:
 
-- The active character profile.
-- The last 3 to 7 session events.
-- Up to 5 high-salience relevant long-term memories.
-- Relationship memory for present NPCs or party members.
+- The active profile from `profile.md`.
+- The current save summary from `save.md`.
+- The last 3 to 7 turn-log entries.
+- Up to 5 relevant durable notes from `gm-memory.md` and `character-memory.md`.
 
 Keep the prompt small. Prefer relevant, high-salience memories over exhaustive history.
-
-If authenticated memory retrieval tools are not available, stop gameplay instead of reconstructing memory from local files.

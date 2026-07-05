@@ -1,22 +1,27 @@
 # Anify Orchestration
 
-This protocol keeps the GM AI and Character AI independently evolvable. The GM may change rules, pacing, and campaign state without rewriting character internals. The Character AI may improve memory, style, and consistency without changing world authority.
+This protocol keeps Engine rules, GM narration, and Character AI independently evolvable.
 
 ## Authority Boundaries
 
+Engine MCP owns:
+
+- Firebase-gated tool access.
+- World context loaded from Engine KV.
+- D20 check results.
+- Deterministic rule advice and state deltas.
+
 GM AI owns:
 
-- World book facts, scene facts, NPC actions, factions, locations, timeline, inventory availability, and environmental constraints.
-- Rule interpretation, DC selection, modifiers, advantage/disadvantage, stakes, and check requests.
-- Hidden quest framework, secrets, clocks, encounter progress, rewards, and consequences.
-- Canonical campaign state and session log.
+- Scene framing, NPC actions, pacing, hidden quest framework, and player-facing consequences.
+- DC, modifier, advantage/disadvantage, and stakes before calling `roll_check`.
+- Applying Engine deltas into `save.md` and appending `turn-log.md`.
+- Updating `gm-memory.md`.
 
 Character AI owns:
 
 - Character voice, memories, goals, fears, emotional response, habits, values, and interpersonal reactions.
-- Suggestions for likely in-character behavior.
-- Consistency checks against the configured persona.
-- Character-facing memory updates.
+- Character-facing memory updates in `character-memory.md`.
 
 Character AI must not:
 
@@ -24,6 +29,18 @@ Character AI must not:
 - Choose or alter D20 outcomes.
 - Reveal hidden GM notes.
 - Force the user to take an action.
+
+## Local Markdown Files
+
+Use these files under `CODEX_HOME/anify/users/userA`:
+
+- `profile.md`: stable player and character profile.
+- `save.md`: current world, location, player stats, inventory, quests, flags, and active scene summary.
+- `gm-memory.md`: durable GM-facing campaign memory and hidden continuity notes.
+- `character-memory.md`: durable character-facing memory and relationship continuity.
+- `turn-log.md`: append-only chronological visible turn log.
+
+Create missing files from `templates/userA-*.md` before play.
 
 ## Stable Packets
 
@@ -82,17 +99,20 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 }
 ```
 
-### CharacterReactionRequest
+### EngineResolution
+
+`anify_resolve_action` returns rule advice and deltas for Codex to apply to Markdown:
 
 ```json
 {
-  "character_id": "string",
-  "visible_scene": "current visible scene",
-  "user_action": "selected or custom action",
-  "check_result": {},
-  "recent_memory": [],
-  "persona_controls": {},
-  "reply_budget": "short"
+  "actionKind": "investigate",
+  "outcome": "success",
+  "stateDelta": {
+    "player": {},
+    "inventory": [],
+    "flags": []
+  },
+  "ruleAdvice": "Resolve investigate as successful and update the local Markdown save."
 }
 ```
 
@@ -117,19 +137,21 @@ or this object:
 
 ## Turn Execution
 
-1. GM builds or updates `TurnPacket`.
-2. GM presents scene and exactly three options to the user.
-3. User chooses or writes a custom action.
-4. GM creates `CheckRequest`.
-5. Codex calls D20 MCP `roll_check`.
-6. GM records `CheckResult`.
-7. Character AI receives `CharacterReactionRequest`.
-8. Character AI returns `NO_REPLY` or `CharacterReaction`.
-9. GM applies consequences, updates state, writes memory, and presents the next scene.
+1. Read local Markdown state.
+2. Call `anify_get_context` if fresh world context is needed.
+3. GM builds or updates `TurnPacket`.
+4. GM presents scene and exactly three options.
+5. User chooses or writes a custom action.
+6. GM creates `CheckRequest`.
+7. Codex calls `roll_check`.
+8. Codex calls `anify_resolve_action`.
+9. Character AI returns `NO_REPLY` or `CharacterReaction`.
+10. Codex updates `save.md`, `gm-memory.md`, `character-memory.md`, and appends `turn-log.md`.
+11. GM presents the next scene and choices.
 
 ## GM Narration Rules
 
-- Make consequences follow both the check result and the established fiction.
+- Make consequences follow both the check result and established fiction.
 - Let failures move the story forward with cost, complication, lost time, danger, resource pressure, or changed relationships.
 - Critical success should add a bonus beyond ordinary success.
 - Critical failure should add a serious but playable complication.

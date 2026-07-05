@@ -4,14 +4,13 @@ Anify is a local Codex plugin for running AI-driven DnD-style TRPG adventures.
 
 It provides:
 
-- A single Firebase Auth login path shared with the Anify web app.
-- MCP-level auth gating before any adventure session or D20 check can run.
+- A single Firebase Auth path shared with the Anify web app.
+- Engine-backed MCP tools for auth status, adventure bootstrap, world context, D20 checks, and deterministic rule advice.
 - A GM AI orchestration protocol.
 - A configurable character AI template.
-- Long-term memory and personality consistency controls.
-- A stable turn loop: GM narration, three options, user action, D20 check, character reaction, GM advancement.
-- A remote `anify` HTTP MCP server for auth status, adventure start, and D20 checks outside the GM model.
+- Local Markdown save, turn log, GM memory, and character memory under `CODEX_HOME/anify/users/userA`.
+- A stable turn loop: read local state, fetch Engine context, GM narration, three options, user action, D20 check, Engine rule resolution, memory/save update, GM advancement.
 
-Use the `anify-trpg-adventure` skill to start or continue a campaign after Codex completes the Anify MCP OAuth flow at `https://anify.ai/mcp`. There is no offline, single-player, local callback, or local `.anify` save fallback path; gameplay waits for authenticated server-side state MCP tools.
+Use the `anify-trpg-adventure` skill to start or continue a campaign. The Codex client may complete the Anify MCP OAuth flow normally. The Codex shell runtime uses a preconfigured OAuth cache in development and runs the thread from `CODEX_HOME/anify/users/userA`.
 
 Run `python3 scripts/update_cachebuster.py .` after plugin changes to rewrite `.codex-plugin/plugin.json` as `<base-version>+codex.<UTC timestamp>`.

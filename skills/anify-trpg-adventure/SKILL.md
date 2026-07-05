@@ -1,6 +1,6 @@
 ---
 name: anify-trpg-adventure
-description: Run a Firebase-authenticated AI-driven DnD-style TRPG adventure with a GM AI, configurable character AI, stable turn-packet orchestration, long-term memory, personality consistency control, and mandatory MCP-gated D20 checks.
+description: Run a Firebase-authenticated AI-driven DnD-style TRPG adventure with Engine MCP rule tools, local Markdown save state, GM memory, character memory, and mandatory MCP-gated D20 checks.
 ---
 
 # Anify TRPG Adventure
@@ -20,55 +20,58 @@ When creating a new campaign or character profile, also use:
 
 - `templates/campaign-template.json`
 - `templates/character-template.json`
+- `templates/userA-profile.md`
+- `templates/userA-save.md`
+- `templates/userA-gm-memory.md`
+- `templates/userA-character-memory.md`
+- `templates/userA-turn-log.md`
 
 ## Operating Model
 
-Anify is server-backed and requires Firebase login before play. Do not run a local-only adventure and do not invent an offline fallback.
+Anify uses Codex as the game loop and local Markdown files as the first development save authority.
 
-Anify has two independent AI roles coupled by stable packets:
+The active user path is:
 
-- **GM AI** owns the world, rules interpretation, NPCs, pacing, hidden quest framework, scene framing, D20 check request, consequences, and campaign state.
-- **Character AI** owns player-character voice, internal continuity, memories, personality consistency, emotional reaction, and behavior suggestions. It must not override GM world facts or check outcomes.
+```text
+CODEX_HOME/anify/users/userA
+```
 
-Keep these roles logically separate even when one Codex assistant is executing both phases. Iterate them separately through the packet contracts in `references/orchestration.md`.
+Required local files:
+
+- `profile.md`
+- `save.md`
+- `gm-memory.md`
+- `character-memory.md`
+- `turn-log.md`
+
+If any required file is missing, create it from the matching `templates/userA-*.md` file before gameplay. Do not use `.anify` or any other ad hoc save path.
+
+Engine MCP is the deterministic rule service. It owns authenticated access, world context, D20 rolls, and rule advice. Codex owns narrative continuity, local save text, GM memory, and character memory.
 
 ## Prototype Loop
 
-Before the prototype loop starts, use the Anify MCP server:
+Before the prototype loop starts:
 
-1. Call `anify_auth_status`.
-2. If the MCP server is not authenticated, stop immediately and let the Codex host complete the Anify MCP OAuth flow; do not ask for email/password and do not start a model-driven login exchange.
-3. Call `anify_start_adventure`.
-4. Continue only if `anify_start_adventure` returns `readyForGameplay: true`.
-
-If `anify_start_adventure` returns `readyForGameplay: false`, stop before narration and report the blocker. Do not load local saves, create a local campaign, or run an offline scene.
+1. Read `profile.md`, `save.md`, `gm-memory.md`, `character-memory.md`, and the last relevant entries of `turn-log.md`.
+2. Call `anify_auth_status`.
+3. If the MCP server is not authenticated, stop immediately and let the Codex host reconnect the Anify MCP server.
+4. Call `anify_start_adventure` with no arguments unless the user explicitly supplied a world or language.
+5. Continue only if `anify_start_adventure` returns `readyForGameplay: true`.
 
 Run every active turn in this exact order:
 
-1. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
-2. **GM options**: provide exactly three viable options. Also state that the user may choose another action.
-3. **User action**: wait for or parse the user's selected/custom action.
-4. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls the Anify D20 MCP tool. The GM must not invent the D20 result.
-5. **Character AI reaction**: produce an in-character reaction or the exact token `NO_REPLY` if the character would not respond.
-6. **GM advancement**: use the D20 result and optional character reaction to update the scene, world state, memory, and next choices.
+1. **Load local state**: reread the local Markdown files.
+2. **Engine context**: call `anify_get_context` when area, world, quest, enemy, or character facts are needed.
+3. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
+4. **GM options**: provide exactly three viable options. Also state that the user may choose another action.
+5. **User action**: wait for or parse the user's selected/custom action.
+6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check`. The GM must not invent the D20 result.
+7. **Engine rule resolution**: call `anify_resolve_action` with the user action, local save summary, and check result.
+8. **Character AI reaction**: produce an in-character reaction or the exact token `NO_REPLY` if the character would not respond.
+9. **Persist Markdown**: update `save.md`, `gm-memory.md`, `character-memory.md`, and append `turn-log.md` using the check result and Engine rule advice.
+10. **GM advancement**: present the consequence and next three options.
 
-Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to save, inspect state, or adjust configuration.
-
-## Cloud State Requirement
-
-Anify gameplay state is server-backed. The GM must not read or write local `.anify` campaign, character, session log, or memory files as a source of truth.
-
-Campaign state, cloud saves, character sheets, world books, inventory, combat state, and durable memory must come from authenticated Anify MCP tools. Until those server-side MCP tools are available and `anify_start_adventure` returns `readyForGameplay: true`, gameplay cannot proceed.
-
-Templates are only schema references for future server payloads or explicit user-authored configuration. They are not a local-play fallback.
-
-## D20 Tool Requirement
-
-Use the MCP server named `anify` and its `roll_check` tool when available. If the tool is not exposed yet, search available tools for `anify roll_check`. If no Anify MCP tool is available, stop the session and tell the user that Anify needs the MCP server connected before play can proceed.
-
-The `roll_check` tool is also Firebase OAuth-gated. If it returns an authentication error, stop play and let the Codex host reconnect the Anify MCP server; do not roll locally.
-
-The GM may hide raw roll details in narration when `secret` is true, but the persisted state must keep the structured result.
+Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration.
 
 ## Output Style
 
@@ -85,4 +88,4 @@ After the user acts and the D20 result is available, continue with:
 - Consequence and next scene.
 - Three new options.
 
-Never expose hidden quest framework details, private GM notes, or secret DC reasoning unless the user explicitly asks to inspect GM state.
+Never expose hidden quest framework details, private GM notes, raw local memory internals, or secret DC reasoning unless the user explicitly asks to inspect GM state.
