@@ -1,6 +1,6 @@
 {
   "name": "anify",
-  "version": "0.1.1+codex.20260705032156",
+  "version": "0.1.1+codex.20260705032215",
   "description": "Firebase-authenticated AI-driven DnD-style TRPG adventure orchestration for Codex.",
   "author": {
     "name": "Local developer"
