@@ -30,9 +30,20 @@ test('marketplace and plugin identity stay aligned with public branding', () => 
   assert.equal(marketplace.interface.displayName, 'Oiy AI');
   assert.equal(marketplace.plugins[0].name, 'anify');
   assert.equal(pluginManifest.name, 'anify');
-  assert.equal(pluginManifest.description, '开启一场属于你的异世界冒险。');
-  assert.equal(pluginManifest.interface.shortDescription, '开启一场属于你的异世界冒险。');
-  assert.equal(pluginManifest.interface.longDescription, '开启一场属于你的异世界冒险。');
+  assert.equal(pluginManifest.description, 'Begin a personal isekai adventure shaped by story, choices, and fate.');
+  assert.equal(pluginManifest.interface.shortDescription, 'Begin an isekai adventure of your own.');
+  assert.match(pluginManifest.interface.longDescription, /personal isekai campaign/);
+  assert.equal(pluginManifest.interface.composerIcon, './assets/anify-icon-64.png');
+  assert.equal(pluginManifest.interface.logo, './assets/anify-icon-512.png');
+});
+
+test('plugin ships standard square PNG icon sizes', () => {
+  for (const size of [32, 64, 128, 256, 512, 1024]) {
+    const icon = readFileSync(new URL(`../assets/anify-icon-${size}.png`, import.meta.url));
+    assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
+    assert.equal(icon.readUInt32BE(16), size);
+    assert.equal(icon.readUInt32BE(20), size);
+  }
 });
 
 test('skill requires the userA Markdown save files', () => {

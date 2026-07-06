@@ -1,7 +1,7 @@
 {
   "name": "anify",
-  "version": "0.1.1+codex.20260706105529",
-  "description": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
+  "version": "0.1.1+codex.20260706135425",
+  "description": "Begin a personal isekai adventure shaped by story, choices, and fate.",
   "author": {
     "name": "Local developer"
   },
@@ -18,8 +18,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify",
-    "shortDescription": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
-    "longDescription": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
+    "shortDescription": "Begin an isekai adventure of your own.",
+    "longDescription": "Step through the gate into a personal isekai campaign where an AI GM frames the world, presents meaningful choices, resolves D20 fate checks, and carries your character's memory through every turn.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
@@ -33,8 +33,8 @@
       "\u521b\u5efa Anify \u6218\u5f79\u548c\u89d2\u8272\u6a21\u677f\u3002"
     ],
     "brandColor": "#7C3AED",
-    "composerIcon": "./assets/anify-small.svg",
-    "logo": "./assets/anify-logo.svg",
+    "composerIcon": "./assets/anify-icon-64.png",
+    "logo": "./assets/anify-icon-512.png",
     "screenshots": []
   }
 }
