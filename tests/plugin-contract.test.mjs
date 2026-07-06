@@ -21,7 +21,19 @@ const memory = readFileSync(
   new URL('../skills/anify-trpg-adventure/references/memory-and-consistency.md', import.meta.url),
   'utf8',
 );
+const pluginManifest = JSON.parse(readFileSync(new URL('../.codex-plugin/plugin.json', import.meta.url), 'utf8'));
+const marketplace = JSON.parse(readFileSync(new URL('../.agents/plugins/marketplace.json', import.meta.url), 'utf8'));
 const mcpConfig = JSON.parse(readFileSync(new URL('../.mcp.json', import.meta.url), 'utf8'));
+
+test('marketplace and plugin identity stay aligned with public branding', () => {
+  assert.equal(marketplace.name, 'anify-codex');
+  assert.equal(marketplace.interface.displayName, 'Oiy AI');
+  assert.equal(marketplace.plugins[0].name, 'anify');
+  assert.equal(pluginManifest.name, 'anify');
+  assert.equal(pluginManifest.description, '开启一场属于你的异世界冒险。');
+  assert.equal(pluginManifest.interface.shortDescription, '开启一场属于你的异世界冒险。');
+  assert.equal(pluginManifest.interface.longDescription, '开启一场属于你的异世界冒险。');
+});
 
 test('skill requires the userA Markdown save files', () => {
   for (const file of ['profile.md', 'save.md', 'gm-memory.md', 'character-memory.md', 'turn-log.md']) {

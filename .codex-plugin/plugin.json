@@ -1,7 +1,7 @@
 {
   "name": "anify",
-  "version": "0.1.1+codex.20260706090447",
-  "description": "Firebase-authenticated AI-driven DnD-style TRPG adventure orchestration for Codex.",
+  "version": "0.1.1+codex.20260706105529",
+  "description": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
   "author": {
     "name": "Local developer"
   },
@@ -18,8 +18,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify",
-    "shortDescription": "Run AI-driven DnD-style TRPG adventures.",
-    "longDescription": "Anify provides a Firebase-authenticated GM AI and configurable character AI orchestration framework for running DnD-style TRPG adventures. It uses the same Firebase Auth project as the Anify web app, gates adventure tools in MCP code before play can start, and supports world books, campaign state, hidden quest frameworks, character memory templates, personality consistency checks, and D20 checks resolved outside the GM model.",
+    "shortDescription": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
+    "longDescription": "\u5f00\u542f\u4e00\u573a\u5c5e\u4e8e\u4f60\u7684\u5f02\u4e16\u754c\u5192\u9669\u3002",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
