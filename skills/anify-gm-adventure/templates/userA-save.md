@@ -4,6 +4,8 @@
 
 - World: anthromyth
 - Language: zh
+- Adventure session: none
+- Engine ready for gameplay: false
 - Current area: unknown
 - Scene summary: New adventure not started.
 

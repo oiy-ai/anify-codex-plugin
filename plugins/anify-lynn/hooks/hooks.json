@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" session-start --character Lynn",
+            "timeout": 30,
+            "statusMessage": "Loading Lynn memory"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Lynn",
+            "timeout": 30,
+            "statusMessage": "Recording Lynn context"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Lynn",
+            "timeout": 30,
+            "statusMessage": "Saving Lynn transcript"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" post-compact --character Lynn",
+            "timeout": 60,
+            "statusMessage": "Updating Lynn memory"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,11 +1,11 @@
 ---
-name: anify-trpg-adventure
-description: Run a Firebase-authenticated AI-driven DnD-style TRPG adventure with Engine MCP rule tools, local Markdown save state, GM memory, character memory, and mandatory MCP-gated D20 checks.
+name: anify-gm-adventure
+description: Run Anify-GM adventures with Engine MCP auth, world context, rule advice, mandatory D20 checks, and local Markdown progress saves under CODEX_HOME/anify/userA/GM. Use when the user invokes Anify-GM, starts or continues a solo adventure, or runs an adventure with installed Anify character plugins.
 ---
 
-# Anify TRPG Adventure
+# Anify GM Adventure
 
-Use this skill when the user wants to start, continue, configure, or run an AI-driven TRPG, DnD-style adventure, campaign, party scene, GM session, or character AI roleplay.
+Use this skill when the user wants to start, continue, configure, or run an AI-driven Anify TRPG adventure, DnD-style campaign, party scene, GM session, or adventure with installed Anify character plugins.
 
 ## Required References
 
@@ -21,9 +21,10 @@ When creating a new campaign or character profile, also use:
 - `templates/campaign-template.json`
 - `templates/character-template.json`
 - `templates/userA-profile.md`
+- `templates/userA-progress.md`
 - `templates/userA-save.md`
 - `templates/userA-gm-memory.md`
-- `templates/userA-character-memory.md`
+- `templates/userA-party-memory.md`
 - `templates/userA-turn-log.md`
 
 ## Operating Model
@@ -33,31 +34,34 @@ Anify uses Codex as the game loop and local Markdown files as the first developm
 The active user path is:
 
 ```text
-CODEX_HOME/anify/users/userA
+CODEX_HOME/anify/userA/GM
 ```
 
 Required local files:
 
 - `profile.md`
+- `progress.md`
 - `save.md`
 - `gm-memory.md`
-- `character-memory.md`
+- `party-memory.md`
 - `turn-log.md`
 
-If any required file is missing, create it from the matching `templates/userA-*.md` file before gameplay. Do not use `.anify` or any other ad hoc save path.
+If `CODEX_HOME` is unset, use `~/.codex/anify/userA/GM`. If any required file is missing, create it from the matching `templates/userA-*.md` file before gameplay. Do not use `.anify`, `CODEX_HOME/anify/users/userA`, or any other ad hoc save path.
 
-Engine MCP is the deterministic rule service. It owns authenticated access, world context, D20 rolls, and rule advice. Codex owns narrative continuity, local save text, GM memory, and character memory.
+Engine MCP is the deterministic rule service. It owns authenticated access, world context, D20 rolls, and rule advice. Codex owns narrative continuity, local progress/save text, GM memory, and party-facing memory.
 
 ## Prototype Loop
 
 Before any start or continue request:
 
-1. Read `profile.md`, `save.md`, `gm-memory.md`, `character-memory.md`, and the last relevant entries of `turn-log.md`.
+1. Read `profile.md`, `progress.md`, `save.md`, `gm-memory.md`, `party-memory.md`, and the last relevant entries of `turn-log.md`.
 2. Call `anify_auth_status`.
 3. If the MCP server is not authenticated, stop immediately and let the Codex host reconnect the Anify MCP server.
-4. If `save.md` has no `Adventure session` or the user explicitly asks to start a new adventure, call `anify_start_adventure` with no arguments unless the user supplied a world or language.
+4. If `save.md` has no `Adventure session` or the user explicitly asks to start a new adventure, use `progress.md` to seed continuity and call `anify_start_adventure` with no arguments unless the user supplied a world or language.
 5. If `save.md` already has an `Adventure session` and the user asks to continue, do not call `anify_start_adventure`; preserve the saved session and use `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
 6. Continue only if the new start returned `readyForGameplay: true`, or the existing save already records `Engine ready for gameplay: true`.
+
+At adventure end, update `progress.md` with the durable outcome, unresolved hooks, relationships, inventory changes, and next-adventure seed. Then clear or archive only transient scene details in `save.md` if the current adventure is complete.
 
 Run every active turn in this exact order:
 
@@ -68,8 +72,8 @@ Run every active turn in this exact order:
 5. **User action**: wait for or parse the user's selected/custom action.
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check`. The GM must not invent the D20 result.
 7. **Engine rule resolution**: call `anify_resolve_action` with the user action, local save summary, and check result.
-8. **Character AI reaction**: produce an in-character reaction or the exact token `NO_REPLY` if the character would not respond.
-9. **Persist Markdown**: update `save.md`, `gm-memory.md`, `character-memory.md`, and append `turn-log.md` using the check result and Engine rule advice.
+8. **Character AI reaction**: if Anify character plugins are active, let those persona instructions control character speech. If no character plugin is active, produce an NPC or companion reaction only when fiction calls for it; otherwise use the exact token `NO_REPLY`.
+9. **Persist Markdown**: update `save.md`, `gm-memory.md`, `party-memory.md`, and append `turn-log.md` using the check result and Engine rule advice. Update `progress.md` only for durable cross-adventure changes or adventure-end summaries.
 10. **GM advancement**: present the consequence and next three options.
 
 Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration.

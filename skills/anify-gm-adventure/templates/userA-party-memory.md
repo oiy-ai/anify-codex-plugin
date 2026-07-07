@@ -1,4 +1,4 @@
-# UserA Character Memory
+# UserA Party Memory
 
 ## Episodic Memory
 

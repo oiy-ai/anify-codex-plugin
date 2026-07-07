@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "anify": {
+      "type": "http",
+      "url": "https://anify.ai/mcp",
+      "note": "Official Anify Engine MCP server. Uses Firebase-backed OAuth discovery and exposes auth, adventure bootstrap, world context, D20, and rule-resolution tools. Codex shell may rewrite this URL to a local engine during development."
+    }
+  }
+}

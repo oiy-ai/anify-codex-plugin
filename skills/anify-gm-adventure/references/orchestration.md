@@ -18,12 +18,12 @@ GM AI owns:
 - Applying Engine deltas into `save.md` and appending `turn-log.md`.
 - Updating `gm-memory.md`.
 
-Character AI owns:
+Installed Anify character plugins own:
 
 - Character voice, memories, goals, fears, emotional response, habits, values, and interpersonal reactions.
-- Character-facing memory updates in `character-memory.md`.
+- Character-facing memory updates in their own `CODEX_HOME/anify/userA/<Character>` workspaces.
 
-Character AI must not:
+Character plugins must not:
 
 - Retcon GM facts.
 - Choose or alter D20 outcomes.
@@ -32,12 +32,13 @@ Character AI must not:
 
 ## Local Markdown Files
 
-Use these files under `CODEX_HOME/anify/users/userA`:
+Use these files under `CODEX_HOME/anify/userA/GM`:
 
 - `profile.md`: stable player and character profile.
+- `progress.md`: durable cross-adventure progress, completed adventure outcomes, unresolved hooks, and next-adventure seeds.
 - `save.md`: current world, location, player stats, inventory, quests, flags, and active scene summary.
 - `gm-memory.md`: durable GM-facing campaign memory and hidden continuity notes.
-- `character-memory.md`: durable character-facing memory and relationship continuity.
+- `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
 - `turn-log.md`: append-only chronological visible turn log.
 
 Create missing files from `templates/userA-*.md` before play.
@@ -145,8 +146,8 @@ or this object:
 6. GM creates `CheckRequest`.
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
-9. Character AI returns `NO_REPLY` or `CharacterReaction`.
-10. Codex updates `save.md`, `gm-memory.md`, `character-memory.md`, and appends `turn-log.md`.
+9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
+10. Codex updates `save.md`, `gm-memory.md`, `party-memory.md`, and appends `turn-log.md`.
 11. GM presents the next scene and choices.
 
 ## GM Narration Rules

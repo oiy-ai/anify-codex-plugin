@@ -16,7 +16,7 @@ The public Codex client uses normal remote MCP OAuth discovery. The Codex shell 
 
 Before starting or continuing an adventure:
 
-1. Read local Markdown state from `CODEX_HOME/anify/users/userA`.
+1. Read local Markdown state from `CODEX_HOME/anify/userA/GM`.
 2. Call `anify_auth_status`.
 3. If the MCP server is not authenticated, stop and let the Codex host reconnect the Anify MCP server.
 4. If `save.md` has no `Adventure session`, call `anify_start_adventure` and continue only if it returns `readyForGameplay: true`.
@@ -45,7 +45,7 @@ Authentication gates Engine tools only. It does not make Engine the save authori
 Codex must read and write the local Markdown files in:
 
 ```text
-CODEX_HOME/anify/users/userA
+CODEX_HOME/anify/userA/GM
 ```
 
 Engine MCP returns context, checks, and rule deltas. Codex applies them to local Markdown. In Codex shell runs, the Engine MCP bearer is the same Firebase token that authenticated the shell request.

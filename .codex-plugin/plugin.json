@@ -1,7 +1,7 @@
 {
-  "name": "anify",
-  "version": "0.1.1+codex.20260707095418",
-  "description": "Begin a personal isekai adventure shaped by story, choices, and fate.",
+  "name": "anify-gm",
+  "version": "0.2.0+codex.20260707135618",
+  "description": "Run Anify adventures as the GM with Engine-backed D20 checks and local progress saves.",
   "author": {
     "name": "Local developer"
   },
@@ -11,15 +11,16 @@
     "dnd",
     "roleplay",
     "gm",
+    "game-master",
     "dice",
     "storytelling"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Anify",
-    "shortDescription": "Begin an isekai adventure of your own.",
-    "longDescription": "Step through the gate into a personal isekai campaign where an AI GM frames the world, presents meaningful choices, resolves D20 fate checks, and carries your character's memory through every turn.",
+    "displayName": "Anify-GM",
+    "shortDescription": "Run Anify adventures with a local GM save.",
+    "longDescription": "Anify-GM frames solo or party adventures, loads the user's local campaign progress, resolves uncertain actions through the Anify Engine MCP D20 tools, and writes the updated adventure progress back to the local GM workspace.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
@@ -28,9 +29,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "\u767b\u5f55 Anify \u5e76\u542f\u52a8 DnD \u98ce\u683c TRPG \u5192\u9669\u3002",
-      "\u7528\u6211\u7684\u89d2\u8272\u5361\u7ee7\u7eed Anify \u8dd1\u56e2\u3002",
-      "\u521b\u5efa Anify \u6218\u5f79\u548c\u89d2\u8272\u6a21\u677f\u3002"
+      "\u767b\u5f55 Anify-GM \u5e76\u7ee7\u7eed\u6211\u7684\u5192\u9669\u3002",
+      "\u4ece\u672c\u5730\u5b58\u6863\u5f00\u542f\u4e00\u6bb5 Anify \u5192\u9669\u3002",
+      "\u548c\u5df2\u5f15\u5165\u7684\u89d2\u8272\u4e00\u8d77\u8dd1 Anify \u5192\u9669\u3002"
     ],
     "brandColor": "#7C3AED",
     "composerIcon": "./assets/anify-icon-64.png",

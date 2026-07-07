@@ -1,23 +1,24 @@
-# Character Memory And Consistency
+# GM Memory And Consistency
 
-Anify character AI is configured by user-authored profiles, while the plugin owns behavior controls for local long-term memory, consistency, and in-session reaction logic.
+Anify-GM owns GM progress and party-facing continuity. Installed Anify character plugins own their own persona memory and private/full-context history.
 
 ## Memory Files
 
 All first-version durable memory lives under:
 
 ```text
-CODEX_HOME/anify/users/userA
+CODEX_HOME/anify/userA/GM
 ```
 
 Use:
 
 - `profile.md`: stable facts, identity, stats, voice, values, boundaries, and backstory.
+- `progress.md`: durable cross-adventure progress, completed outcomes, unresolved hooks, and next-adventure seeds.
 - `gm-memory.md`: GM-only campaign continuity, hidden clocks, unresolved hooks, and world-state notes.
-- `character-memory.md`: character-facing episodic and relationship memory.
+- `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
 - `turn-log.md`: append-only visible session chronology.
 
-Do not write `.anify` memory files. Do not invent a second save root.
+Do not write `.anify` memory files. Do not use `CODEX_HOME/anify/users/userA`. Do not invent a second save root.
 
 ## Memory Update Rules
 
@@ -26,7 +27,8 @@ Update Markdown after each resolved player action:
 - Append a concise turn entry to `turn-log.md`.
 - Update `save.md` with current location, stats, inventory, flags, active quests, and scene summary.
 - Add only durable GM facts to `gm-memory.md`.
-- Add only character-known durable memories to `character-memory.md`.
+- Add only party-known durable memories to `party-memory.md`.
+- Update `progress.md` when an adventure ends or a durable cross-adventure fact changes.
 
 Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 
@@ -65,8 +67,9 @@ Character AI must not:
 For each turn, retrieve:
 
 - The active profile from `profile.md`.
+- The durable adventure record from `progress.md`.
 - The current save summary from `save.md`.
 - The last 3 to 7 turn-log entries.
-- Up to 5 relevant durable notes from `gm-memory.md` and `character-memory.md`.
+- Up to 5 relevant durable notes from `gm-memory.md` and `party-memory.md`.
 
 Keep the prompt small. Prefer relevant, high-salience memories over exhaustive history.
