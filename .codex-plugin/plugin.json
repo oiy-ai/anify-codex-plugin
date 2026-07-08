@@ -1,6 +1,6 @@
 {
   "name": "anify-gm",
-  "version": "0.2.0+codex.20260707135618",
+  "version": "0.2.0+codex.20260708151608",
   "description": "Run Anify adventures as the GM with Engine-backed D20 checks and local progress saves.",
   "author": {
     "name": "Local developer"
@@ -34,8 +34,8 @@
       "\u548c\u5df2\u5f15\u5165\u7684\u89d2\u8272\u4e00\u8d77\u8dd1 Anify \u5192\u9669\u3002"
     ],
     "brandColor": "#7C3AED",
-    "composerIcon": "./assets/anify-icon-64.png",
-    "logo": "./assets/anify-icon-512.png",
+    "composerIcon": "./assets/icon-192x192.png",
+    "logo": "./assets/icon-512x512.png",
     "screenshots": []
   }
 }

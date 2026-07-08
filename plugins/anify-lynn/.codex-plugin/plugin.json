@@ -1,6 +1,6 @@
 {
   "name": "anify-lynn",
-  "version": "0.1.0+codex.20260708151320",
+  "version": "0.1.0+codex.20260708151608",
   "description": "Chat with Lynn Tale using local mem0 character memory hooks and Engine MCP context.",
   "author": {
     "name": "Local developer"
@@ -21,7 +21,9 @@
       "\u548c Lynn \u79c1\u804a\u3002",
       "\u8ba9 Lynn \u52a0\u5165 Anify-GM \u5192\u9669\u3002",
       "\u8bfb\u53d6 Lynn \u7684\u672c\u5730 mem0 \u8bb0\u5fc6\u5e76\u7ee7\u7eed\u5bf9\u8bdd\u3002"
-    ]
+    ],
+    "composerIcon": "./assets/icon-192x192.png",
+    "logo": "./assets/icon-512x512.png"
   },
   "mcpServers": "./.mcp.json"
 }

@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+const webIconRoot = join(repoRoot, '..', 'anify-web', 'public', 'icons');
 
 function text(path) {
   return readFileSync(join(repoRoot, path), 'utf8');
@@ -14,6 +15,14 @@ function text(path) {
 
 function json(path) {
   return JSON.parse(text(path));
+}
+
+function bytes(path) {
+  return readFileSync(join(repoRoot, path));
+}
+
+function webIcon(path) {
+  return readFileSync(join(webIconRoot, path));
 }
 
 const gmSkill = text('skills/anify-gm-adventure/SKILL.md');
@@ -65,14 +74,15 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
   assert.equal(gmManifest.interface.displayName, 'Anify-GM');
   assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with a local GM save.');
   assert.match(gmManifest.interface.longDescription, /local campaign progress/);
-  assert.equal(gmManifest.interface.composerIcon, './assets/anify-icon-64.png');
-  assert.equal(gmManifest.interface.logo, './assets/anify-icon-512.png');
+  assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
+  assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
 
-  for (const size of [32, 64, 128, 256, 512, 1024]) {
-    const icon = readFileSync(join(repoRoot, `assets/anify-icon-${size}.png`));
+  for (const size of [192, 512]) {
+    const icon = bytes(`assets/icon-${size}x${size}.png`);
     assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
     assert.equal(icon.readUInt32BE(16), size);
     assert.equal(icon.readUInt32BE(20), size);
+    assert.deepEqual(icon, webIcon(`icon-${size}x${size}.png`));
   }
 });
 
@@ -119,8 +129,18 @@ test('role plugins expose persona skills and shared character workflow', () => {
     assert.equal(manifest.name, `anify-${slug}`);
     assert.equal(manifest.interface.displayName, displayName);
     assert.equal(manifest.interface.category, 'Entertainment');
+    assert.equal(manifest.interface.composerIcon, './assets/icon-192x192.png');
+    assert.equal(manifest.interface.logo, './assets/icon-512x512.png');
     assert.equal(manifest.mcpServers, './.mcp.json');
     assert.equal(manifest.hooks, undefined);
+
+    for (const size of [192, 512]) {
+      const icon = bytes(`${roleRoot(slug)}/assets/icon-${size}x${size}.png`);
+      assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
+      assert.equal(icon.readUInt32BE(16), size);
+      assert.equal(icon.readUInt32BE(20), size);
+      assert.deepEqual(icon, webIcon(`${slug}/icon-${size}x${size}.png`));
+    }
 
     const persona = text(`${roleRoot(slug)}/skills/anify-${slug}-persona/SKILL.md`);
     assert.match(persona, new RegExp(`CODEX_HOME/anify/userA/${character}`));

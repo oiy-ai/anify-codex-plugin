@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Anify">
-  <rect width="256" height="256" rx="48" fill="#111827"/>
-  <path d="M128 22 221 82 184 211H72L35 82 128 22Z" fill="#7C3AED"/>
-  <path d="M128 46 195 91 169 185H87L61 91 128 46Z" fill="#F8FAFC"/>
-  <path d="M129 68 172 171h-25l-8-24h-37l-8 24H69L112 68h17Zm-19 58h22l-11-32-11 32Z" fill="#111827"/>
-  <path d="M87 91 128 46l41 45-41 25-41-25Z" fill="#DDD6FE"/>
-  <path d="M87 91 128 116v69H87L61 91h26Z" fill="#EDE9FE"/>
-  <path d="M169 91h26l-26 94h-41v-69l41-25Z" fill="#C4B5FD"/>
-</svg>

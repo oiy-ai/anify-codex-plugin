@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Anify">
-  <rect width="64" height="64" rx="14" fill="#1F2937"/>
-  <path d="M32 7 55 22 46 52H18L9 22 32 7Z" fill="#7C3AED"/>
-  <path d="M32 13 48 24 42 46H22L16 24 32 13Z" fill="#F8FAFC"/>
-  <path d="M32 18 42 42H36L34 36H25L23 42H17L27 18h5Zm-5 13h6l-3-8-3 8Z" fill="#111827"/>
-</svg>
