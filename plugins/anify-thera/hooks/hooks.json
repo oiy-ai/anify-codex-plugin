@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Thera",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" user-prompt --character Thera",
             "timeout": 30,
             "statusMessage": "Recording Thera context"
           }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Thera",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" stop --character Thera",
             "timeout": 30,
             "statusMessage": "Saving Thera transcript"
           }

@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Lynn",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" user-prompt --character Lynn",
             "timeout": 30,
             "statusMessage": "Recording Lynn context"
           }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" record --character Lynn",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/anify_character_hooks.py\" stop --character Lynn",
             "timeout": 30,
             "statusMessage": "Saving Lynn transcript"
           }

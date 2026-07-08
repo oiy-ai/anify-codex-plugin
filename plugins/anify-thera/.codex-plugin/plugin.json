@@ -1,7 +1,7 @@
 {
   "name": "anify-thera",
-  "version": "0.1.0+codex.20260707135618",
-  "description": "Chat with Thera Valeria using Anify character memory hooks and Engine MCP context.",
+  "version": "0.1.0+codex.20260708144821",
+  "description": "Chat with Thera Valeria using local mem0 character memory hooks and Engine MCP context.",
   "author": {
     "name": "Local developer"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Anify-Thera",
     "shortDescription": "Chat privately or in a party with Thera.",
-    "longDescription": "Anify-Thera provides Thera Valeria's persona, shared Anify character chat instructions, the Anify Engine MCP connection, and lifecycle hooks that save full local conversation context under CODEX_HOME/anify/userA/Thera.",
+    "longDescription": "Anify-Thera provides Thera Valeria's persona, shared Anify character chat instructions, the Anify Engine MCP connection, and lifecycle hooks that save local mem0 character memory under CODEX_HOME/anify/userA/Thera/memory.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
@@ -20,7 +20,7 @@
     "defaultPrompt": [
       "\u548c Thera \u79c1\u804a\u3002",
       "\u8ba9 Thera \u52a0\u5165 Anify-GM \u5192\u9669\u3002",
-      "\u8bfb\u53d6 Thera \u7684\u4e3b\u8bb0\u5fc6\u5e76\u7ee7\u7eed\u5bf9\u8bdd\u3002"
+      "\u8bfb\u53d6 Thera \u7684\u672c\u5730 mem0 \u8bb0\u5fc6\u5e76\u7ee7\u7eed\u5bf9\u8bdd\u3002"
     ]
   },
   "mcpServers": "./.mcp.json"

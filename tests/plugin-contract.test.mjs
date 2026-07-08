@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,13 +144,19 @@ test('role hooks capture prompts, stops, compactions, and session starts', () =>
   );
 });
 
-test('character hook script stores full context and injects startup memory', () => {
+test('character hook script stores local mem0 character memory', () => {
   const tempDir = mkdtempSync(join(tmpdir(), 'anify-character-hooks-'));
+  const stubRoot = join(tempDir, 'python-stub');
+  installMem0Stub(stubRoot);
   const transcriptPath = join(tempDir, 'transcript.jsonl');
   writeFileSync(transcriptPath, '{"type":"user","text":"hello Lynn"}\n{"type":"assistant","text":"hello"}\n');
 
   const script = join(repoRoot, 'plugins/anify-lynn/hooks/anify_character_hooks.py');
-  const env = { ...process.env, CODEX_HOME: tempDir };
+  const env = {
+    ...process.env,
+    CODEX_HOME: tempDir,
+    PYTHONPATH: [stubRoot, process.env.PYTHONPATH].filter(Boolean).join(':'),
+  };
   const basePayload = {
     session_id: 'session-1',
     turn_id: 'turn-1',
@@ -160,28 +166,46 @@ test('character hook script stores full context and injects startup memory', () 
   };
 
   try {
-    const record = runHook(script, ['record', '--character', 'Lynn'], {
+    const record = runHook(script, ['user-prompt', '--character', 'Lynn'], {
       ...basePayload,
       hook_event_name: 'UserPromptSubmit',
-      prompt: 'hello Lynn',
+      prompt: 'what did we discuss about tea?',
     }, env);
-    assert.equal(record.stdout, '');
+    const promptContext = JSON.parse(record.stdout);
+    assert.match(promptContext.hookSpecificOutput.additionalContext, /Relevant Lynn memories from local mem0/);
 
     const workspace = join(tempDir, 'anify', 'userA', 'Lynn');
-    const eventLog = textFrom(workspace, 'history/hook-events.jsonl').trim().split('\n').map(JSON.parse);
+    const eventLog = textFrom(workspace, 'memory/hook-events.jsonl').trim().split('\n').map(JSON.parse);
     assert.equal(eventLog[0].event, 'UserPromptSubmit');
     assert.equal(eventLog[0].transcript_snapshot.available, true);
+    assert.match(eventLog[0].transcript_snapshot.snapshot_path, /memory\/transcripts/);
     assert.equal(textFromPath(eventLog[0].transcript_snapshot.snapshot_path), textFromPath(transcriptPath));
+    assert.equal(existsSync(join(workspace, 'memory', 'master.md')), false);
 
     runHook(script, ['post-compact', '--character', 'Lynn'], {
       ...basePayload,
       hook_event_name: 'PostCompact',
       trigger: 'auto',
     }, env);
-    const master = textFrom(workspace, 'memory/master.md');
-    assert.match(master, /PostCompact/);
-    assert.match(master, /Transcript tail excerpt/);
-    assert.match(master, /hello Lynn/);
+    const operations = textFrom(workspace, 'memory/memory-operations.jsonl').trim().split('\n').map(JSON.parse);
+    assert.equal(operations[0].status, 'stored');
+    assert.equal(operations[0].message_count, 2);
+
+    const mem0Adds = textFrom(workspace, 'memory/stub-adds.jsonl').trim().split('\n').map(JSON.parse);
+    assert.equal(mem0Adds[0].user_id, 'userA');
+    assert.equal(mem0Adds[0].agent_id, 'character:Lynn');
+    assert.equal(mem0Adds[0].run_id, 'session-1');
+    assert.equal(mem0Adds[0].infer, true);
+    assert.equal(mem0Adds[0].metadata.character, 'Lynn');
+    assert.equal(mem0Adds[0].metadata.memory_type, 'character_long_term');
+    assert.match(mem0Adds[0].metadata.source_snapshot_path, /memory\/transcripts/);
+    assert.deepEqual(mem0Adds[0].messages.map((message) => message.role), ['user', 'assistant']);
+
+    const mem0Config = JSON.parse(textFrom(workspace, 'memory/stub-config.json'));
+    assert.equal(mem0Config.history_db_path, join(workspace, 'memory', 'history.db'));
+    assert.equal(mem0Config.vector_store.provider, 'qdrant');
+    assert.equal(mem0Config.vector_store.config.path, join(workspace, 'memory', 'qdrant'));
+    assert.equal(mem0Config.vector_store.config.collection_name, 'anify_lynn');
 
     const startup = runHook(script, ['session-start', '--character', 'Lynn'], {
       ...basePayload,
@@ -189,8 +213,9 @@ test('character hook script stores full context and injects startup memory', () 
       source: 'startup',
     }, env);
     assert.match(startup.stdout, /Anify character startup context for Lynn/);
-    assert.match(startup.stdout, /agentic search/);
-    assert.match(startup.stdout, /Master memory/);
+    assert.match(startup.stdout, /Memory directory/);
+    assert.match(startup.stdout, /Loaded mem0 memories for Lynn/);
+    assert.doesNotMatch(startup.stdout, /Master memory/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
@@ -256,4 +281,51 @@ function textFrom(root, path) {
 
 function textFromPath(path) {
   return readFileSync(path, 'utf8');
+}
+
+function installMem0Stub(root) {
+  const moduleDir = join(root, 'mem0');
+  mkdirSync(moduleDir, { recursive: true });
+  writeFileSync(
+    join(moduleDir, '__init__.py'),
+    `
+import json
+from pathlib import Path
+
+
+class Memory:
+    def __init__(self, config):
+        self.config = config
+        self.root = Path(config["history_db_path"]).parent
+        self.root.mkdir(parents=True, exist_ok=True)
+        (self.root / "stub-config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(config)
+
+    def add(self, messages, *, user_id=None, agent_id=None, run_id=None, metadata=None, infer=True):
+        entry = {
+            "messages": messages,
+            "user_id": user_id,
+            "agent_id": agent_id,
+            "run_id": run_id,
+            "metadata": metadata,
+            "infer": infer,
+        }
+        with (self.root / "stub-adds.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False, separators=(",", ":")) + "\\n")
+        return {"results": [{"id": "add-1", "memory": "stored character memory", "event": "ADD"}]}
+
+    def search(self, query, *, filters=None, top_k=20, threshold=0.1):
+        entry = {"query": query, "filters": filters, "top_k": top_k, "threshold": threshold}
+        with (self.root / "stub-searches.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False, separators=(",", ":")) + "\\n")
+        return {"results": [{"id": "search-1", "memory": "Lynn promised to remember tea", "score": 0.91}]}
+
+    def get_all(self, *, filters=None, top_k=20):
+        return {"results": [{"id": "startup-1", "memory": "Lynn knows the user likes quiet tea"}]}
+`,
+    'utf8',
+  );
 }

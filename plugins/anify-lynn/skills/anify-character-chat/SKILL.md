@@ -19,19 +19,21 @@ If `CODEX_HOME` is unset, use `~/.codex/anify/userA/<Character>`. `userA` is res
 
 Expected files and folders:
 
-- `memory/master.md`: durable character memory maintained from compacted threads and session updates.
-- `history/hook-events.jsonl`: append-only hook metadata.
-- `history/transcripts/`: full transcript snapshots copied by hooks.
+- `memory/history.db`: mem0 local history database.
+- `memory/qdrant/`: mem0 local vector store.
+- `memory/hook-events.jsonl`: append-only hook metadata.
+- `memory/transcripts/`: full transcript snapshots copied by hooks.
+- `memory/memory-operations.jsonl`: mem0 write attempts and results.
 
 ## Startup Memory
 
-On a new thread, the bundled `SessionStart` hook injects the character workspace and the current `memory/master.md` excerpt when available.
+On a new thread, the bundled `SessionStart` hook injects the character workspace and recent local mem0 memories when available.
 
 Before responding:
 
 1. Read the persona skill.
-2. Use the injected memory context if present.
-3. If the user refers to prior events, unresolved details, or relationships, run targeted search over the character workspace history before answering. Search `memory/master.md`, `history/hook-events.jsonl`, and `history/transcripts/`.
+2. Use the injected mem0 memory context if present.
+3. If the user refers to prior events, unresolved details, or relationships, search the character's local mem0 memory before answering. If source inspection is needed, use `memory/hook-events.jsonl`, `memory/memory-operations.jsonl`, and `memory/transcripts/`.
 4. Use only relevant passages; do not dump raw hook logs unless the user asks to inspect memory.
 
 ## Chat Modes
