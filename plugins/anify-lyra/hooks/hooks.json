@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" session-start --character Lyra",
+            "timeout": 30,
+            "statusMessage": "Loading Lyra memory"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" user-prompt --character Lyra",
+            "timeout": 30,
+            "statusMessage": "Recording Lyra context"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" stop --character Lyra",
+            "timeout": 30,
+            "statusMessage": "Saving Lyra transcript"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" post-compact --character Lyra",
+            "timeout": 60,
+            "statusMessage": "Updating Lyra memory"
+          }
+        ]
+      }
+    ]
+  }
+}

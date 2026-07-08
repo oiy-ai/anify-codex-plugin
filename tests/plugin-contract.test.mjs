@@ -24,6 +24,11 @@ const memory = text('skills/anify-gm-adventure/references/memory-and-consistency
 const gmManifest = json('.codex-plugin/plugin.json');
 const marketplace = json('.agents/plugins/marketplace.json');
 const gmMcp = json('.mcp.json');
+const roles = [
+  ['lynn', 'Anify-Lynn', 'Lynn', 'Lynn Tale'],
+  ['thera', 'Anify-Thera', 'Thera', 'Thera Valeria'],
+  ['lyra', 'Anify-Lyra', 'Lyra', 'Lyra Oravia'],
+];
 
 function roleRoot(role) {
   return `plugins/anify-${role}`;
@@ -41,7 +46,7 @@ function roleHooks(role) {
   return json(`${roleRoot(role)}/hooks/hooks.json`);
 }
 
-test('marketplace exposes GM plus two role plugins', () => {
+test('marketplace exposes GM plus role plugins', () => {
   assert.equal(marketplace.name, 'anify-codex');
   assert.equal(marketplace.interface.displayName, 'Oiy AI');
   assert.deepEqual(
@@ -50,6 +55,7 @@ test('marketplace exposes GM plus two role plugins', () => {
       ['anify-gm', '.', 'Entertainment'],
       ['anify-lynn', './plugins/anify-lynn', 'Entertainment'],
       ['anify-thera', './plugins/anify-thera', 'Entertainment'],
+      ['anify-lyra', './plugins/anify-lyra', 'Entertainment'],
     ],
   );
 });
@@ -98,17 +104,17 @@ test('all plugins share the Anify Engine MCP config', () => {
   assert.equal(gmMcp.mcpServers.anify.type, 'http');
   assert.equal(gmMcp.mcpServers.anify.url, 'https://anify.ai/mcp');
   assert.equal(gmMcp.mcpServers.anify.bearer_token_env_var, undefined);
-  assert.deepEqual(roleMcp('lynn'), gmMcp);
-  assert.deepEqual(roleMcp('thera'), gmMcp);
+  for (const [slug] of roles) {
+    assert.deepEqual(roleMcp(slug), gmMcp);
+  }
 });
 
 test('role plugins expose persona skills and shared character workflow', () => {
-  const roles = [
-    ['lynn', 'Anify-Lynn', 'Lynn'],
-    ['thera', 'Anify-Thera', 'Thera'],
-  ];
+  const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
+  assert.match(sharedSkill, /memory\/history\.db/);
+  assert.match(sharedSkill, /memory\/qdrant/);
 
-  for (const [slug, displayName, character] of roles) {
+  for (const [slug, displayName, character, fullName] of roles) {
     const manifest = roleManifest(slug);
     assert.equal(manifest.name, `anify-${slug}`);
     assert.equal(manifest.interface.displayName, displayName);
@@ -118,30 +124,42 @@ test('role plugins expose persona skills and shared character workflow', () => {
 
     const persona = text(`${roleRoot(slug)}/skills/anify-${slug}-persona/SKILL.md`);
     assert.match(persona, new RegExp(`CODEX_HOME/anify/userA/${character}`));
-    assert.match(persona, new RegExp(character));
-  }
+    assert.match(persona, new RegExp(fullName));
 
-  assert.equal(
-    text('plugins/anify-lynn/skills/anify-character-chat/SKILL.md'),
-    text('plugins/anify-thera/skills/anify-character-chat/SKILL.md'),
-  );
+    const localWorkflow = text(`${roleRoot(slug)}/skills/anify-character-chat/SKILL.md`);
+    assert.match(localWorkflow, /\.\.\/\.\.\/shared\/anify-character\/skills\/anify-character-chat\/SKILL\.md/);
+  }
 });
 
 test('role hooks capture prompts, stops, compactions, and session starts', () => {
   const expectedEvents = ['SessionStart', 'UserPromptSubmit', 'Stop', 'PostCompact'];
-  for (const [slug, character] of [
-    ['lynn', 'Lynn'],
-    ['thera', 'Thera'],
-  ]) {
+  for (const [slug, , character] of roles) {
     const hooks = roleHooks(slug).hooks;
     assert.deepEqual(Object.keys(hooks).sort(), expectedEvents.sort());
-    assert.match(JSON.stringify(hooks), new RegExp(`--character ${character}`));
+    const encodedHooks = JSON.stringify(hooks);
+    assert.match(encodedHooks, /shared\/anify-character\/hooks\/anify_character_hooks\.py/);
+    assert.doesNotMatch(encodedHooks, /\.\.\/\.\.\//);
+    assert.match(encodedHooks, new RegExp(`--character ${character}`));
+    assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'hooks', 'anify_character_hooks.py')), false);
   }
 
-  assert.equal(
-    text('plugins/anify-lynn/hooks/anify_character_hooks.py'),
-    text('plugins/anify-thera/hooks/anify_character_hooks.py'),
-  );
+  assert.equal(existsSync(join(repoRoot, 'shared/anify-character/hooks/anify_character_hooks.py')), true);
+});
+
+test('role packages carry synced shared character runtime for plugin cache installs', () => {
+  const sharedHook = text('shared/anify-character/hooks/anify_character_hooks.py');
+  const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
+
+  for (const [slug] of roles) {
+    assert.equal(
+      text(`${roleRoot(slug)}/shared/anify-character/hooks/anify_character_hooks.py`),
+      sharedHook,
+    );
+    assert.equal(
+      text(`${roleRoot(slug)}/shared/anify-character/skills/anify-character-chat/SKILL.md`),
+      sharedSkill,
+    );
+  }
 });
 
 test('character hook script stores local mem0 character memory', () => {
@@ -151,7 +169,7 @@ test('character hook script stores local mem0 character memory', () => {
   const transcriptPath = join(tempDir, 'transcript.jsonl');
   writeFileSync(transcriptPath, '{"type":"user","text":"hello Lynn"}\n{"type":"assistant","text":"hello"}\n');
 
-  const script = join(repoRoot, 'plugins/anify-lynn/hooks/anify_character_hooks.py');
+  const script = join(repoRoot, 'shared/anify-character/hooks/anify_character_hooks.py');
   const env = {
     ...process.env,
     CODEX_HOME: tempDir,

@@ -23,7 +23,7 @@ MEMORY_STARTUP_TOP_K = 8
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["user-prompt", "stop", "post-compact", "session-start"])
-    parser.add_argument("--character", required=True, choices=["Lynn", "Thera"])
+    parser.add_argument("--character", required=True)
     args = parser.parse_args()
 
     payload = read_payload()
@@ -71,7 +71,7 @@ def ensure_workspace(character: str) -> Path:
 
 def character_workspace(character: str) -> Path:
     codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
-    return codex_home / "anify" / USER_ID / character
+    return codex_home / "anify" / USER_ID / safe_name(character)
 
 
 def memory_dir(workspace: Path) -> Path:
@@ -291,7 +291,7 @@ def memory_config(character: str, workspace: Path) -> dict[str, Any]:
         "vector_store": {
             "provider": "qdrant",
             "config": {
-                "collection_name": f"anify_{character.lower()}",
+                "collection_name": f"anify_{slug_name(character)}",
                 "path": str(mem_dir / "qdrant"),
                 "embedding_model_dims": 1536,
             },
@@ -440,6 +440,10 @@ def append_jsonl(path: Path, value: dict[str, Any]) -> None:
 def safe_name(value: Any) -> str:
     safe = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value)).strip("-")
     return safe[:120] or "unknown"
+
+
+def slug_name(value: Any) -> str:
+    return safe_name(value).lower().replace("-", "_")
 
 
 def utc_now() -> str:

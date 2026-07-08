@@ -1,0 +1,27 @@
+{
+  "name": "anify-lyra",
+  "version": "0.1.0+codex.20260708151320",
+  "description": "Chat with Lyra Oravia using local mem0 character memory hooks and Engine MCP context.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Anify-Lyra",
+    "shortDescription": "Chat privately or in a party with Lyra.",
+    "longDescription": "Anify-Lyra provides Lyra Oravia's persona, shared Anify character chat instructions, the Anify Engine MCP connection, and lifecycle hooks that save local mem0 character memory under CODEX_HOME/anify/userA/Lyra/memory.",
+    "developerName": "Local developer",
+    "category": "Entertainment",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "\u548c Lyra \u79c1\u804a\u3002",
+      "\u8ba9 Lyra \u52a0\u5165 Anify-GM \u5192\u9669\u3002",
+      "\u8bfb\u53d6 Lyra \u7684\u672c\u5730 mem0 \u8bb0\u5fc6\u5e76\u7ee7\u7eed\u5bf9\u8bdd\u3002"
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

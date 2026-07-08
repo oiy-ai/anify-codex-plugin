@@ -1,6 +1,6 @@
 {
   "name": "anify-thera",
-  "version": "0.1.0+codex.20260708144821",
+  "version": "0.1.0+codex.20260708151320",
   "description": "Chat with Thera Valeria using local mem0 character memory hooks and Engine MCP context.",
   "author": {
     "name": "Local developer"

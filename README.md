@@ -7,6 +7,9 @@ It provides:
 - `Anify-GM`: runs single-player or party TRPG adventures, reads and writes local GM progress under `CODEX_HOME/anify/userA/GM`, and uses the Anify Engine MCP for auth, context, D20 checks, and deterministic rule advice.
 - `Anify-Lynn`: private or group chat persona for Lynn Tale, with local mem0 character memory under `CODEX_HOME/anify/userA/Lynn/memory`.
 - `Anify-Thera`: private or group chat persona for Thera Valeria, with local mem0 character memory under `CODEX_HOME/anify/userA/Thera/memory`.
+- `Anify-Lyra`: private or group chat persona for Lyra Oravia, with local mem0 character memory under `CODEX_HOME/anify/userA/Lyra/memory`.
+
+Shared character runtime lives under `shared/anify-character/`. Role plugins keep only their local manifest, hook wiring, persona skill, synced shared runtime copy, and any future role-exclusive files. After editing shared character runtime, run `python3 scripts/sync_character_shared.py` so installed plugin archives include the same runtime.
 
 Use the `anify-gm-adventure` skill to start or continue a campaign. Use the role persona skills when chatting with characters directly or when adding them to a GM adventure. The public Codex plugins use standard MCP OAuth discovery only. The Codex shell runtime passes the caller's Firebase bearer token to Engine MCP through shell-owned runtime config.
 
