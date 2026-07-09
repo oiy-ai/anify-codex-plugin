@@ -1,11 +1,11 @@
 ---
 name: anify-installer
-description: Initialize the Anify Codex client with Engine login verification, remote GM save creation, old local workspace cleanup, and next-step plugin guidance. Use before Anify-GM or Anify character plugins are used on a fresh client install.
+description: Initialize the Anify Codex client with Engine login verification, remote GM save creation, and next-step plugin guidance. Use before Anify-GM or Anify character plugins are used on a fresh client install.
 ---
 
 # Anify Installer
 
-Use this skill when the user wants to initialize Anify in the Codex client, create the first remote GM save, clean old local Anify state, or asks what to do before using Anify-GM and character plugins.
+Use this skill when the user wants to initialize Anify in the Codex client, create the first remote GM save, or asks what to do before using Anify-GM and character plugins.
 
 ## Scope
 
@@ -13,7 +13,6 @@ Anify Installer owns first-run client setup only:
 
 - Verify the Anify Engine MCP login once.
 - Initialize the remote GM save through Engine MCP.
-- Remove obsolete local Anify user/runtime directories from older development builds.
 - Tell the user how to install and use Anify-GM and character plugins next.
 
 Do not run gameplay. Do not start an adventure. Do not ask for Firebase credentials inside Codex.
@@ -31,11 +30,6 @@ Do not run gameplay. Do not start an adventure. Do not ask for Firebase credenti
 3. Initialize the remote GM save by calling `anify_save_initialize` with those fields.
    - If a remote GM save already exists, do not overwrite it unless the user explicitly asks to reinitialize and confirms data replacement.
    - If the user confirms replacement, call `anify_save_initialize` with `force: true`.
-4. Remove obsolete local Anify state:
-
-```bash
-python3 "${PLUGIN_ROOT}/scripts/anify_installer.py" cleanup-local-state
-```
 
 ## Final Guidance
 

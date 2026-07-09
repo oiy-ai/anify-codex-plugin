@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -68,7 +66,7 @@ test('marketplace exposes installer, GM, and role plugins', () => {
   );
 });
 
-test('installer plugin initializes remote saves and cleans obsolete local state', () => {
+test('installer plugin initializes remote saves through Engine MCP', () => {
   assert.equal(installerManifest.name, 'anify-installer');
   assert.equal(installerManifest.interface.displayName, 'Anify Installer');
   assert.equal(installerManifest.skills, './skills/');
@@ -78,7 +76,7 @@ test('installer plugin initializes remote saves and cleans obsolete local state'
 
   const installerSkill = text('plugins/anify-installer/skills/anify-installer/SKILL.md');
   assert.match(installerSkill, /anify_save_initialize/);
-  assert.match(installerSkill, /cleanup-local-state/);
+  assert.doesNotMatch(installerSkill, /cleanup-local-state/);
   assert.doesNotMatch(installerSkill, /install-runtime|mem0|local GM Markdown save/i);
 
   for (const size of [192, 512]) {
@@ -87,22 +85,6 @@ test('installer plugin initializes remote saves and cleans obsolete local state'
     assert.equal(icon.readUInt32BE(16), size);
     assert.equal(icon.readUInt32BE(20), size);
     assert.deepEqual(icon, webIcon(`icon-${size}x${size}.png`));
-  }
-
-  const tempDir = mkdtempSync(join(tmpdir(), 'anify-installer-cleanup-'));
-  try {
-    mkdirSync(join(tempDir, 'anify/users/userA/GM'), { recursive: true });
-    mkdirSync(join(tempDir, 'anify/runtime/python'), { recursive: true });
-    writeFileSync(join(tempDir, 'anify/users/userA/GM/save.md'), 'legacy');
-    const result = spawnSync('python3', [
-      join(repoRoot, 'plugins/anify-installer/scripts/anify_installer.py'),
-      'cleanup-local-state',
-    ], { encoding: 'utf8', env: { ...process.env, CODEX_HOME: tempDir } });
-    assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.equal(existsSync(join(tempDir, 'anify/users')), false);
-    assert.equal(existsSync(join(tempDir, 'anify/runtime')), false);
-  } finally {
-    rmSync(tempDir, { recursive: true, force: true });
   }
 });
 
@@ -135,7 +117,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
     assert.match(gmSkill, new RegExp(tool));
   }
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
-    assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/userA|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
+    assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
     assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
     assert.match(source, /remote|Engine MCP|anify_/i);
   }

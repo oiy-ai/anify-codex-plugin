@@ -4,7 +4,7 @@ This repo packages local Codex plugins for Anify GM sessions and character chat.
 
 ## Plugins
 
-- `Anify Installer`: verifies Engine login, initializes the remote GM save, and cleans obsolete local Anify state from older development builds.
+- `Anify Installer`: verifies Engine login and initializes the remote GM save.
 - `Anify-GM`: runs single-player or party TRPG adventures with remote GM saves through Anify Engine MCP.
 - `Anify-Lynn`: private or group chat persona for Lynn Tale, with remote long-term character memory through Anify Engine MCP.
 - `Anify-Thera`: private or group chat persona for Thera Valeria, with remote long-term character memory through Anify Engine MCP.
@@ -21,9 +21,3 @@ Anify Codex plugins do not maintain local user workspaces. GM saves and role mem
 - GM save tools: `anify_save_initialize`, `anify_save_get`, `anify_save_update`.
 - Character memory tools: `anify_memory_search`, `anify_memory_remember`.
 - Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_resolve_action`.
-
-The Installer cleanup script removes obsolete local development paths:
-
-```bash
-python3 plugins/anify-installer/scripts/anify_installer.py cleanup-local-state
-```
