@@ -1,34 +1,27 @@
 # GM Memory And Consistency
 
-Anify-GM owns GM progress and party-facing continuity. Installed Anify character plugins own their own persona memory and private/full-context history.
+Anify-GM owns GM progress and party-facing continuity through Engine MCP. Installed Anify character plugins own their own persona memory through the same Engine MCP server.
 
-## Memory Files
-
-All first-version durable memory lives under:
-
-```text
-CODEX_HOME/anify/users/userA/GM
-```
+## Remote Memory And Save State
 
 Use:
 
-- `profile.md`: stable facts, identity, stats, voice, values, boundaries, and backstory.
-- `progress.md`: durable cross-adventure progress, completed outcomes, unresolved hooks, and next-adventure seeds.
-- `gm-memory.md`: GM-only campaign continuity, hidden clocks, unresolved hooks, and world-state notes.
-- `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
-- `turn-log.md`: append-only visible session chronology.
+- `anify_save_get`: retrieve profile, current state, progress, GM memory, party memory, and recent turn log.
+- `anify_save_update`: patch current state, progress, GM memory, party memory, and append resolved turn entries.
+- `anify_memory_search`: retrieve character-specific durable memories.
+- `anify_memory_remember`: store character-specific durable memories.
 
-Do not write `.anify` memory files. Do not use `CODEX_HOME/anify/userA`. Do not invent a second save root.
+Do not write `.anify` memory files. Do not create or inspect a local Anify user workspace.
 
 ## Memory Update Rules
 
-Update Markdown after each resolved player action:
+After each resolved player action:
 
-- Append a concise turn entry to `turn-log.md`.
-- Update `save.md` with current location, stats, inventory, flags, active quests, and scene summary.
-- Add only durable GM facts to `gm-memory.md`.
-- Add only party-known durable memories to `party-memory.md`.
-- Update `progress.md` when an adventure ends or a durable cross-adventure fact changes.
+- Append a concise turn entry with `anify_save_update`.
+- Patch current location, stats, inventory, flags, active quests, and scene summary when they change.
+- Add only durable GM facts to GM memory.
+- Add only party-known durable memories to party memory.
+- Update progress when an adventure ends or a durable cross-adventure fact changes.
 
 Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 
@@ -51,7 +44,7 @@ Character AI may:
 - React emotionally.
 - Offer short in-character advice.
 - Notice inconsistencies from the character's point of view.
-- Update memory.
+- Update memory through `anify_memory_remember`.
 - Suggest a likely next action as a suggestion, not a command.
 
 Character AI must not:
@@ -66,10 +59,8 @@ Character AI must not:
 
 For each turn, retrieve:
 
-- The active profile from `profile.md`.
-- The durable adventure record from `progress.md`.
-- The current save summary from `save.md`.
-- The last 3 to 7 turn-log entries.
-- Up to 5 relevant durable notes from `gm-memory.md` and `party-memory.md`.
+- The remote GM save from `anify_save_get`.
+- Fresh world context from `anify_get_context` only when needed.
+- Character memories from `anify_memory_search` when a role plugin is active or when the user references prior relationship/context.
 
 Keep the prompt small. Prefer relevant, high-salience memories over exhaustive history.

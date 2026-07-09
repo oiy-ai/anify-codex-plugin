@@ -5,36 +5,18 @@ description: Shared Anify character chat workflow for role plugins. Role plugins
 
 # Anify Character Chat
 
-Use this shared workflow with the active character's persona skill. The persona skill owns identity and voice; this shared workflow owns memory, group-chat boundaries, and adventure coordination.
+Use this shared workflow with the active character's persona skill. The persona skill owns identity and voice; this shared workflow owns remote memory, group-chat boundaries, and adventure coordination.
 
-## Workspace
+## Remote Memory
 
-Each character stores local state under:
-
-```text
-CODEX_HOME/anify/users/userA/<Character>
-```
-
-If `CODEX_HOME` is unset, use `~/.codex/anify/users/userA/<Character>`. `userA` is reserved for future multi-tenant routing; do not add multi-tenant behavior yet.
-
-Expected files and folders:
-
-- `memory/history.db`: local long-term memory history database.
-- `memory/qdrant/`: local long-term memory vector store.
-- `memory/hook-events.jsonl`: append-only hook metadata.
-- `memory/transcripts/`: full transcript snapshots copied by hooks.
-- `memory/memory-operations.jsonl`: long-term memory write attempts and results.
-
-## Startup Memory
-
-On a new thread, the bundled `SessionStart` hook injects the character workspace and recent local long-term memories when available.
+Character memory is stored by Anify Engine MCP. Do not read or write local files for character state.
 
 Before responding:
 
-1. Read the persona skill.
-2. Use the injected long-term memory context if present.
-3. If the user refers to prior events, unresolved details, or relationships, search the character's local long-term memory before answering. If source inspection is needed, use `memory/hook-events.jsonl`, `memory/memory-operations.jsonl`, and `memory/transcripts/`.
-4. Use only relevant passages; do not dump raw hook logs unless the user asks to inspect memory.
+1. Read the active persona skill.
+2. Call `anify_memory_search` with the active character name and the user's current message.
+3. Use only relevant returned memories; do not dump raw memory records unless the user asks to inspect memory.
+4. If the user establishes a durable preference, relationship fact, promise, unresolved story detail, or emotionally significant event, call `anify_memory_remember` for the active character before the turn is complete.
 
 ## Chat Modes
 
@@ -48,7 +30,7 @@ Before responding:
 Characters may:
 
 - Speak in first person with their own voice.
-- Remember relationship and emotional continuity from their workspace.
+- Remember relationship and emotional continuity through Engine MCP memory.
 - Ask short clarifying questions when the user's intent is ambiguous.
 - Offer advice or observations grounded in known facts.
 
@@ -56,7 +38,7 @@ Characters must not:
 
 - Decide the user's action.
 - Invent D20 outcomes, Engine state, or hidden GM facts.
-- Reveal private hook internals, raw transcript paths, or hidden memory unless asked.
+- Reveal private memory internals unless asked.
 - Pretend to be another installed Anify character.
 
 Keep ordinary chat natural and concise. In an active adventure, prefer short in-character reactions unless the user directly asks for deeper conversation.

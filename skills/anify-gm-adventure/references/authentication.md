@@ -16,10 +16,10 @@ The public Codex client uses normal remote MCP OAuth discovery. The Codex shell 
 
 Before starting or continuing an adventure:
 
-1. Read local Markdown state from `CODEX_HOME/anify/users/userA/GM`.
-2. If any required save file is missing, stop and tell the user to complete Anify Installer or Web initialization.
-3. If `save.md` has no `Adventure session`, call `anify_start_adventure` and continue only if it returns `readyForGameplay: true`.
-4. If `save.md` already has an `Adventure session`, do not call `anify_start_adventure`; keep the saved session id and continue with `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
+1. Call `anify_save_get`.
+2. If the remote GM save is not initialized, stop and tell the user to complete Anify Installer or Web initialization.
+3. If the remote save has no active `adventure_session_id`, call `anify_start_adventure` and continue only if it returns `readyForGameplay: true`.
+4. If the remote save already has an active `adventure_session_id`, do not call `anify_start_adventure`; continue with `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
 5. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.
@@ -38,14 +38,6 @@ The Anify MCP server follows the remote HTTP MCP OAuth pattern:
 
 Do not ask the user to paste Firebase email/password into Codex.
 
-## Local Save Authority
+## Save Authority
 
-Authentication gates Engine tools only. It does not make Engine the save authority in this development architecture.
-
-Codex must read and write the local Markdown files in:
-
-```text
-CODEX_HOME/anify/users/userA/GM
-```
-
-Engine MCP returns context, checks, and rule deltas. Codex applies them to local Markdown. In Codex shell runs, the Engine MCP bearer is the same Firebase token that authenticated the shell request.
+Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, and `anify_save_update`; it must not create or maintain a local Anify user workspace.

@@ -7,6 +7,8 @@ This protocol keeps Engine rules, GM narration, and Character AI independently e
 Engine MCP owns:
 
 - Firebase-gated tool access.
+- Remote GM save state through `anify_save_get` and `anify_save_update`.
+- Character long-term memory through `anify_memory_search` and `anify_memory_remember`.
 - World context loaded from Engine KV.
 - D20 check results.
 - Deterministic rule advice and state deltas.
@@ -15,13 +17,12 @@ GM AI owns:
 
 - Scene framing, NPC actions, pacing, hidden quest framework, and player-facing consequences.
 - DC, modifier, advantage/disadvantage, and stakes before calling `roll_check`.
-- Applying Engine deltas into `save.md` and appending `turn-log.md`.
-- Updating `gm-memory.md`.
+- Translating Engine deltas into compact remote save patches.
 
 Installed Anify character plugins own:
 
-- Character voice, memories, goals, fears, emotional response, habits, values, and interpersonal reactions.
-- Character-facing memory updates in their own `CODEX_HOME/anify/users/userA/<Character>` workspaces.
+- Character voice, goals, fears, emotional response, habits, values, and interpersonal reactions.
+- Character-facing memory decisions through Engine MCP.
 
 Character plugins must not:
 
@@ -29,19 +30,6 @@ Character plugins must not:
 - Choose or alter D20 outcomes.
 - Reveal hidden GM notes.
 - Force the user to take an action.
-
-## Local Markdown Files
-
-Use these files under `CODEX_HOME/anify/users/userA/GM`:
-
-- `profile.md`: stable player and character profile.
-- `progress.md`: durable cross-adventure progress, completed adventure outcomes, unresolved hooks, and next-adventure seeds.
-- `save.md`: current world, location, player stats, inventory, quests, flags, and active scene summary.
-- `gm-memory.md`: durable GM-facing campaign memory and hidden continuity notes.
-- `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
-- `turn-log.md`: append-only chronological visible turn log.
-
-Do not create missing files during GM play. Missing save files mean Anify Installer or Web initialization has not completed yet.
 
 ## Stable Packets
 
@@ -102,7 +90,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ### EngineResolution
 
-`anify_resolve_action` returns rule advice and deltas for Codex to apply to Markdown:
+`anify_resolve_action` returns rule advice and deltas for Codex to apply with `anify_save_update`:
 
 ```json
 {
@@ -113,7 +101,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
     "inventory": [],
     "flags": []
   },
-  "ruleAdvice": "Resolve investigate as successful and update the local Markdown save."
+  "ruleAdvice": "Resolve investigate as successful and update the remote save."
 }
 ```
 
@@ -138,7 +126,7 @@ or this object:
 
 ## Turn Execution
 
-1. Read local Markdown state.
+1. Call `anify_save_get`.
 2. Call `anify_get_context` if fresh world context is needed.
 3. GM builds or updates `TurnPacket`.
 4. GM presents scene and exactly three options.
@@ -147,7 +135,7 @@ or this object:
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
 9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-10. Codex updates `save.md`, `gm-memory.md`, `party-memory.md`, and appends `turn-log.md`.
+10. Codex calls `anify_save_update` with compact state/progress/memory changes and the turn entry.
 11. GM presents the next scene and choices.
 
 ## GM Narration Rules

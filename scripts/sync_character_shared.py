@@ -7,7 +7,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE = REPO_ROOT / "shared" / "anify-character"
-ROLE_PLUGINS = sorted((REPO_ROOT / "plugins").glob("anify-*"))
+ROLE_PLUGINS = sorted(
+    path for path in (REPO_ROOT / "plugins").glob("anify-*")
+    if path.name != "anify-installer"
+)
 
 
 def main() -> int:
@@ -16,8 +19,7 @@ def main() -> int:
 
     for plugin_root in ROLE_PLUGINS:
         manifest = plugin_root / ".codex-plugin" / "plugin.json"
-        hooks = plugin_root / "hooks" / "hooks.json"
-        if not manifest.exists() or not hooks.exists():
+        if not manifest.exists():
             continue
 
         target = plugin_root / "shared" / "anify-character"
@@ -25,11 +27,6 @@ def main() -> int:
             shutil.rmtree(target)
         shutil.copytree(SOURCE, target)
 
-        for hook in [
-            target / "hooks" / "anify_character_hooks.py",
-            target / "hooks" / "anify_memory_runtime.sh",
-        ]:
-            hook.chmod(hook.stat().st_mode | 0o111)
         print(f"synced {SOURCE.relative_to(REPO_ROOT)} -> {target.relative_to(REPO_ROOT)}")
 
     return 0

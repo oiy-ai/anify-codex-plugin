@@ -3,7 +3,7 @@
     "anify": {
       "type": "http",
       "url": "https://anify.ai/mcp",
-      "note": "Official Anify Engine MCP server. Anify Installer uses this connection only to verify the initial client login."
+      "note": "Official Anify Engine MCP server. Anify Installer uses this connection to verify client login and initialize the remote GM save."
     }
   }
 }
