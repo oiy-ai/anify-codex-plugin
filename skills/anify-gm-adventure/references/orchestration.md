@@ -96,12 +96,39 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 {
   "actionKind": "investigate",
   "outcome": "success",
+  "checkResult": {
+    "outcome": "success"
+  },
   "stateDelta": {
     "player": {},
     "inventory": [],
     "flags": []
   },
-  "ruleAdvice": "Resolve investigate as successful and update the remote save."
+  "ruleAdvice": "Resolve investigate as successful and update the remote save.",
+  "saveUpdateArguments": {
+    "patch": {
+      "state": {
+        "last_action": "Search the grove",
+        "last_action_kind": "investigate",
+        "last_check_outcome": "success",
+        "last_rule_advice": "Resolve investigate as successful and update the remote save."
+      }
+    },
+    "turn_entry": {
+      "action": "Search the grove",
+      "actionKind": "investigate",
+      "outcome": "success",
+      "check_result": {
+        "outcome": "success"
+      },
+      "state_delta": {
+        "player": {},
+        "inventory": [],
+        "flags": []
+      },
+      "rule_advice": "Resolve investigate as successful and update the remote save."
+    }
+  }
 }
 ```
 
@@ -135,7 +162,7 @@ or this object:
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
 9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-10. Codex calls `anify_save_update` with compact state/progress/memory changes and the turn entry.
+10. Codex calls `anify_save_update` with Engine's `saveUpdateArguments`, plus compact state/progress/memory additions only when needed for continuity.
 11. GM presents the next scene and choices.
 
 ## GM Narration Rules

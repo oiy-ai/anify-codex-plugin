@@ -40,9 +40,9 @@ Run every active turn in this exact order:
 4. **GM options**: provide exactly three viable options. Also state that the user may choose another action.
 5. **User action**: wait for or parse the user's selected/custom action.
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check`. The GM must not invent the D20 result.
-7. **Engine rule resolution**: call `anify_resolve_action` with the user action, remote save summary, and check result.
+7. **Engine rule resolution**: call `anify_resolve_action` with the user action, remote save summary, and the exact `roll_check` result. Do not call it without `check_result`.
 8. **Character AI reaction**: if Anify character plugins are active, let those persona instructions control character speech. If no character plugin is active, produce an NPC or companion reaction only when fiction calls for it; otherwise use the exact token `NO_REPLY`.
-9. **Persist remote state**: call `anify_save_update` with state/progress/memory changes and append the resolved turn entry.
+9. **Persist remote state**: call `anify_save_update` with Engine's returned `saveUpdateArguments`, adding only compact scene/progress/memory fields that are needed for continuity.
 10. **GM advancement**: present the consequence and next three options.
 
 Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration.

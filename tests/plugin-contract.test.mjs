@@ -116,6 +116,10 @@ test('GM skill uses Engine remote save and memory tools', () => {
   ]) {
     assert.match(gmSkill, new RegExp(tool));
   }
+  assert.match(gmSkill, /saveUpdateArguments/);
+  assert.match(orchestration, /saveUpdateArguments/);
+  assert.match(d20, /saveUpdateArguments/);
+  assert.match(d20, /reject missing or fabricated outcomes/);
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
     assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);

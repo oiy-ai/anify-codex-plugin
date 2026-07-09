@@ -70,8 +70,9 @@ Output:
 - Call `anify_start_adventure` only when the remote save has no active `adventure_session_id`.
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
+- Pass the full `CheckResult` to `anify_resolve_action`; it must reject missing or fabricated outcomes.
 - Persist the full `CheckResult` through `anify_save_update`.
 - If `secret` is true, summarize the fictional consequence without revealing the raw roll unless the user asks to inspect state.
 - Every player action that affects uncertain fiction must pass through this tool.
 
-After `roll_check`, call `anify_resolve_action` so Engine can return rule advice and save deltas for `anify_save_update`.
+After `roll_check`, call `anify_resolve_action` so Engine can return rule advice, save deltas, and `saveUpdateArguments`. Use `saveUpdateArguments` as the base payload for `anify_save_update`.
