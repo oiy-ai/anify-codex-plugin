@@ -31,8 +31,10 @@ const authentication = text('skills/anify-gm-adventure/references/authentication
 const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
 const gmManifest = json('.codex-plugin/plugin.json');
+const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
 const marketplace = json('.agents/plugins/marketplace.json');
 const gmMcp = json('.mcp.json');
+const installerMcp = json('plugins/anify-installer/.mcp.json');
 const roles = [
   ['lynn', 'Anify-Lynn', 'Lynn', 'Lynn Tale'],
   ['thera', 'Anify-Thera', 'Thera', 'Thera Valeria'],
@@ -55,25 +57,44 @@ function roleHooks(role) {
   return json(`${roleRoot(role)}/hooks/hooks.json`);
 }
 
-test('marketplace exposes GM plus role plugins', () => {
+test('marketplace exposes installer, GM, and role plugins', () => {
   assert.equal(marketplace.name, 'anify-codex');
   assert.equal(marketplace.interface.displayName, 'Oiy AI');
   assert.deepEqual(
-    marketplace.plugins.map((plugin) => [plugin.name, plugin.source.path, plugin.category]),
+    marketplace.plugins.map((plugin) => [plugin.name, plugin.source.path, plugin.category, plugin.policy.authentication]),
     [
-      ['anify-gm', '.', 'Entertainment'],
-      ['anify-lynn', './plugins/anify-lynn', 'Entertainment'],
-      ['anify-thera', './plugins/anify-thera', 'Entertainment'],
-      ['anify-lyra', './plugins/anify-lyra', 'Entertainment'],
+      ['anify-installer', './plugins/anify-installer', 'Productivity', 'ON_INSTALL'],
+      ['anify-gm', '.', 'Entertainment', 'ON_USE'],
+      ['anify-lynn', './plugins/anify-lynn', 'Entertainment', 'ON_USE'],
+      ['anify-thera', './plugins/anify-thera', 'Entertainment', 'ON_USE'],
+      ['anify-lyra', './plugins/anify-lyra', 'Entertainment', 'ON_USE'],
     ],
   );
+});
+
+test('installer plugin identity, MCP, assets, and skill are valid', () => {
+  assert.equal(installerManifest.name, 'anify-installer');
+  assert.equal(installerManifest.interface.displayName, 'Anify Installer');
+  assert.equal(installerManifest.skills, './skills/');
+  assert.equal(installerManifest.mcpServers, './.mcp.json');
+  assert.equal(installerMcp.mcpServers.anify.type, 'http');
+  assert.equal(installerMcp.mcpServers.anify.url, 'https://anify.ai/mcp');
+  assert.match(text('plugins/anify-installer/skills/anify-installer/SKILL.md'), /init-save --name/);
+
+  for (const size of [192, 512]) {
+    const icon = bytes(`plugins/anify-installer/assets/icon-${size}x${size}.png`);
+    assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
+    assert.equal(icon.readUInt32BE(16), size);
+    assert.equal(icon.readUInt32BE(20), size);
+    assert.deepEqual(icon, webIcon(`icon-${size}x${size}.png`));
+  }
 });
 
 test('GM plugin identity and assets match Anify-GM branding', () => {
   assert.equal(gmManifest.name, 'anify-gm');
   assert.equal(gmManifest.interface.displayName, 'Anify-GM');
-  assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with a local GM save.');
-  assert.match(gmManifest.interface.longDescription, /local campaign progress/);
+  assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with an initialized GM save.');
+  assert.match(gmManifest.interface.longDescription, /initialized local campaign progress/);
   assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
   assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
 
@@ -91,21 +112,24 @@ test('GM skill uses the GM workspace and progress save files', () => {
     assert.match(gmSkill, new RegExp(file.replace('.', '\\.')));
   }
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
-    assert.match(source, /CODEX_HOME\/anify\/userA\/GM/);
+    assert.match(source, /CODEX_HOME\/anify\/users\/userA\/GM/);
+    assert.doesNotMatch(source, /CODEX_HOME\/anify\/userA\/GM/);
   }
-  assert.match(gmSkill, /`CODEX_HOME\/anify\/users\/userA`/);
-  assert.match(memory, /`CODEX_HOME\/anify\/users\/userA`/);
+  assert.match(gmSkill, /run Anify Installer/);
+  assert.match(gmSkill, /Do not create missing save files/);
 });
 
 test('GM skill keeps Engine MCP as the D20 authority', () => {
   for (const tool of [
-    'anify_auth_status',
     'anify_start_adventure',
     'anify_get_context',
     'roll_check',
     'anify_resolve_action',
   ]) {
     assert.match(gmSkill, new RegExp(tool));
+  }
+  for (const source of [gmSkill, orchestration, authentication, d20]) {
+    assert.doesNotMatch(source, /anify_auth_status/);
   }
   assert.match(d20, /The GM must not alter `rolls`/);
 });
@@ -123,6 +147,8 @@ test('role plugins expose persona skills and shared character workflow', () => {
   const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
   assert.match(sharedSkill, /memory\/history\.db/);
   assert.match(sharedSkill, /memory\/qdrant/);
+  assert.match(sharedSkill, /CODEX_HOME\/anify\/users\/userA\/<Character>/);
+  assert.doesNotMatch(sharedSkill, /mem0/i);
 
   for (const [slug, displayName, character, fullName] of roles) {
     const manifest = roleManifest(slug);
@@ -143,7 +169,7 @@ test('role plugins expose persona skills and shared character workflow', () => {
     }
 
     const persona = text(`${roleRoot(slug)}/skills/anify-${slug}-persona/SKILL.md`);
-    assert.match(persona, new RegExp(`CODEX_HOME/anify/userA/${character}`));
+    assert.match(persona, new RegExp(`CODEX_HOME/anify/users/userA/${character}`));
     assert.match(persona, new RegExp(fullName));
 
     const localWorkflow = text(`${roleRoot(slug)}/skills/anify-character-chat/SKILL.md`);
@@ -157,17 +183,21 @@ test('role hooks capture prompts, stops, compactions, and session starts', () =>
     const hooks = roleHooks(slug).hooks;
     assert.deepEqual(Object.keys(hooks).sort(), expectedEvents.sort());
     const encodedHooks = JSON.stringify(hooks);
-    assert.match(encodedHooks, /shared\/anify-character\/hooks\/anify_character_hooks\.py/);
+    assert.match(encodedHooks, /shared\/anify-character\/hooks\/anify_memory_runtime\.sh/);
+    assert.doesNotMatch(encodedHooks, /python3/);
+    assert.doesNotMatch(encodedHooks, /anify_character_hooks\.py/);
     assert.doesNotMatch(encodedHooks, /\.\.\/\.\.\//);
     assert.match(encodedHooks, new RegExp(`--character ${character}`));
     assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'hooks', 'anify_character_hooks.py')), false);
   }
 
   assert.equal(existsSync(join(repoRoot, 'shared/anify-character/hooks/anify_character_hooks.py')), true);
+  assert.equal(existsSync(join(repoRoot, 'shared/anify-character/hooks/anify_memory_runtime.sh')), true);
 });
 
 test('role packages carry synced shared character runtime for plugin cache installs', () => {
   const sharedHook = text('shared/anify-character/hooks/anify_character_hooks.py');
+  const sharedWrapper = text('shared/anify-character/hooks/anify_memory_runtime.sh');
   const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
 
   for (const [slug] of roles) {
@@ -176,13 +206,17 @@ test('role packages carry synced shared character runtime for plugin cache insta
       sharedHook,
     );
     assert.equal(
+      text(`${roleRoot(slug)}/shared/anify-character/hooks/anify_memory_runtime.sh`),
+      sharedWrapper,
+    );
+    assert.equal(
       text(`${roleRoot(slug)}/shared/anify-character/skills/anify-character-chat/SKILL.md`),
       sharedSkill,
     );
   }
 });
 
-test('character hook script stores local mem0 character memory', () => {
+test('character hook script stores local long-term character memory', () => {
   const tempDir = mkdtempSync(join(tmpdir(), 'anify-character-hooks-'));
   const stubRoot = join(tempDir, 'python-stub');
   installMem0Stub(stubRoot);
@@ -210,9 +244,10 @@ test('character hook script stores local mem0 character memory', () => {
       prompt: 'what did we discuss about tea?',
     }, env);
     const promptContext = JSON.parse(record.stdout);
-    assert.match(promptContext.hookSpecificOutput.additionalContext, /Relevant Lynn memories from local mem0/);
+    assert.match(promptContext.hookSpecificOutput.additionalContext, /Relevant Lynn long-term memories/);
+    assert.doesNotMatch(promptContext.hookSpecificOutput.additionalContext, /mem0/i);
 
-    const workspace = join(tempDir, 'anify', 'userA', 'Lynn');
+    const workspace = join(tempDir, 'anify', 'users', 'userA', 'Lynn');
     const eventLog = textFrom(workspace, 'memory/hook-events.jsonl').trim().split('\n').map(JSON.parse);
     assert.equal(eventLog[0].event, 'UserPromptSubmit');
     assert.equal(eventLog[0].transcript_snapshot.available, true);
@@ -252,8 +287,55 @@ test('character hook script stores local mem0 character memory', () => {
     }, env);
     assert.match(startup.stdout, /Anify character startup context for Lynn/);
     assert.match(startup.stdout, /Memory directory/);
-    assert.match(startup.stdout, /Loaded mem0 memories for Lynn/);
+    assert.match(startup.stdout, /Loaded long-term memories for Lynn/);
+    assert.doesNotMatch(startup.stdout, /mem0/i);
     assert.doesNotMatch(startup.stdout, /Master memory/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('installer script initializes local GM save files', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'anify-installer-'));
+  const script = join(repoRoot, 'plugins/anify-installer/scripts/anify_installer.py');
+  const env = { ...process.env, CODEX_HOME: tempDir };
+
+  try {
+    const result = spawnSync('python3', [
+      script,
+      'init-save',
+      '--name',
+      'Mira',
+      '--profession',
+      'Ranger',
+      '--gender',
+      'Female',
+      '--other',
+      'Keeps a silver compass.',
+    ], { encoding: 'utf8', env });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+
+    const workspace = join(tempDir, 'anify', 'users', 'userA', 'GM');
+    for (const file of ['profile.md', 'progress.md', 'save.md', 'gm-memory.md', 'party-memory.md', 'turn-log.md']) {
+      assert.equal(existsSync(join(workspace, file)), true);
+    }
+    assert.match(textFrom(workspace, 'profile.md'), /Name: Mira/);
+    assert.match(textFrom(workspace, 'profile.md'), /Profession: Ranger/);
+    assert.match(textFrom(workspace, 'profile.md'), /Gender: Female/);
+    assert.match(textFrom(workspace, 'save.md'), /Keeps a silver compass/);
+
+    const rerun = spawnSync('python3', [
+      script,
+      'init-save',
+      '--name',
+      'Mira',
+      '--profession',
+      'Ranger',
+      '--gender',
+      'Female',
+    ], { encoding: 'utf8', env });
+    assert.notEqual(rerun.status, 0);
+    assert.match(rerun.stderr || rerun.stdout, /already exists/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

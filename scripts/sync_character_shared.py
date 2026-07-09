@@ -16,7 +16,8 @@ def main() -> int:
 
     for plugin_root in ROLE_PLUGINS:
         manifest = plugin_root / ".codex-plugin" / "plugin.json"
-        if not manifest.exists():
+        hooks = plugin_root / "hooks" / "hooks.json"
+        if not manifest.exists() or not hooks.exists():
             continue
 
         target = plugin_root / "shared" / "anify-character"
@@ -24,8 +25,11 @@ def main() -> int:
             shutil.rmtree(target)
         shutil.copytree(SOURCE, target)
 
-        hook = target / "hooks" / "anify_character_hooks.py"
-        hook.chmod(hook.stat().st_mode | 0o111)
+        for hook in [
+            target / "hooks" / "anify_character_hooks.py",
+            target / "hooks" / "anify_memory_runtime.sh",
+        ]:
+            hook.chmod(hook.stat().st_mode | 0o111)
         print(f"synced {SOURCE.relative_to(REPO_ROOT)} -> {target.relative_to(REPO_ROOT)}")
 
     return 0

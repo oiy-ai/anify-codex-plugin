@@ -1,0 +1,39 @@
+{
+  "name": "anify-installer",
+  "version": "0.1.0+codex.20260709071822",
+  "description": "Initialize the local Anify Codex client environment before installing GM and character plugins.",
+  "author": {
+    "name": "Local developer"
+  },
+  "license": "MIT",
+  "keywords": [
+    "anify",
+    "installer",
+    "setup",
+    "memory",
+    "trpg"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Anify Installer",
+    "shortDescription": "Prepare local Anify client runtime and saves.",
+    "longDescription": "Anify Installer performs the first client-side Anify setup: Engine login verification, long-term memory runtime deployment, local GM save initialization, and next-step usage guidance.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Initialize my local Anify client.",
+      "Set up Anify long-term memory.",
+      "Create my first local Anify save."
+    ],
+    "brandColor": "#14B8A6",
+    "composerIcon": "./assets/icon-192x192.png",
+    "logo": "./assets/icon-512x512.png",
+    "screenshots": []
+  }
+}

@@ -13,7 +13,7 @@ from typing import Any
 
 
 USER_ID = "userA"
-MEMORY_SCHEMA_VERSION = "anify-character-mem0-v1"
+MEMORY_SCHEMA_VERSION = "anify-character-memory-v1"
 MAX_TRANSCRIPT_MESSAGES = 40
 MAX_MESSAGE_CHARS = 6000
 MEMORY_SEARCH_TOP_K = 5
@@ -71,7 +71,7 @@ def ensure_workspace(character: str) -> Path:
 
 def character_workspace(character: str) -> Path:
     codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
-    return codex_home / "anify" / USER_ID / safe_name(character)
+    return codex_home / "anify" / "users" / USER_ID / safe_name(character)
 
 
 def memory_dir(workspace: Path) -> Path:
@@ -225,14 +225,14 @@ def search_prompt_memory(character: str, workspace: Path, payload: dict[str, Any
         )
     except Exception as error:
         return (
-            f"Anify mem0 memory for {character} is unavailable: {type(error).__name__}: {error}\n"
-            "Do not fall back to legacy Markdown memory; install/configure mem0ai for this character workspace."
+            f"Anify long-term memory for {character} is unavailable: {type(error).__name__}: {error}\n"
+            "Do not fall back to legacy Markdown memory; run Anify Installer to deploy the local memory runtime."
         )
 
     memories = normalize_mem0_results(result)
     if not memories:
         return ""
-    return format_memories(f"Relevant {character} memories from local mem0", memories)
+    return format_memories(f"Relevant {character} long-term memories", memories)
 
 
 def build_session_context(character: str, workspace: Path) -> str:
@@ -242,13 +242,13 @@ def build_session_context(character: str, workspace: Path) -> str:
         f"Anify character startup context for {character}.\n"
         f"Workspace: {workspace}\n"
         f"Memory directory: {mem_dir}\n"
-        f"Mem0 history DB: {mem_dir / 'history.db'}\n"
-        f"Mem0 vector store: {mem_dir / 'qdrant'}\n"
+        f"History DB: {mem_dir / 'history.db'}\n"
+        f"Vector store: {mem_dir / 'qdrant'}\n"
         f"Hook event log: {mem_dir / 'hook-events.jsonl'}\n"
         f"Transcript snapshots: {mem_dir / 'transcripts'}\n\n"
         "Before answering as this character, use the active persona skill. "
-        "Use the injected mem0 memories when present. If the user references earlier events, "
-        "relationships, promises, or unresolved details, search local mem0 memory for this character "
+        "Use the injected long-term memories when present. If the user references earlier events, "
+        "relationships, promises, or unresolved details, search local long-term memory for this character "
         "before answering.\n\n"
         f"{memories_status}"
     )
@@ -262,14 +262,14 @@ def startup_memories(character: str, workspace: Path) -> str:
         )
     except Exception as error:
         return (
-            f"Mem0 status: unavailable for {character}: {type(error).__name__}: {error}\n"
-            "This character now uses local mem0 storage only; no Markdown memory fallback is loaded."
+            f"Long-term memory status: unavailable for {character}: {type(error).__name__}: {error}\n"
+            "This character uses local long-term memory only; no Markdown memory fallback is loaded."
         )
 
     memories = normalize_mem0_results(result)
     if not memories:
-        return f"Loaded mem0 memories for {character}: none yet."
-    return format_memories(f"Loaded mem0 memories for {character}", memories)
+        return f"Loaded long-term memories for {character}: none yet."
+    return format_memories(f"Loaded long-term memories for {character}", memories)
 
 
 def character_memory(character: str, workspace: Path):
@@ -277,8 +277,8 @@ def character_memory(character: str, workspace: Path):
         from mem0 import Memory
     except ModuleNotFoundError as error:
         raise RuntimeError(
-            "Python package 'mem0ai' is not installed in the Codex hook environment. "
-            "Install it with: python3 -m pip install mem0ai"
+            "The Anify long-term memory runtime is not installed in the Codex hook environment. "
+            "Run Anify Installer to deploy it."
         ) from error
 
     return Memory.from_config(memory_config(character, workspace))

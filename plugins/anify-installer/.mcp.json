@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "anify": {
+      "type": "http",
+      "url": "https://anify.ai/mcp",
+      "note": "Official Anify Engine MCP server. Anify Installer uses this connection only to verify the initial client login."
+    }
+  }
+}

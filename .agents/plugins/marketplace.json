@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "anify-installer",
+      "source": {
+        "source": "local",
+        "path": "./plugins/anify-installer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "anify-gm",
       "source": {
         "source": "local",
@@ -12,7 +24,7 @@
       },
       "policy": {
         "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "authentication": "ON_USE"
       },
       "category": "Entertainment"
     },
@@ -24,7 +36,7 @@
       },
       "policy": {
         "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "authentication": "ON_USE"
       },
       "category": "Entertainment"
     },
@@ -36,7 +48,7 @@
       },
       "policy": {
         "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "authentication": "ON_USE"
       },
       "category": "Entertainment"
     },
@@ -48,7 +60,7 @@
       },
       "policy": {
         "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "authentication": "ON_USE"
       },
       "category": "Entertainment"
     }

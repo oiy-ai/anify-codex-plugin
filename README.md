@@ -4,10 +4,11 @@ This repo packages local Codex plugins for Anify GM sessions and character chat.
 
 It provides:
 
-- `Anify-GM`: runs single-player or party TRPG adventures, reads and writes local GM progress under `CODEX_HOME/anify/userA/GM`, and uses the Anify Engine MCP for auth, context, D20 checks, and deterministic rule advice.
-- `Anify-Lynn`: private or group chat persona for Lynn Tale, with local mem0 character memory under `CODEX_HOME/anify/userA/Lynn/memory`.
-- `Anify-Thera`: private or group chat persona for Thera Valeria, with local mem0 character memory under `CODEX_HOME/anify/userA/Thera/memory`.
-- `Anify-Lyra`: private or group chat persona for Lyra Oravia, with local mem0 character memory under `CODEX_HOME/anify/userA/Lyra/memory`.
+- `Anify Installer`: initializes the local client runtime and first GM save.
+- `Anify-GM`: runs single-player or party TRPG adventures, reads and writes local GM progress under `CODEX_HOME/anify/users/userA/GM`, and uses the Anify Engine MCP for context, D20 checks, and deterministic rule advice.
+- `Anify-Lynn`: private or group chat persona for Lynn Tale, with local long-term character memory under `CODEX_HOME/anify/users/userA/Lynn/memory`.
+- `Anify-Thera`: private or group chat persona for Thera Valeria, with local long-term character memory under `CODEX_HOME/anify/users/userA/Thera/memory`.
+- `Anify-Lyra`: private or group chat persona for Lyra Oravia, with local long-term character memory under `CODEX_HOME/anify/users/userA/Lyra/memory`.
 
 Shared character runtime lives under `shared/anify-character/`. Role plugins keep only their local manifest, hook wiring, persona skill, synced shared runtime copy, and any future role-exclusive files. After editing shared character runtime, run `python3 scripts/sync_character_shared.py` so installed plugin archives include the same runtime.
 
@@ -22,11 +23,11 @@ python3 -m pip install mem0ai
 The default local mem0 layout is:
 
 ```text
-CODEX_HOME/anify/userA/<Character>/memory/history.db
-CODEX_HOME/anify/userA/<Character>/memory/qdrant/
-CODEX_HOME/anify/userA/<Character>/memory/hook-events.jsonl
-CODEX_HOME/anify/userA/<Character>/memory/transcripts/
-CODEX_HOME/anify/userA/<Character>/memory/memory-operations.jsonl
+CODEX_HOME/anify/users/userA/<Character>/memory/history.db
+CODEX_HOME/anify/users/userA/<Character>/memory/qdrant/
+CODEX_HOME/anify/users/userA/<Character>/memory/hook-events.jsonl
+CODEX_HOME/anify/users/userA/<Character>/memory/transcripts/
+CODEX_HOME/anify/users/userA/<Character>/memory/memory-operations.jsonl
 ```
 
 The default mem0 config uses OpenAI for extraction and embeddings, so `OPENAI_API_KEY` must be available to Codex hooks.

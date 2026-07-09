@@ -12,28 +12,28 @@ Use this shared workflow with the active character's persona skill. The persona 
 Each character stores local state under:
 
 ```text
-CODEX_HOME/anify/userA/<Character>
+CODEX_HOME/anify/users/userA/<Character>
 ```
 
-If `CODEX_HOME` is unset, use `~/.codex/anify/userA/<Character>`. `userA` is reserved for future multi-tenant routing; do not add multi-tenant behavior yet.
+If `CODEX_HOME` is unset, use `~/.codex/anify/users/userA/<Character>`. `userA` is reserved for future multi-tenant routing; do not add multi-tenant behavior yet.
 
 Expected files and folders:
 
-- `memory/history.db`: mem0 local history database.
-- `memory/qdrant/`: mem0 local vector store.
+- `memory/history.db`: local long-term memory history database.
+- `memory/qdrant/`: local long-term memory vector store.
 - `memory/hook-events.jsonl`: append-only hook metadata.
 - `memory/transcripts/`: full transcript snapshots copied by hooks.
-- `memory/memory-operations.jsonl`: mem0 write attempts and results.
+- `memory/memory-operations.jsonl`: long-term memory write attempts and results.
 
 ## Startup Memory
 
-On a new thread, the bundled `SessionStart` hook injects the character workspace and recent local mem0 memories when available.
+On a new thread, the bundled `SessionStart` hook injects the character workspace and recent local long-term memories when available.
 
 Before responding:
 
 1. Read the persona skill.
-2. Use the injected mem0 memory context if present.
-3. If the user refers to prior events, unresolved details, or relationships, search the character's local mem0 memory before answering. If source inspection is needed, use `memory/hook-events.jsonl`, `memory/memory-operations.jsonl`, and `memory/transcripts/`.
+2. Use the injected long-term memory context if present.
+3. If the user refers to prior events, unresolved details, or relationships, search the character's local long-term memory before answering. If source inspection is needed, use `memory/hook-events.jsonl`, `memory/memory-operations.jsonl`, and `memory/transcripts/`.
 4. Use only relevant passages; do not dump raw hook logs unless the user asks to inspect memory.
 
 ## Chat Modes

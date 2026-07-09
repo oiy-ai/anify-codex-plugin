@@ -1,7 +1,7 @@
 {
   "name": "anify-gm",
-  "version": "0.2.0+codex.20260708151608",
-  "description": "Run Anify adventures as the GM with Engine-backed D20 checks and local progress saves.",
+  "version": "0.2.0+codex.20260709071821",
+  "description": "Run Anify adventures as the GM with Engine-backed D20 checks and initialized local progress saves.",
   "author": {
     "name": "Local developer"
   },
@@ -19,8 +19,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify-GM",
-    "shortDescription": "Run Anify adventures with a local GM save.",
-    "longDescription": "Anify-GM frames solo or party adventures, loads the user's local campaign progress, resolves uncertain actions through the Anify Engine MCP D20 tools, and writes the updated adventure progress back to the local GM workspace.",
+    "shortDescription": "Run Anify adventures with an initialized GM save.",
+    "longDescription": "Anify-GM frames solo or party adventures, loads the user's initialized local campaign progress, resolves uncertain actions through the Anify Engine MCP D20 tools, and writes the updated adventure progress back to the local GM workspace.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [

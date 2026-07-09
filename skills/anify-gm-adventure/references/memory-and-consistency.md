@@ -7,7 +7,7 @@ Anify-GM owns GM progress and party-facing continuity. Installed Anify character
 All first-version durable memory lives under:
 
 ```text
-CODEX_HOME/anify/userA/GM
+CODEX_HOME/anify/users/userA/GM
 ```
 
 Use:
@@ -18,7 +18,7 @@ Use:
 - `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
 - `turn-log.md`: append-only visible session chronology.
 
-Do not write `.anify` memory files. Do not use `CODEX_HOME/anify/users/userA`. Do not invent a second save root.
+Do not write `.anify` memory files. Do not use `CODEX_HOME/anify/userA`. Do not invent a second save root.
 
 ## Memory Update Rules
 

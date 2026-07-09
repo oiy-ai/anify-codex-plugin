@@ -21,7 +21,7 @@ GM AI owns:
 Installed Anify character plugins own:
 
 - Character voice, memories, goals, fears, emotional response, habits, values, and interpersonal reactions.
-- Character-facing memory updates in their own `CODEX_HOME/anify/userA/<Character>` workspaces.
+- Character-facing memory updates in their own `CODEX_HOME/anify/users/userA/<Character>` workspaces.
 
 Character plugins must not:
 
@@ -32,7 +32,7 @@ Character plugins must not:
 
 ## Local Markdown Files
 
-Use these files under `CODEX_HOME/anify/userA/GM`:
+Use these files under `CODEX_HOME/anify/users/userA/GM`:
 
 - `profile.md`: stable player and character profile.
 - `progress.md`: durable cross-adventure progress, completed adventure outcomes, unresolved hooks, and next-adventure seeds.
@@ -41,7 +41,7 @@ Use these files under `CODEX_HOME/anify/userA/GM`:
 - `party-memory.md`: party-facing episodic and relationship memory known in the current adventure.
 - `turn-log.md`: append-only chronological visible turn log.
 
-Create missing files from `templates/userA-*.md` before play.
+Do not create missing files during GM play. Missing save files mean Anify Installer or Web initialization has not completed yet.
 
 ## Stable Packets
 

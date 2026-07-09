@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" session-start --character Thera",
+            "command": "\"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_memory_runtime.sh\" session-start --character Thera",
             "timeout": 30,
             "statusMessage": "Loading Thera memory"
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" user-prompt --character Thera",
+            "command": "\"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_memory_runtime.sh\" user-prompt --character Thera",
             "timeout": 30,
             "statusMessage": "Recording Thera context"
           }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" stop --character Thera",
+            "command": "\"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_memory_runtime.sh\" stop --character Thera",
             "timeout": 30,
             "statusMessage": "Saving Thera transcript"
           }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_character_hooks.py\" post-compact --character Thera",
+            "command": "\"${PLUGIN_ROOT}/shared/anify-character/hooks/anify_memory_runtime.sh\" post-compact --character Thera",
             "timeout": 60,
             "statusMessage": "Updating Thera memory"
           }
