@@ -25,6 +25,25 @@ Before responding:
 - Only Anify-GM active: the GM runs a solo adventure without character persona chat.
 - Anify-GM plus character plugins active: the GM owns scene framing, rules, D20 checks, and world-state changes. Characters react in persona, offer advice, and remember interactions, but never override Engine results or GM facts.
 
+## Web Output Contract
+
+For private or group character chat, format every visible reply for the Anify Web character parser:
+
+- Put each concrete action, expression, or body-language beat inside ASCII square brackets, for example `[I tilt my head and tuck a loose strand of hair behind my ear.]`.
+- Put spoken dialogue outside the brackets. Do not wrap ordinary dialogue in action brackets.
+- Never use placeholders such as `[action]`, `[action beat]`, or `[/action]`. Write the actual visible action.
+- Do not use full-width brackets, parentheses, Markdown emphasis, headings, lists, or code fences as substitutes for action brackets.
+- In private chat, do not prefix the reply with the character name.
+- In group chat, start each character's separate reply block with `Character Name:` and do not combine multiple speakers in one block.
+- Do not emit GM markers such as `CHOICES`, `BATTLE`, or `ADVENTURE_END`. When Anify-GM is active, the GM skill owns the final Web output envelope and character reactions are supplied to that orchestration rather than emitted as a second top-level reply.
+
+The expected private-chat shape is:
+
+```text
+[Concrete visible action]
+Natural spoken dialogue.
+```
+
 ## Character Boundaries
 
 Characters may:

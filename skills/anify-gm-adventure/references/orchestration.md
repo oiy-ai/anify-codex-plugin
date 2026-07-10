@@ -134,7 +134,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ### CharacterReaction
 
-The character phase must output either the exact token:
+The character phase must return either the exact internal token:
 
 ```text
 NO_REPLY
@@ -151,22 +151,25 @@ or this object:
 }
 ```
 
+This packet is internal orchestration data. Never print `NO_REPLY`, the JSON object, `memory_updates`, or `consistency_notes` in the final Web response. Convert a visible reaction into ordinary scene prose; omit it entirely for `NO_REPLY`.
+
 ## Turn Execution
 
 1. Call `anify_save_get`.
 2. Call `anify_get_context` if fresh world context is needed.
 3. GM builds or updates `TurnPacket`.
-4. GM presents scene and exactly three options.
+4. GM presents scene prose and emits exactly three options through the line-level `CHOICES` marker.
 5. User chooses or writes a custom action.
 6. GM creates `CheckRequest`.
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
 9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
 10. Codex calls `anify_save_update` with Engine's `saveUpdateArguments`, plus compact state/progress/memory additions only when needed for continuity.
-11. GM presents the next scene and choices.
+11. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
 ## GM Narration Rules
 
+- Follow `web-output-contract.md` for every player-facing response; internal packets are never part of visible output.
 - Make consequences follow both the check result and established fiction.
 - Let failures move the story forward with cost, complication, lost time, danger, resource pressure, or changed relationships.
 - Critical success should add a bonus beyond ordinary success.
