@@ -11,6 +11,8 @@ Use this shared workflow with the active character's persona skill. The persona 
 
 Character memory is stored by Anify Engine MCP. Do not read or write local files for character state.
 
+The host injects the stable run operation ID through the MCP `x-anify-operation-id` header. Never ask for it, expose it, or add it to memory tool arguments; identical interrupted-run retries are handled by Engine receipts.
+
 Before responding:
 
 1. Read the active persona skill.

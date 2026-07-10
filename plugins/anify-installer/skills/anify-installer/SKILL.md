@@ -17,6 +17,8 @@ Anify Installer owns first-run client setup only:
 
 Do not run gameplay. Do not start an adventure. Do not ask for Firebase credentials inside Codex.
 
+The host injects the stable run operation ID through the MCP `x-anify-operation-id` header. Never ask the user for it or add it to `anify_save_initialize` arguments.
+
 ## Initialization Flow
 
 1. Verify the Engine login by calling `anify_auth_status`.

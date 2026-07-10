@@ -82,6 +82,8 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
 
   const installerSkill = text('plugins/anify-installer/skills/anify-installer/SKILL.md');
   assert.match(installerSkill, /anify_save_initialize/);
+  assert.match(installerSkill, /x-anify-operation-id/);
+  assert.match(installerSkill, /Never ask the user for it or add it to `anify_save_initialize` arguments/);
   assert.doesNotMatch(installerSkill, /cleanup-local-state/);
   assert.doesNotMatch(installerSkill, /install-runtime|mem0|local GM Markdown save/i);
 
@@ -129,12 +131,22 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /save\.game/);
   assert.match(gmSkill, /save\.adventure/);
   assert.match(gmSkill, /Never patch `save\.game` directly/);
-  assert.match(gmSkill, /use `lynn_tale` and `lyra_oravia`/);
-  assert.match(gmSkill, /pass it as `gm_thread_id`; otherwise omit it and never fabricate one/);
-  assert.match(gmSkill, /battle\.start <enemyId>/);
+  assert.match(gmSkill, /use the world-declared default `lynn_tale` and `lyra_oravia`/);
+  assert.match(gmSkill, /session_intent: "new"/);
+  assert.match(gmSkill, /session_intent: "resume"/);
+  assert.match(gmSkill, /new host-provided logical GM thread ID/);
+  assert.match(gmSkill, /exact `resolution_packet`/);
+  assert.match(gmSkill, /Do not resubmit `turn_entry`/);
+  assert.match(gmSkill, /Never follow it with `anify_game_action battle\.start`/);
+  assert.match(gmSkill, /matching `save\.game\.battleState` and `battle\.await_action` checkpoint/);
+  assert.match(gmSkill, /x-anify-operation-id/);
+  assert.match(gmSkill, /Never add an operation ID to tool arguments/);
   assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
+  assert.match(orchestration, /same successful `anify_apply_gm_resolution` response already contains the matching active battle state/);
+  assert.doesNotMatch(orchestration, /successfully runs `battle\.start/);
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
-  assert.match(d20, /reject missing or fabricated outcomes/);
+  assert.match(d20, /rejects every missing, changed, or fabricated field/);
+  assert.match(d20, /original check, packet, or committed apply result/);
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
     assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
@@ -151,6 +163,19 @@ test('GM commits the one-time opening before exposing it to Web', () => {
   assert.match(gmSkill, /successful commit is what clears `opening_pending`/);
   assert.match(orchestration, /Never output an opening while `opening_pending` remains uncommitted/);
   assert.match(d20, /one-time opening is not a check/);
+  assert.match(gmSkill, /omit `resolution_packet`/);
+});
+
+test('GM commits battle creation atomically with one immutable resolution packet', () => {
+  for (const source of [gmSkill, orchestration, memory, webOutput]) {
+    assert.match(source, /battle/i);
+    assert.match(source, /resolution/i);
+    assert.doesNotMatch(source, /first call `anify_game_action` with `battle\.start/);
+  }
+  assert.match(gmSkill, /set `resolution\.battle`/);
+  assert.match(gmSkill, /set `resolution\.choices` to `\[\]`/);
+  assert.match(gmSkill, /battle creation, narrative, turn log, and memories are one Engine commit/);
+  assert.match(webOutput, /Never call `anify_game_action battle\.start` afterward/);
 });
 
 test('GM output contract matches the Web line marker parser', () => {
@@ -179,6 +204,7 @@ test('GM output contract matches the Web line marker parser', () => {
   assert.match(webOutput, /payload must be a JSON string array with exactly three items/);
   assert.match(webOutput, /Do not duplicate those choices in visible prose/);
   assert.match(webOutput, /end with `BATTLE` instead of `CHOICES`/);
+  assert.match(webOutput, /\[BATTLE: \{"enemyId":"corrupted-forest-wolf"\}\]/);
   assert.match(webOutput, /end with `ADVENTURE_END` instead of `CHOICES`/);
   assert.match(webOutput, /Never print `NO_REPLY`/);
   assert.match(orchestration, /Never print `NO_REPLY`/);
@@ -188,7 +214,11 @@ test('all plugins share the Anify Engine MCP config', () => {
   assert.equal(gmMcp.mcpServers.anify.type, 'http');
   assert.match(gmMcp.mcpServers.anify.url, /^https?:\/\/.+\/mcp$/);
   assert.equal(gmMcp.mcpServers.anify.bearer_token_env_var, undefined);
+  assert.deepEqual(gmMcp.mcpServers.anify.env_http_headers, {
+    'x-anify-operation-id': 'ANIFY_OPERATION_ID',
+  });
   assert.match(gmMcp.mcpServers.anify.note, /remote saves/);
+  assert.deepEqual(installerMcp.mcpServers.anify.env_http_headers, gmMcp.mcpServers.anify.env_http_headers);
   for (const [slug] of roles) {
     assert.deepEqual(roleMcp(slug), gmMcp);
   }
@@ -199,6 +229,8 @@ test('role plugins expose persona skills and shared remote character workflow', 
   assert.ok(webCharacterParser.includes('const ACTION_PATTERN = /\\[([^\\]]+)\\]/g;'));
   assert.match(sharedSkill, /anify_memory_search/);
   assert.match(sharedSkill, /anify_memory_remember/);
+  assert.match(sharedSkill, /x-anify-operation-id/);
+  assert.match(sharedSkill, /Never ask for it, expose it, or add it to memory tool arguments/);
   assert.match(sharedSkill, /ASCII square brackets/);
   assert.match(sharedSkill, /spoken dialogue outside the brackets/);
   assert.match(sharedSkill, /In private chat, do not prefix the reply with the character name/);

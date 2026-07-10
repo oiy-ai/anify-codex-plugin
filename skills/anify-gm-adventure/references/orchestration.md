@@ -12,6 +12,7 @@ Engine MCP owns:
 - World context loaded from Engine KV.
 - D20 check results.
 - Deterministic rule advice, revision validation, and all state mutations.
+- Per-user SQLite operation receipts keyed by the host-provided run ID and tool stage.
 
 GM AI owns:
 
@@ -70,8 +71,12 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ```json
 {
+  "operation_id": "host run id",
   "check_id": "uuid",
   "timestamp": "UTC timestamp",
+  "uid": "authenticated Firebase uid",
+  "adventure_session_id": "active adventure session id",
+  "revision": 4,
   "actor": "string",
   "action": "string",
   "ability": "string",
@@ -107,6 +112,18 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
     "choices": [],
     "flags": []
   },
+  "resolution_packet": {
+    "operation_id": "host run id",
+    "resolution_id": "uuid",
+    "check_id": "uuid",
+    "uid": "authenticated Firebase uid",
+    "adventure_session_id": "active adventure session id",
+    "revision": 4,
+    "type": "adventure",
+    "action": "Search the grove",
+    "action_kind": "investigate",
+    "outcome": "success"
+  },
   "turn_entry": {
     "action": "Search the grove",
     "actionKind": "investigate",
@@ -119,7 +136,9 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 }
 ```
 
-The GM must not alter `type`, `revision`, check data, or Engine-generated mechanical effects. It may add the visible `narrative`, exactly three normal-turn `choices`, and marker effects explicitly justified by Engine context. `anify_apply_gm_resolution` is the only commit for this packet.
+The GM must not alter `resolution_packet`, `type`, `revision`, check data, or Engine-generated mechanical effects. It may add the visible `narrative`, exactly three normal-turn `choices`, and marker effects explicitly justified by Engine context. Submit the exact `resolution_packet` to `anify_apply_gm_resolution` and do not resubmit `turn_entry`; Engine commits its stored turn entry. `anify_apply_gm_resolution` is the only commit for this packet.
+
+The host automatically sends one stable `x-anify-operation-id` for the whole run. The model never constructs or transports that header value; it only preserves matching provenance fields returned by Engine. If a run stops after Engine commits but before the host records EOF, the retried run receives the same check, resolution packet, and apply result. Same-stage input changes under that operation ID fail closed.
 
 ### CharacterReaction
 
@@ -150,7 +169,7 @@ If `save.adventure.opening_pending` is true, commit the opening before returning
 
 1. Read fresh world context and `save.game.resumeCheckpoint.revision`.
 2. Write the visible opening narration and exactly three choices.
-3. Call `anify_apply_gm_resolution` with an `adventure` resolution at that exact revision and a compact opening `turn_entry`.
+3. Call `anify_apply_gm_resolution` with an `adventure` resolution at that exact revision and a compact opening `turn_entry`. Omit `resolution_packet` for this opening-only commit.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
 The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.
@@ -166,10 +185,12 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
 9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-10. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution`, optionally including compact durable GM or party memories.
+10. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution` with the exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
 11. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
-For deterministic UI-style operations, call `anify_game_action`. A `BATTLE` marker is valid only after `anify_game_action` successfully runs `battle.start <enemyId>`. Subsequent Codex-client attacks, skills, items, and flee operations also use `anify_game_action`, exactly like Web uses Engine's browser action endpoint.
+To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
+
+For deterministic actions inside an active battle, call `anify_game_action`. Codex-client attacks, skills, items, and flee operations use the same canonical state as Web's browser action endpoint.
 
 ## GM Narration Rules
 

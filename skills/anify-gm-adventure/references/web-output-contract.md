@@ -51,8 +51,10 @@ A normal adventure turn must end with exactly one marker line containing exactly
 When combat begins, end with `BATTLE` instead of `CHOICES`:
 
 ```text
-[BATTLE: {"enemyId":"corrupted-wolf"}]
+[BATTLE: {"enemyId":"corrupted-forest-wolf"}]
 ```
+
+Before emitting it, commit one adventure resolution with `battle: { "enemyId": "corrupted-forest-wolf" }`, `choices: []`, and the exact Engine `resolution_packet`. The successful apply response must already contain the matching active battle state. Never call `anify_game_action battle.start` afterward.
 
 Do not narrate the battle outcome, emit `CHOICES`, grant loot, or set defeat flags in the same turn as `BATTLE`.
 

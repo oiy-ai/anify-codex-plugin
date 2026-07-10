@@ -14,6 +14,8 @@ Use:
 
 Do not write `.anify` memory files. Do not create or inspect a local Anify user workspace.
 
+Mutating calls receive the host's stable run ID through the automatic `x-anify-operation-id` header. Do not put it in model-authored tool arguments. Engine receipts make identical interrupted-run retries idempotent, including memory writes and an already committed GM turn.
+
 ## Memory Update Rules
 
 After each resolved player action:
@@ -23,6 +25,7 @@ After each resolved player action:
 - Add only durable GM facts to GM memory.
 - Add only party-known durable memories to party memory.
 - Express adventure completion and durable effects through the structured resolution, not a second save write.
+- When the consequence begins combat, include the battle trigger in that same resolution; do not perform a later `battle.start` write.
 
 Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 

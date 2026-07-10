@@ -12,6 +12,8 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 
 The public Codex client uses normal remote MCP OAuth discovery. The Codex shell runtime receives the caller's Firebase bearer token on `/v1/runs` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
 
+For mutating tools, the host also provides one stable operation ID per Codex run. Plugin MCP config maps the shell-owned `ANIFY_OPERATION_ID` environment variable to the `x-anify-operation-id` HTTP header through `env_http_headers`. The model must never put this value in tool arguments, invent it, or rotate it between D20 stages. Queue retries reuse the same run ID so Engine can replay committed receipts without duplicating a turn.
+
 ## Required Flow
 
 Before starting or continuing an adventure:
@@ -19,8 +21,8 @@ Before starting or continuing an adventure:
 1. Call `anify_save_get`.
 2. If the remote GM save is not initialized, call `anify_save_initialize` with a compact default player profile inferred from the request, then call `anify_save_get` again.
 3. Read canonical gameplay state from `save.game` and active-session metadata from `save.adventure`.
-4. If `save.adventure` is null, call `anify_start_adventure` and continue only if it returns an active canonical save. Pass a host-provided Shell logical thread ID when available; omit it for native Codex sessions rather than inventing one.
-5. If `save.adventure` is active, do not call `anify_start_adventure`; continue with context, D20, resolution, and game-action tools as needed.
+4. If `save.adventure` is null or the user explicitly requests a fresh adventure, call `anify_start_adventure` with `session_intent: "new"` and continue only if it returns a new active canonical session. A Shell new session must carry a new host-provided logical thread ID; omit `gm_thread_id` for native sessions rather than inventing one.
+5. If `save.adventure` is active and the user continues it, call `anify_start_adventure` with `session_intent: "resume"` and no changed session fields. Continue only if Engine returns that same fixed session.
 6. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.

@@ -3,6 +3,9 @@
     "anify": {
       "type": "http",
       "url": "http://localhost:18787/mcp",
+      "env_http_headers": {
+        "x-anify-operation-id": "ANIFY_OPERATION_ID"
+      },
       "note": "Anify Engine MCP server. Anify Installer uses this connection to verify client login and initialize the remote GM save."
     }
   }
