@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-export const ANIFY_PRODUCTION_MCP_URL = "https://anify.ai/mcp";
+const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+
+export const ANIFY_MCP_URL = JSON.parse(readFileSync(join(repoRoot, ".mcp.json"), "utf8")).mcpServers.anify.url;
 export const SHELL_BEARER_TOKEN_ENV = "ANIFY_ENGINE_BEARER_TOKEN";
 
 export function defaultClientMcpConfigPaths(codexHome = process.env.CODEX_HOME || join(homedir(), ".codex")) {
@@ -32,7 +34,7 @@ export function repairAnifyClientMcpConfig(paths = defaultClientMcpConfigPaths()
     }
 
     const anify = objectValue(objectValue(config.mcpServers).anify);
-    if (anify.url !== ANIFY_PRODUCTION_MCP_URL || anify.bearer_token_env_var !== SHELL_BEARER_TOKEN_ENV) {
+    if (anify.url !== ANIFY_MCP_URL || anify.bearer_token_env_var !== SHELL_BEARER_TOKEN_ENV) {
       continue;
     }
 

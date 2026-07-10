@@ -2,8 +2,8 @@
   "mcpServers": {
     "anify": {
       "type": "http",
-      "url": "https://anify.ai/mcp",
-      "note": "Official Anify Engine MCP server. Anify Installer uses this connection to verify client login and initialize the remote GM save."
+      "url": "http://localhost:18787/mcp",
+      "note": "Anify Engine MCP server. Anify Installer uses this connection to verify client login and initialize the remote GM save."
     }
   }
 }

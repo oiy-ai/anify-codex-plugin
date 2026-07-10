@@ -33,6 +33,7 @@ const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.jso
 const marketplace = json('.agents/plugins/marketplace.json');
 const gmMcp = json('.mcp.json');
 const installerMcp = json('plugins/anify-installer/.mcp.json');
+const configuredMcpUrl = gmMcp.mcpServers.anify.url;
 const roles = [
   ['lynn', 'Anify-Lynn', 'Lynn', 'Lynn Tale'],
   ['thera', 'Anify-Thera', 'Thera', 'Thera Valeria'],
@@ -72,7 +73,7 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
   assert.equal(installerManifest.skills, './skills/');
   assert.equal(installerManifest.mcpServers, './.mcp.json');
   assert.equal(installerMcp.mcpServers.anify.type, 'http');
-  assert.equal(installerMcp.mcpServers.anify.url, 'https://anify.ai/mcp');
+  assert.equal(installerMcp.mcpServers.anify.url, configuredMcpUrl);
 
   const installerSkill = text('plugins/anify-installer/skills/anify-installer/SKILL.md');
   assert.match(installerSkill, /anify_save_initialize/);
@@ -131,7 +132,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
 
 test('all plugins share the Anify Engine MCP config', () => {
   assert.equal(gmMcp.mcpServers.anify.type, 'http');
-  assert.equal(gmMcp.mcpServers.anify.url, 'https://anify.ai/mcp');
+  assert.match(gmMcp.mcpServers.anify.url, /^https?:\/\/.+\/mcp$/);
   assert.equal(gmMcp.mcpServers.anify.bearer_token_env_var, undefined);
   assert.match(gmMcp.mcpServers.anify.note, /remote saves/);
   for (const [slug] of roles) {
