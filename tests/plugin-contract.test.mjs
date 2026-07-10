@@ -91,7 +91,7 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
 test('GM plugin identity and assets match Anify-GM branding', () => {
   assert.equal(gmManifest.name, 'anify-gm');
   assert.equal(gmManifest.interface.displayName, 'Anify-GM');
-  assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with an initialized remote GM save.');
+  assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with Engine-backed remote GM saves.');
   assert.match(gmManifest.interface.longDescription, /remote campaign progress/);
   assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
   assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
@@ -125,7 +125,8 @@ test('GM skill uses Engine remote save and memory tools', () => {
     assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
     assert.match(source, /remote|Engine MCP|anify_/i);
   }
-  assert.match(gmSkill, /run Anify Installer/);
+  assert.match(gmSkill, /anify_save_initialize/);
+  assert.doesNotMatch(gmSkill, /run Anify Installer/);
 });
 
 test('all plugins share the Anify Engine MCP config', () => {

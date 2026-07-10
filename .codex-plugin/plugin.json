@@ -1,6 +1,6 @@
 {
   "name": "anify-gm",
-  "version": "0.2.0+codex.20260709153850",
+  "version": "0.2.0+codex.202607100506-auto-init",
   "description": "Run Anify adventures as the GM with Engine-backed D20 checks and remote progress saves.",
   "author": {
     "name": "Local developer"
@@ -19,8 +19,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify-GM",
-    "shortDescription": "Run Anify adventures with an initialized remote GM save.",
-    "longDescription": "Anify-GM frames solo or party adventures, loads the user's initialized remote campaign progress from Anify Engine MCP, resolves uncertain actions through Engine D20 tools, and writes updated adventure progress back through Engine MCP.",
+    "shortDescription": "Run Anify adventures with Engine-backed remote GM saves.",
+    "longDescription": "Anify-GM frames solo or party adventures, initializes or loads the user's remote campaign progress from Anify Engine MCP, resolves uncertain actions through Engine D20 tools, and writes updated adventure progress back through Engine MCP.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [

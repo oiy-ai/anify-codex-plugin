@@ -17,7 +17,7 @@ The public Codex client uses normal remote MCP OAuth discovery. The Codex shell 
 Before starting or continuing an adventure:
 
 1. Call `anify_save_get`.
-2. If the remote GM save is not initialized, stop and tell the user to complete Anify Installer or Web initialization.
+2. If the remote GM save is not initialized, call `anify_save_initialize` with a compact default player profile inferred from the request, then call `anify_save_get` again.
 3. If the remote save has no active `adventure_session_id`, call `anify_start_adventure` and continue only if it returns `readyForGameplay: true`.
 4. If the remote save already has an active `adventure_session_id`, do not call `anify_start_adventure`; continue with `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
 5. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
