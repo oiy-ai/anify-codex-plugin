@@ -6,6 +6,8 @@ Anify requires D20 checks to be resolved outside the GM model. The MCP server is
 
 Do not call `roll_check` until the adventure has been started and `anify_save_get` returns an active `save.adventure` plus canonical `save.game` state.
 
+The one-time opening is not a check: when `save.adventure.opening_pending` is true, commit an opening `AdventureResolution` at the current revision through `anify_apply_gm_resolution`, without calling `roll_check` or `anify_resolve_action`. Normal D20 rules begin with the first player action after that committed opening.
+
 ## Tool
 
 `roll_check`

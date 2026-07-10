@@ -32,6 +32,8 @@ Before any start or continue request:
 3. Read active adventure state from `save.adventure` and canonical gameplay state from `save.game`.
 4. If `save.adventure` is null or the user explicitly asks to start a new adventure, call `anify_start_adventure`. Pass the active character-plugin party, with at most two character IDs. When no explicit party selection exists, use `lynn_tale` and `lyra_oravia`. If the host supplies the current Shell logical thread ID, pass it as `gm_thread_id`; otherwise omit it and never fabricate one.
 5. If `save.adventure` is active and the user asks to continue, do not call `anify_start_adventure`; use `anify_get_context`, `roll_check`, and Engine resolution tools as needed.
+
+When `save.adventure.opening_pending` is true, the current response is the one-time opening turn. Build the opening narration and exactly three choices, then call `anify_apply_gm_resolution` directly with an `adventure` resolution using the current `save.game.resumeCheckpoint.revision`. Include a compact opening `turn_entry`. Do not roll a D20 and do not call `anify_resolve_action` for this opening-only turn. Emit the same committed narration and choices through the Web output contract only after the Engine commit succeeds. This successful commit is what clears `opening_pending`; never return an uncommitted opening.
 6. If an Engine MCP call fails because authorization is missing or expired, surface that failure directly and let the Codex host reconnect Anify.
 
 Run every active turn in this exact order:
@@ -49,7 +51,7 @@ Run every active turn in this exact order:
 
 For a deterministic gameplay command, including every numerical battle action, call `anify_game_action`. Before emitting `BATTLE`, first call `anify_game_action` with `battle.start <enemyId>` and emit the marker only when Engine returns the corresponding active battle state. Codex-client battle commands and Web battle buttons therefore operate on the same save.
 
-Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration.
+Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration. The one-time committed opening above is not a user action and is the only opening-specific exception.
 
 ## Player-Facing Output
 

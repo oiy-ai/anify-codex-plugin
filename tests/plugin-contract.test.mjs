@@ -144,6 +144,15 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.doesNotMatch(gmSkill, /run Anify Installer/);
 });
 
+test('GM commits the one-time opening before exposing it to Web', () => {
+  assert.match(gmSkill, /save\.adventure\.opening_pending/);
+  assert.match(gmSkill, /call `anify_apply_gm_resolution` directly/);
+  assert.match(gmSkill, /Do not roll a D20 and do not call `anify_resolve_action`/);
+  assert.match(gmSkill, /successful commit is what clears `opening_pending`/);
+  assert.match(orchestration, /Never output an opening while `opening_pending` remains uncommitted/);
+  assert.match(d20, /one-time opening is not a check/);
+});
+
 test('GM output contract matches the Web line marker parser', () => {
   assert.match(gmSkill, /references\/web-output-contract\.md/);
   assert.match(gmSkill, /Do not print numbered or bulleted options/);
