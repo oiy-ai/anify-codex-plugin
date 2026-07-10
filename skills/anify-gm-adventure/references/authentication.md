@@ -10,7 +10,7 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 - OAuth dynamic registration endpoint: `/register`
 - Bearer token type: Firebase ID token
 
-The public Codex client uses normal remote MCP OAuth discovery. The Codex shell runtime receives the caller's Firebase bearer token on `/v1/thread/run` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
+The public Codex client uses normal remote MCP OAuth discovery. The Codex shell runtime receives the caller's Firebase bearer token on `/v1/runs` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
 
 ## Required Flow
 
@@ -18,9 +18,10 @@ Before starting or continuing an adventure:
 
 1. Call `anify_save_get`.
 2. If the remote GM save is not initialized, call `anify_save_initialize` with a compact default player profile inferred from the request, then call `anify_save_get` again.
-3. If the remote save has no active `adventure_session_id`, call `anify_start_adventure` and continue only if it returns `readyForGameplay: true`.
-4. If the remote save already has an active `adventure_session_id`, do not call `anify_start_adventure`; continue with `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
-5. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
+3. Read canonical gameplay state from `save.game` and active-session metadata from `save.adventure`.
+4. If `save.adventure` is null, call `anify_start_adventure` and continue only if it returns an active canonical save. Pass a host-provided Shell logical thread ID when available; omit it for native Codex sessions rather than inventing one.
+5. If `save.adventure` is active, do not call `anify_start_adventure`; continue with context, D20, resolution, and game-action tools as needed.
+6. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.
 
@@ -40,4 +41,4 @@ Do not ask the user to paste Firebase email/password into Codex.
 
 ## Save Authority
 
-Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, and `anify_save_update`; it must not create or maintain a local Anify user workspace.
+Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`; it must not create or maintain a local Anify user workspace or submit arbitrary gameplay patches.

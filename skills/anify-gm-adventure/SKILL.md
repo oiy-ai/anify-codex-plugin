@@ -21,7 +21,7 @@ Before running or modifying an Anify session, read:
 
 Anify Engine MCP is the only save and memory authority. Do not read or write local Anify user workspace files.
 
-Engine MCP owns authenticated access, remote GM save state, remote character memory, world context, D20 rolls, and deterministic rule advice. Codex owns the live game loop, scene framing, DC selection, and player-facing narration.
+Engine MCP owns authenticated access, the canonical game state shared with Anify Web, remote character memory, world context, D20 rolls, deterministic rule advice, and every state mutation. Codex owns scene framing, DC selection, character orchestration, and player-facing narration.
 
 ## Prototype Loop
 
@@ -29,22 +29,25 @@ Before any start or continue request:
 
 1. Call `anify_save_get`.
 2. If the save is not initialized, call `anify_save_initialize` with a concise default profile inferred from the user's request, then call `anify_save_get` again.
-3. If the remote save has no active `adventure_session_id` or the user explicitly asks to start a new adventure, call `anify_start_adventure`.
-4. If the remote save already has an active `adventure_session_id` and the user asks to continue, do not call `anify_start_adventure`; use `anify_get_context`, `roll_check`, and `anify_resolve_action` as needed.
-5. If an Engine MCP call fails because authorization is missing or expired, surface that failure directly and let the Codex host reconnect Anify.
+3. Read active adventure state from `save.adventure` and canonical gameplay state from `save.game`.
+4. If `save.adventure` is null or the user explicitly asks to start a new adventure, call `anify_start_adventure`. Pass the active character-plugin party, with at most two character IDs. When no explicit party selection exists, use `lynn_tale` and `lyra_oravia`. If the host supplies the current Shell logical thread ID, pass it as `gm_thread_id`; otherwise omit it and never fabricate one.
+5. If `save.adventure` is active and the user asks to continue, do not call `anify_start_adventure`; use `anify_get_context`, `roll_check`, and Engine resolution tools as needed.
+6. If an Engine MCP call fails because authorization is missing or expired, surface that failure directly and let the Codex host reconnect Anify.
 
 Run every active turn in this exact order:
 
-1. **Load remote state**: call `anify_save_get`.
+1. **Load canonical state**: call `anify_save_get` and treat `save.game` as the only gameplay state.
 2. **Engine context**: call `anify_get_context` when area, world, quest, enemy, or character facts are needed.
 3. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
 4. **GM options**: choose exactly three viable options and emit them only through the Web `CHOICES` marker defined in `references/web-output-contract.md`.
 5. **User action**: wait for or parse the user's selected/custom action.
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check`. The GM must not invent the D20 result.
-7. **Engine rule resolution**: call `anify_resolve_action` with the user action, remote save summary, and the exact `roll_check` result. Do not call it without `check_result`.
+7. **Engine rule resolution**: call `anify_resolve_action` with the user action and exact `roll_check` result. Do not submit a client-authored save or call it without `check_result`.
 8. **Character AI reaction**: if Anify character plugins are active, let those persona instructions control character speech. If no character plugin is active, produce an NPC or companion reaction only when fiction calls for it; otherwise use the internal token `NO_REPLY`. Never expose `NO_REPLY` in the final Web output.
-9. **Persist remote state**: call `anify_save_update` with Engine's returned `saveUpdateArguments`, adding only compact scene/progress/memory fields that are needed for continuity.
+9. **Commit the turn**: extend only the presentation fields of Engine's returned resolution—narrative, exactly three choices, and justified marker effects—then call `anify_apply_gm_resolution`. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
 10. **GM advancement**: present the consequence and end with the next `CHOICES` marker, unless a mutually exclusive `BATTLE` or `ADVENTURE_END` marker ends the turn.
+
+For a deterministic gameplay command, including every numerical battle action, call `anify_game_action`. Before emitting `BATTLE`, first call `anify_game_action` with `battle.start <enemyId>` and emit the marker only when Engine returns the corresponding active battle state. Codex-client battle commands and Web battle buttons therefore operate on the same save.
 
 Do not skip the D20 check after a user action unless the action is purely administrative, such as asking to inspect state or adjust configuration.
 

@@ -114,17 +114,26 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
 test('GM skill uses Engine remote save and memory tools', () => {
   for (const tool of [
     'anify_save_get',
-    'anify_save_update',
     'anify_start_adventure',
     'anify_get_context',
     'roll_check',
     'anify_resolve_action',
+    'anify_apply_gm_resolution',
+    'anify_game_action',
   ]) {
     assert.match(gmSkill, new RegExp(tool));
   }
-  assert.match(gmSkill, /saveUpdateArguments/);
-  assert.match(orchestration, /saveUpdateArguments/);
-  assert.match(d20, /saveUpdateArguments/);
+  for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
+    assert.doesNotMatch(source, /anify_save_update|saveUpdateArguments/);
+  }
+  assert.match(gmSkill, /save\.game/);
+  assert.match(gmSkill, /save\.adventure/);
+  assert.match(gmSkill, /Never patch `save\.game` directly/);
+  assert.match(gmSkill, /use `lynn_tale` and `lyra_oravia`/);
+  assert.match(gmSkill, /pass it as `gm_thread_id`; otherwise omit it and never fabricate one/);
+  assert.match(gmSkill, /battle\.start <enemyId>/);
+  assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
+  assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
   assert.match(d20, /reject missing or fabricated outcomes/);
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);

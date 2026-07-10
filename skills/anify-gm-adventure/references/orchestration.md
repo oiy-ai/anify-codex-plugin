@@ -7,17 +7,17 @@ This protocol keeps Engine rules, GM narration, and Character AI independently e
 Engine MCP owns:
 
 - Firebase-gated tool access.
-- Remote GM save state through `anify_save_get` and `anify_save_update`.
+- Canonical gameplay state shared by Codex and Web through `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`.
 - Character long-term memory through `anify_memory_search` and `anify_memory_remember`.
 - World context loaded from Engine KV.
 - D20 check results.
-- Deterministic rule advice and state deltas.
+- Deterministic rule advice, revision validation, and all state mutations.
 
 GM AI owns:
 
 - Scene framing, NPC actions, pacing, hidden quest framework, and player-facing consequences.
 - DC, modifier, advantage/disadvantage, and stakes before calling `roll_check`.
-- Translating Engine deltas into compact remote save patches.
+- Adding player-facing narration and next choices to an Engine-provided resolution before asking Engine to commit it.
 
 Installed Anify character plugins own:
 
@@ -90,7 +90,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ### EngineResolution
 
-`anify_resolve_action` returns rule advice and deltas for Codex to apply with `anify_save_update`:
+`anify_resolve_action` reads the authenticated canonical save and returns rule advice plus a revision-bound resolution. Codex may fill only its presentation fields before submitting it to `anify_apply_gm_resolution`:
 
 ```json
 {
@@ -99,38 +99,27 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
   "checkResult": {
     "outcome": "success"
   },
-  "stateDelta": {
-    "player": {},
-    "inventory": [],
+  "ruleAdvice": "Resolve investigate as successful and update the remote save.",
+  "resolution": {
+    "type": "adventure",
+    "revision": 4,
+    "narrative": "",
+    "choices": [],
     "flags": []
   },
-  "ruleAdvice": "Resolve investigate as successful and update the remote save.",
-  "saveUpdateArguments": {
-    "patch": {
-      "state": {
-        "last_action": "Search the grove",
-        "last_action_kind": "investigate",
-        "last_check_outcome": "success",
-        "last_rule_advice": "Resolve investigate as successful and update the remote save."
-      }
+  "turn_entry": {
+    "action": "Search the grove",
+    "actionKind": "investigate",
+    "outcome": "success",
+    "check_result": {
+      "outcome": "success"
     },
-    "turn_entry": {
-      "action": "Search the grove",
-      "actionKind": "investigate",
-      "outcome": "success",
-      "check_result": {
-        "outcome": "success"
-      },
-      "state_delta": {
-        "player": {},
-        "inventory": [],
-        "flags": []
-      },
-      "rule_advice": "Resolve investigate as successful and update the remote save."
-    }
+    "rule_advice": "Resolve investigate as successful and update the canonical save."
   }
 }
 ```
+
+The GM must not alter `type`, `revision`, check data, or Engine-generated mechanical effects. It may add the visible `narrative`, exactly three normal-turn `choices`, and marker effects explicitly justified by Engine context. `anify_apply_gm_resolution` is the only commit for this packet.
 
 ### CharacterReaction
 
@@ -164,8 +153,10 @@ This packet is internal orchestration data. Never print `NO_REPLY`, the JSON obj
 7. Codex calls `roll_check`.
 8. Codex calls `anify_resolve_action`.
 9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-10. Codex calls `anify_save_update` with Engine's `saveUpdateArguments`, plus compact state/progress/memory additions only when needed for continuity.
+10. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution`, optionally including compact durable GM or party memories.
 11. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
+
+For deterministic UI-style operations, call `anify_game_action`. A `BATTLE` marker is valid only after `anify_game_action` successfully runs `battle.start <enemyId>`. Subsequent Codex-client attacks, skills, items, and flee operations also use `anify_game_action`, exactly like Web uses Engine's browser action endpoint.
 
 ## GM Narration Rules
 

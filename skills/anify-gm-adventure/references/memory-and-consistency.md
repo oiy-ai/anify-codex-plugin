@@ -6,8 +6,9 @@ Anify-GM owns GM progress and party-facing continuity through Engine MCP. Instal
 
 Use:
 
-- `anify_save_get`: retrieve profile, current state, progress, GM memory, party memory, and recent turn log.
-- `anify_save_update`: patch current state, progress, GM memory, party memory, and append resolved turn entries.
+- `anify_save_get`: retrieve the profile, canonical `game` state, active `adventure`, GM memory, party memory, and recent turn log.
+- `anify_apply_gm_resolution`: atomically apply an Engine-validated narrative resolution and append its resolved turn entry and durable memories.
+- `anify_game_action`: run deterministic Engine commands, including every numerical battle action, against the same canonical state used by Web.
 - `anify_memory_search`: retrieve character-specific durable memories.
 - `anify_memory_remember`: store character-specific durable memories.
 
@@ -17,11 +18,11 @@ Do not write `.anify` memory files. Do not create or inspect a local Anify user 
 
 After each resolved player action:
 
-- Append a concise turn entry with `anify_save_update`.
-- Patch current location, stats, inventory, flags, active quests, and scene summary when they change.
+- Commit the Engine resolution with `anify_apply_gm_resolution` so the turn entry and gameplay mutation succeed or fail together.
+- Let Engine update location, stats, inventory, flags, quests, and battle state. Never recreate those mutations as a plugin-authored patch.
 - Add only durable GM facts to GM memory.
 - Add only party-known durable memories to party memory.
-- Update progress when an adventure ends or a durable cross-adventure fact changes.
+- Express adventure completion and durable effects through the structured resolution, not a second save write.
 
 Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 
@@ -59,7 +60,7 @@ Character AI must not:
 
 For each turn, retrieve:
 
-- The remote GM save from `anify_save_get`.
+- The canonical remote save from `anify_save_get`.
 - Fresh world context from `anify_get_context` only when needed.
 - Character memories from `anify_memory_search` when a role plugin is active or when the user references prior relationship/context.
 

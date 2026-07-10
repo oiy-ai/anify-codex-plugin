@@ -18,6 +18,8 @@ Use the `anify-gm-adventure` skill to start or continue a campaign. Use the role
 
 Anify Codex plugins do not maintain local user workspaces. GM saves and role memories are stored by Anify Engine MCP:
 
-- GM save tools: `anify_save_initialize`, `anify_save_get`, `anify_save_update`.
+- Canonical save tools: `anify_save_initialize`, `anify_save_get`.
 - Character memory tools: `anify_memory_search`, `anify_memory_remember`.
-- Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_resolve_action`.
+- Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_resolve_action`, `anify_apply_gm_resolution`, `anify_game_action`.
+
+The remote save contains one canonical Engine game state. Codex and Anify Web mutate that same state through Engine-owned operations; plugins never submit arbitrary game-state patches.
