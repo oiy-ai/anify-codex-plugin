@@ -12,7 +12,7 @@ Engine MCP owns:
 - World context loaded from Engine KV.
 - D20 check results.
 - Deterministic rule advice, revision validation, and all state mutations.
-- Per-user SQLite operation receipts keyed by the host-provided run ID and tool stage.
+- Per-user SQLite operation receipts keyed by the effective operation ID and tool stage: the trusted Shell run header when present, otherwise the Engine-issued native turn ID.
 
 GM AI owns:
 
@@ -71,7 +71,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ```json
 {
-  "operation_id": "host run id",
+  "operation_id": "effective operation id",
   "check_id": "uuid",
   "timestamp": "UTC timestamp",
   "uid": "authenticated Firebase uid",
@@ -113,7 +113,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
     "flags": []
   },
   "resolution_packet": {
-    "operation_id": "host run id",
+    "operation_id": "effective operation id",
     "resolution_id": "uuid",
     "check_id": "uuid",
     "uid": "authenticated Firebase uid",
@@ -138,7 +138,9 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 The GM must not alter `resolution_packet`, `type`, `revision`, check data, or Engine-generated mechanical effects. It may add the visible `narrative`, exactly three normal-turn `choices`, and marker effects explicitly justified by Engine context. Submit the exact `resolution_packet` to `anify_apply_gm_resolution` and do not resubmit `turn_entry`; Engine commits its stored turn entry. `anify_apply_gm_resolution` is the only commit for this packet.
 
-The host automatically sends one stable `x-anify-operation-id` for the whole run. The model never constructs or transports that header value; it only preserves matching provenance fields returned by Engine. If a run stops after Engine commits but before the host records EOF, the retried run receives the same check, resolution packet, and apply result. Same-stage input changes under that operation ID fail closed.
+Every logical user or GM turn starts with the read-only `anify_begin_operation`. Retain the returned `operation_id` and pass it as a required top-level argument to every mutation in that turn. Shell additionally sends its trusted run ID through `x-anify-operation-id`; that header takes precedence inside Engine when present, but the argument remains required. Never invent or rotate an operation ID.
+
+Every GM turn then calls the read-only `anify_pending_turn_get` before loading or advancing the scene. A pending `check` must continue through `anify_resolve_action` with its exact returned `action` and full `check_result`. For a pending `resolution`, read canonical context if needed, add only the permitted presentation fields to its returned Engine resolution, and commit it through `anify_apply_gm_resolution` with the exact returned `resolution_packet`. Do not reroll, discard pending work, change provenance, or start a new normal turn while pending work exists.
 
 ### CharacterReaction
 
@@ -169,24 +171,26 @@ If `save.adventure.opening_pending` is true, commit the opening before returning
 
 1. Read fresh world context and `save.game.resumeCheckpoint.revision`.
 2. Write the visible opening narration and exactly three choices.
-3. Call `anify_apply_gm_resolution` with an `adventure` resolution at that exact revision and a compact opening `turn_entry`. Omit `resolution_packet` for this opening-only commit.
+3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id`, an `adventure` resolution at that exact revision, and a compact opening `turn_entry`. Omit `resolution_packet` for this opening-only commit.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
 The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.
 
 ### Player action turns
 
-1. Call `anify_save_get`.
-2. Call `anify_get_context` if fresh world context is needed.
-3. GM builds or updates `TurnPacket`.
-4. GM presents scene prose and emits exactly three options through the line-level `CHOICES` marker.
-5. User chooses or writes a custom action.
-6. GM creates `CheckRequest`.
-7. Codex calls `roll_check`.
-8. Codex calls `anify_resolve_action`.
-9. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-10. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution` with the exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
-11. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
+1. Call `anify_begin_operation` and retain its returned `operation_id`.
+2. Call `anify_pending_turn_get`; recover its exact pending check or resolution before starting a new normal turn. Read-only canonical state/context calls remain available while completing recovery.
+3. Call `anify_save_get`.
+4. Call `anify_get_context` if fresh world context is needed.
+5. GM builds or updates `TurnPacket`.
+6. GM presents scene prose and emits exactly three options through the line-level `CHOICES` marker.
+7. User chooses or writes a custom action.
+8. GM creates `CheckRequest`.
+9. Codex calls `roll_check` with the turn's `operation_id`.
+10. Codex calls `anify_resolve_action` with that same `operation_id`.
+11. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
+12. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
+13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
 To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
 

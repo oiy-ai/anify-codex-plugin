@@ -17,21 +17,24 @@ Anify Installer owns first-run client setup only:
 
 Do not run gameplay. Do not start an adventure. Do not ask for Firebase credentials inside Codex.
 
-The host injects the stable run operation ID through the MCP `x-anify-operation-id` header. Never ask the user for it or add it to `anify_save_initialize` arguments.
+Start the logical initialization turn by calling the read-only `anify_begin_operation` and retain its returned `operation_id`. Pass that same ID as the required top-level `operation_id` argument to `anify_save_initialize`. In Shell, the trusted `x-anify-operation-id` header takes precedence inside Engine, but the argument is still mandatory. Never ask the user to provide or invent an operation ID.
 
 ## Initialization Flow
 
-1. Verify the Engine login by calling `anify_auth_status`.
+1. Call `anify_begin_operation` and retain its returned `operation_id` for the entire initialization turn.
+   - If the MCP call fails because auth is missing, stop and tell the user to reconnect Anify from the Codex plugin/MCP login UI.
+   - Do not collect or paste account credentials.
+2. Verify the Engine login by calling `anify_auth_status`.
    - If the MCP call fails or reports missing auth, stop and tell the user to reconnect Anify from the Codex plugin/MCP login UI.
    - Do not collect or paste account credentials.
-2. Collect exactly these save initialization fields from the user:
+3. Collect exactly these save initialization fields from the user:
    - name
    - profession
    - gender
    - other settings
-3. Initialize the remote GM save by calling `anify_save_initialize` with those fields.
+4. Initialize the remote GM save by calling `anify_save_initialize` with the retained `operation_id` and those fields.
    - If a remote GM save already exists, do not overwrite it unless the user explicitly asks to reinitialize and confirms data replacement.
-   - If the user confirms replacement, call `anify_save_initialize` with `force: true`.
+   - If the user confirms replacement, call `anify_save_initialize` with the same `operation_id` and `force: true`.
 
 ## Final Guidance
 

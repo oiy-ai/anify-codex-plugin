@@ -2,7 +2,7 @@
   "mcpServers": {
     "anify": {
       "type": "http",
-      "url": "http://localhost:18787/mcp",
+      "url": "https://anify.ai/mcp",
       "env_http_headers": {
         "x-anify-operation-id": "ANIFY_OPERATION_ID"
       },

@@ -1,6 +1,6 @@
 {
   "name": "anify-installer",
-  "version": "0.1.0+codex.20260710134256",
+  "version": "0.1.0+codex.20260710142244",
   "description": "Initialize the local Anify Codex client environment before installing GM and character plugins.",
   "author": {
     "name": "Local developer"

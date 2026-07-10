@@ -6,6 +6,8 @@ Anify-GM owns GM progress and party-facing continuity through Engine MCP. Instal
 
 Use:
 
+- `anify_begin_operation`: create or recover the stable operation ID for one logical user or GM turn.
+- `anify_pending_turn_get`: inspect unfinished GM D20 work before advancing a turn.
 - `anify_save_get`: retrieve the profile, canonical `game` state, active `adventure`, GM memory, party memory, and recent turn log.
 - `anify_apply_gm_resolution`: atomically apply an Engine-validated narrative resolution and append its resolved turn entry and durable memories.
 - `anify_game_action`: run deterministic Engine commands, including every numerical battle action, against the same canonical state used by Web.
@@ -14,7 +16,9 @@ Use:
 
 Do not write `.anify` memory files. Do not create or inspect a local Anify user workspace.
 
-Mutating calls receive the host's stable run ID through the automatic `x-anify-operation-id` header. Do not put it in model-authored tool arguments. Engine receipts make identical interrupted-run retries idempotent, including memory writes and an already committed GM turn.
+Start each logical user or GM turn with the read-only `anify_begin_operation` and retain its returned `operation_id`. Pass that ID as a required top-level argument to every mutation, including `anify_memory_remember`. Shell's trusted `x-anify-operation-id` header takes precedence when present, but the argument remains mandatory. Engine receipts make matching interrupted-run retries idempotent, including memory writes and an already committed GM turn.
+
+At the beginning of every GM turn, call `anify_pending_turn_get` after `anify_begin_operation`. Continue a returned pending check with its exact action and check result, or a returned pending resolution with its exact packet. Never reroll or discard pending work.
 
 ## Memory Update Rules
 
@@ -48,7 +52,7 @@ Character AI may:
 - React emotionally.
 - Offer short in-character advice.
 - Notice inconsistencies from the character's point of view.
-- Update memory through `anify_memory_remember`.
+- Update memory through `anify_memory_remember`, passing the current logical turn's `operation_id`.
 - Suggest a likely next action as a suggestion, not a command.
 
 Character AI must not:

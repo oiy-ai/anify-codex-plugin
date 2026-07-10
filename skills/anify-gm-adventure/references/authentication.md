@@ -12,18 +12,21 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 
 The public Codex client uses normal remote MCP OAuth discovery. The Codex shell runtime receives the caller's Firebase bearer token on `/v1/runs` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
 
-For mutating tools, the host also provides one stable operation ID per Codex run. Plugin MCP config maps the shell-owned `ANIFY_OPERATION_ID` environment variable to the `x-anify-operation-id` HTTP header through `env_http_headers`. The model must never put this value in tool arguments, invent it, or rotate it between D20 stages. Queue retries reuse the same run ID so Engine can replay committed receipts without duplicating a turn.
+Every logical user or GM turn must first call the read-only `anify_begin_operation` and retain its returned `operation_id`. Every mutating tool call in that turn must include that same ID as the required top-level `operation_id` argument. Plugin MCP config also maps the Shell-owned `ANIFY_OPERATION_ID` environment variable to the trusted `x-anify-operation-id` header through `env_http_headers`; when present, the header takes precedence inside Engine, but the argument remains mandatory. Native Codex clients work without that environment variable because Engine issues the ID through `anify_begin_operation`. Never invent or rotate an ID between stages.
+
+At the start of every GM turn, call the read-only `anify_pending_turn_get` immediately after `anify_begin_operation`. If it reports a pending check, continue with its exact `action` and full `check_result`; if it reports a pending resolution, use read-only canonical context as needed and commit its returned resolution with the exact `resolution_packet`. Never reroll, discard, or replace pending provenance. Only begin a new normal turn when no pending work exists.
 
 ## Required Flow
 
 Before starting or continuing an adventure:
 
-1. Call `anify_save_get`.
-2. If the remote GM save is not initialized, call `anify_save_initialize` with a compact default player profile inferred from the request, then call `anify_save_get` again.
-3. Read canonical gameplay state from `save.game` and active-session metadata from `save.adventure`.
-4. If `save.adventure` is null or the user explicitly requests a fresh adventure, call `anify_start_adventure` with `session_intent: "new"` and continue only if it returns a new active canonical session. A Shell new session must carry a new host-provided logical thread ID; omit `gm_thread_id` for native sessions rather than inventing one.
-5. If `save.adventure` is active and the user continues it, call `anify_start_adventure` with `session_intent: "resume"` and no changed session fields. Continue only if Engine returns that same fixed session.
-6. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
+1. Call `anify_begin_operation`, retain its `operation_id`, call `anify_pending_turn_get`, and finish any returned pending check or resolution before starting a new normal turn.
+2. Call `anify_save_get`.
+3. If the remote GM save is not initialized, call `anify_save_initialize` with that `operation_id` and a compact default player profile inferred from the request, then call `anify_save_get` again.
+4. Read canonical gameplay state from `save.game` and active-session metadata from `save.adventure`.
+5. If `save.adventure` is null or the user explicitly requests a fresh adventure, call `anify_start_adventure` with the same `operation_id` and `session_intent: "new"`, and continue only if it returns a new active canonical session. A Shell new session must carry a new host-provided logical thread ID; omit `gm_thread_id` for native sessions rather than inventing one.
+6. If `save.adventure` is active and the user continues it, call `anify_start_adventure` with the same `operation_id`, `session_intent: "resume"`, and no changed session fields. Continue only if Engine returns that same fixed session.
+7. If an Engine MCP call fails because authorization is missing or expired, surface the failure directly and let the Codex host reconnect Anify.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.
 
@@ -43,4 +46,4 @@ Do not ask the user to paste Firebase email/password into Codex.
 
 ## Save Authority
 
-Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`; it must not create or maintain a local Anify user workspace or submit arbitrary gameplay patches.
+Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`; every mutation argument must include the logical turn's `operation_id`. Codex must not create or maintain a local Anify user workspace or submit arbitrary gameplay patches.

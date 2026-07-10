@@ -11,14 +11,15 @@ Use this shared workflow with the active character's persona skill. The persona 
 
 Character memory is stored by Anify Engine MCP. Do not read or write local files for character state.
 
-The host injects the stable run operation ID through the MCP `x-anify-operation-id` header. Never ask for it, expose it, or add it to memory tool arguments; identical interrupted-run retries are handled by Engine receipts.
+At the start of every logical user turn, call the read-only `anify_begin_operation` and retain its returned `operation_id` for the whole turn. Pass that same ID as the required top-level `operation_id` argument to every `anify_memory_remember` call. In Shell, the trusted `x-anify-operation-id` header takes precedence inside Engine, but the argument remains mandatory. Never ask the user for an ID, expose it, invent it, or rotate it during the turn; matching interrupted retries are handled by Engine receipts.
 
 Before responding:
 
-1. Read the active persona skill.
-2. Call `anify_memory_search` with the active character name and the user's current message.
-3. Use only relevant returned memories; do not dump raw memory records unless the user asks to inspect memory.
-4. If the user establishes a durable preference, relationship fact, promise, unresolved story detail, or emotionally significant event, call `anify_memory_remember` for the active character before the turn is complete.
+1. Call `anify_begin_operation` and retain its returned `operation_id`.
+2. Read the active persona skill.
+3. Call `anify_memory_search` with the active character name and the user's current message.
+4. Use only relevant returned memories; do not dump raw memory records unless the user asks to inspect memory.
+5. If the user establishes a durable preference, relationship fact, promise, unresolved story detail, or emotionally significant event, call `anify_memory_remember` for the active character with the retained `operation_id` before the turn is complete.
 
 ## Chat Modes
 

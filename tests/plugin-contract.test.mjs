@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
-const engineRoot = join(repoRoot, '..', 'anify-engine');
 const webRoot = join(repoRoot, '..', 'anify-web');
 const webIconRoot = join(repoRoot, '..', 'anify-web', 'public', 'icons');
 
@@ -31,7 +30,6 @@ const authentication = text('skills/anify-gm-adventure/references/authentication
 const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
 const webOutput = text('skills/anify-gm-adventure/references/web-output-contract.md');
-const engineMarkerParser = readFileSync(join(engineRoot, 'src/marker-parser.ts'), 'utf8');
 const webCharacterParser = readFileSync(join(webRoot, 'src/lib/parseChatSegments.ts'), 'utf8');
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
@@ -81,9 +79,11 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
   assert.equal(installerMcp.mcpServers.anify.url, configuredMcpUrl);
 
   const installerSkill = text('plugins/anify-installer/skills/anify-installer/SKILL.md');
+  assert.match(installerSkill, /anify_begin_operation/);
   assert.match(installerSkill, /anify_save_initialize/);
   assert.match(installerSkill, /x-anify-operation-id/);
-  assert.match(installerSkill, /Never ask the user for it or add it to `anify_save_initialize` arguments/);
+  assert.match(installerSkill, /required top-level `operation_id` argument/);
+  assert.match(installerSkill, /header takes precedence inside Engine, but the argument is still mandatory/);
   assert.doesNotMatch(installerSkill, /cleanup-local-state/);
   assert.doesNotMatch(installerSkill, /install-runtime|mem0|local GM Markdown save/i);
 
@@ -115,6 +115,8 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
 
 test('GM skill uses Engine remote save and memory tools', () => {
   for (const tool of [
+    'anify_begin_operation',
+    'anify_pending_turn_get',
     'anify_save_get',
     'anify_start_adventure',
     'anify_get_context',
@@ -140,13 +142,22 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /Never follow it with `anify_game_action battle\.start`/);
   assert.match(gmSkill, /matching `save\.game\.battleState` and `battle\.await_action` checkpoint/);
   assert.match(gmSkill, /x-anify-operation-id/);
-  assert.match(gmSkill, /Never add an operation ID to tool arguments/);
+  assert.match(gmSkill, /Every mutating tool argument[\s\S]*must include the same top-level `operation_id`/);
+  assert.match(gmSkill, /header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory/);
+  assert.match(gmSkill, /pending `check`[\s\S]*exact returned `action`[\s\S]*full `check_result`/);
+  assert.match(gmSkill, /pending `resolution`[\s\S]*exact returned `resolution_packet`/);
+  assert.match(gmSkill, /Do not reroll, resolve again, discard the packet/);
   assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
   assert.match(orchestration, /same successful `anify_apply_gm_resolution` response already contains the matching active battle state/);
   assert.doesNotMatch(orchestration, /successfully runs `battle\.start/);
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
   assert.match(d20, /rejects every missing, changed, or fabricated field/);
   assert.match(d20, /original check, packet, or committed apply result/);
+  for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
+    assert.match(source, /anify_begin_operation/);
+    assert.match(source, /anify_pending_turn_get/);
+    assert.match(source, /operation_id/);
+  }
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
     assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
@@ -178,26 +189,37 @@ test('GM commits battle creation atomically with one immutable resolution packet
   assert.match(webOutput, /Never call `anify_game_action battle\.start` afterward/);
 });
 
-test('GM output contract matches the Web line marker parser', () => {
+test('GM output contract is parsed by the Web line marker parser', async () => {
   assert.match(gmSkill, /references\/web-output-contract\.md/);
   assert.match(gmSkill, /Do not print numbered or bulleted options/);
   assert.match(gmSkill, /exactly one line-level `CHOICES` marker/);
   assert.doesNotMatch(gmSkill, /Exactly three numbered options|A line saying custom actions are allowed/);
 
-  for (const marker of [
-    'CHOICES',
-    'BATTLE',
-    'ADVENTURE_END',
-    'QUEST_OFFER',
-    'QUEST_UPDATE',
-    'ITEM_GIVE',
-    'FLAG_SET',
-    'SYSTEM_MESSAGE',
-    'STATUS_UPDATE',
-  ]) {
+  const markerPayloads = [
+    ['CHOICES', ['Investigate', 'Advance', 'Wait']],
+    ['BATTLE', { enemyId: 'corrupted-forest-wolf' }],
+    ['ADVENTURE_END', { outcome: 'success', flagsSet: ['forest-cleared'] }],
+    ['QUEST_OFFER', { id: 'quest-id', name: 'Quest', description: 'Description', completionConditions: [] }],
+    ['QUEST_UPDATE', { questId: 'quest-id', title: 'Updated title' }],
+    ['ITEM_GIVE', { itemId: 'item-id', quantity: 1 }],
+    ['FLAG_SET', { key: 'flag-id', value: true }],
+    ['SYSTEM_MESSAGE', { tier: 'success_with_cost', title: 'Check', description: 'Result' }],
+    ['STATUS_UPDATE', { hp: -5 }],
+  ];
+  for (const [marker] of markerPayloads) {
     assert.match(webOutput, new RegExp(`\\[${marker}:`));
-    assert.match(engineMarkerParser, new RegExp(`'${marker}'`));
   }
+
+  const { parseCodexOutput } = await import('../../anify-web/src/lib/codex-shell/output.ts');
+  const parsed = parseCodexOutput([
+    'Visible narration.',
+    ...markerPayloads.map(([type, payload]) => `[${type}: ${JSON.stringify(payload)}]`),
+  ].join('\n'));
+  assert.equal(parsed.text, 'Visible narration.');
+  assert.deepEqual(
+    parsed.markers,
+    markerPayloads.map(([type, payload]) => ({ type, payload })),
+  );
 
   assert.match(webOutput, /\[CHOICES: \["Option 1","Option 2","Option 3"\]\]/);
   assert.match(webOutput, /`CHOICES` must be the final non-empty line/);
@@ -212,7 +234,7 @@ test('GM output contract matches the Web line marker parser', () => {
 
 test('all plugins share the Anify Engine MCP config', () => {
   assert.equal(gmMcp.mcpServers.anify.type, 'http');
-  assert.match(gmMcp.mcpServers.anify.url, /^https?:\/\/.+\/mcp$/);
+  assert.equal(gmMcp.mcpServers.anify.url, 'https://anify.ai/mcp');
   assert.equal(gmMcp.mcpServers.anify.bearer_token_env_var, undefined);
   assert.deepEqual(gmMcp.mcpServers.anify.env_http_headers, {
     'x-anify-operation-id': 'ANIFY_OPERATION_ID',
@@ -229,8 +251,10 @@ test('role plugins expose persona skills and shared remote character workflow', 
   assert.ok(webCharacterParser.includes('const ACTION_PATTERN = /\\[([^\\]]+)\\]/g;'));
   assert.match(sharedSkill, /anify_memory_search/);
   assert.match(sharedSkill, /anify_memory_remember/);
+  assert.match(sharedSkill, /anify_begin_operation/);
   assert.match(sharedSkill, /x-anify-operation-id/);
-  assert.match(sharedSkill, /Never ask for it, expose it, or add it to memory tool arguments/);
+  assert.match(sharedSkill, /required top-level `operation_id` argument/);
+  assert.match(sharedSkill, /header takes precedence inside Engine, but the argument remains mandatory/);
   assert.match(sharedSkill, /ASCII square brackets/);
   assert.match(sharedSkill, /spoken dialogue outside the brackets/);
   assert.match(sharedSkill, /In private chat, do not prefix the reply with the character name/);
