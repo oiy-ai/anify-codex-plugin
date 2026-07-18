@@ -36,7 +36,7 @@ node scripts/build_plugin_packages.mjs --target production --version-id local-1
 
 The commands write five public packages under `dist/<target>/` without modifying tracked plugin manifests. Preview artifacts use `https://anify-web-preview.xsun.workers.dev/mcp` and the npm `preview` dist-tag. Production artifacts use `https://anify.ai/mcp` and the npm `latest` dist-tag.
 
-Pushing the same source commit to `preview` and `main` triggers `.github/workflows/publish-plugins.yml`. The workflow runs contract tests, verifies every npm tarball, then publishes:
+Pushing the same source commit to `preview` and `main` triggers `.github/workflows/publish-plugins.yml`. The workflow runs contract tests, verifies every npm tarball, then publishes through npm Trusted Publishing (OIDC), without an npm token:
 
 - `@oiy-ai/anify-installer`
 - `@oiy-ai/anify-gm`

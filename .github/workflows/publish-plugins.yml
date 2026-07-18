@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: publish-codex-plugins-${{ github.ref_name }}
@@ -29,12 +30,13 @@ jobs:
       TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref_name == 'preview' && 'preview' || 'production') }}
       VERSION_ID: ${{ github.run_number }}-${{ github.run_attempt }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Verify publish source
         run: |
@@ -54,8 +56,6 @@ jobs:
 
       - name: Publish npm packages
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           DIST_TAG=$(node -e 'console.log(require(`./dist/${process.env.TARGET}/build-manifest.json`).distTag)')
           while IFS= read -r package_path; do
