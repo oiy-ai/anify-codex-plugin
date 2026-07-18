@@ -24,3 +24,24 @@ Anify Codex plugins do not maintain local user workspaces. GM saves and role mem
 - Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_resolve_action`, `anify_apply_gm_resolution`, `anify_game_action`.
 
 The remote save contains one canonical Engine game state. Codex and Anify Web mutate that same state through Engine-owned operations; plugins never submit arbitrary game-state patches. Engine receipts make a retried Shell run replay the original committed tool stages instead of rerolling or duplicating a turn.
+
+## Build and publish
+
+The source tree keeps one canonical plugin implementation. Environment-specific MCP URLs are generated only in npm package artifacts from `config/mcp-targets.json`:
+
+```bash
+node scripts/build_plugin_packages.mjs --target preview --version-id local-1
+node scripts/build_plugin_packages.mjs --target production --version-id local-1
+```
+
+The commands write five public packages under `dist/<target>/` without modifying tracked plugin manifests. Preview artifacts use `https://anify-web-preview.xsun.workers.dev/mcp` and the npm `preview` dist-tag. Production artifacts use `https://anify.ai/mcp` and the npm `latest` dist-tag.
+
+Pushing the same source commit to `preview` and `main` triggers `.github/workflows/publish-plugins.yml`. The workflow runs contract tests, verifies every npm tarball, then publishes:
+
+- `@oiy-ai/anify-installer`
+- `@oiy-ai/anify-gm`
+- `@oiy-ai/anify-lynn`
+- `@oiy-ai/anify-thera`
+- `@oiy-ai/anify-lyra`
+
+The root marketplace installs production packages. The preview marketplace is available at `marketplaces/preview/.agents/plugins/marketplace.json` and resolves the same packages through their `preview` dist-tag.

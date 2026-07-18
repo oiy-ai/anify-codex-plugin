@@ -34,6 +34,7 @@ const webCharacterParser = readFileSync(join(webRoot, 'src/lib/parseChatSegments
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
 const marketplace = json('.agents/plugins/marketplace.json');
+const previewMarketplace = json('marketplaces/preview/.agents/plugins/marketplace.json');
 const gmMcp = json('.mcp.json');
 const installerMcp = json('plugins/anify-installer/.mcp.json');
 const configuredMcpUrl = gmMcp.mcpServers.anify.url;
@@ -55,18 +56,31 @@ function roleMcp(role) {
   return json(`${roleRoot(role)}/.mcp.json`);
 }
 
-test('marketplace exposes installer, GM, and role plugins', () => {
+test('production and preview marketplaces expose environment-tagged npm plugins', () => {
   assert.equal(marketplace.name, 'anify-codex');
   assert.equal(marketplace.interface.displayName, 'Oiy AI');
   assert.deepEqual(
-    marketplace.plugins.map((plugin) => [plugin.name, plugin.source.path, plugin.category, plugin.policy.authentication]),
+    marketplace.plugins.map((plugin) => [
+      plugin.name,
+      plugin.source.source,
+      plugin.source.package,
+      plugin.source.version,
+      plugin.category,
+      plugin.policy.authentication,
+    ]),
     [
-      ['anify-installer', './plugins/anify-installer', 'Productivity', 'ON_INSTALL'],
-      ['anify-gm', '.', 'Entertainment', 'ON_USE'],
-      ['anify-lynn', './plugins/anify-lynn', 'Entertainment', 'ON_USE'],
-      ['anify-thera', './plugins/anify-thera', 'Entertainment', 'ON_USE'],
-      ['anify-lyra', './plugins/anify-lyra', 'Entertainment', 'ON_USE'],
+      ['anify-installer', 'npm', '@oiy-ai/anify-installer', 'latest', 'Productivity', 'ON_INSTALL'],
+      ['anify-gm', 'npm', '@oiy-ai/anify-gm', 'latest', 'Entertainment', 'ON_USE'],
+      ['anify-lynn', 'npm', '@oiy-ai/anify-lynn', 'latest', 'Entertainment', 'ON_USE'],
+      ['anify-thera', 'npm', '@oiy-ai/anify-thera', 'latest', 'Entertainment', 'ON_USE'],
+      ['anify-lyra', 'npm', '@oiy-ai/anify-lyra', 'latest', 'Entertainment', 'ON_USE'],
     ],
+  );
+  assert.equal(previewMarketplace.name, 'anify-codex-preview');
+  assert.equal(previewMarketplace.interface.displayName, 'Oiy AI Preview');
+  assert.deepEqual(
+    previewMarketplace.plugins.map((plugin) => [plugin.name, plugin.source.package, plugin.source.version]),
+    marketplace.plugins.map((plugin) => [plugin.name, plugin.source.package, 'preview']),
   );
 });
 

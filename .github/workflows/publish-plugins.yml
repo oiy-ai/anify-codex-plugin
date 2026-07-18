@@ -1,0 +1,63 @@
+name: Publish Codex plugins
+
+on:
+  push:
+    branches:
+      - main
+      - preview
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Plugin environment to publish
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-codex-plugins-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref_name == 'preview' && 'preview' || 'production') }}
+      VERSION_ID: ${{ github.run_number }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify source contracts
+        run: |
+          python3 scripts/sync_character_shared.py
+          git diff --exit-code
+          node --test tests/*.test.mjs
+
+      - name: Build environment packages
+        run: node scripts/build_plugin_packages.mjs --target "$TARGET" --version-id "$VERSION_ID"
+
+      - name: Verify npm package contents
+        shell: bash
+        run: |
+          while IFS= read -r package_path; do
+            npm pack "$package_path" --dry-run
+          done < <(node -e 'const manifest = require(`./dist/${process.env.TARGET}/build-manifest.json`); for (const entry of manifest.packages) console.log(`dist/${process.env.TARGET}/${entry.path}`);')
+
+      - name: Publish npm packages
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          DIST_TAG=$(node -e 'console.log(require(`./dist/${process.env.TARGET}/build-manifest.json`).distTag)')
+          while IFS= read -r package_path; do
+            npm publish "$package_path" --access public --tag "$DIST_TAG"
+          done < <(node -e 'const manifest = require(`./dist/${process.env.TARGET}/build-manifest.json`); for (const entry of manifest.packages) console.log(`dist/${process.env.TARGET}/${entry.path}`);')

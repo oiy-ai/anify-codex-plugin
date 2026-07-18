@@ -1,7 +1,7 @@
 {
-  "name": "anify-codex",
+  "name": "anify-codex-preview",
   "interface": {
-    "displayName": "Oiy AI"
+    "displayName": "Oiy AI Preview"
   },
   "plugins": [
     {
@@ -9,7 +9,7 @@
       "source": {
         "source": "npm",
         "package": "@oiy-ai/anify-installer",
-        "version": "latest"
+        "version": "preview"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -22,7 +22,7 @@
       "source": {
         "source": "npm",
         "package": "@oiy-ai/anify-gm",
-        "version": "latest"
+        "version": "preview"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -35,7 +35,7 @@
       "source": {
         "source": "npm",
         "package": "@oiy-ai/anify-lynn",
-        "version": "latest"
+        "version": "preview"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -48,7 +48,7 @@
       "source": {
         "source": "npm",
         "package": "@oiy-ai/anify-thera",
-        "version": "latest"
+        "version": "preview"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -61,7 +61,7 @@
       "source": {
         "source": "npm",
         "package": "@oiy-ai/anify-lyra",
-        "version": "latest"
+        "version": "preview"
       },
       "policy": {
         "installation": "AVAILABLE",

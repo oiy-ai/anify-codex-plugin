@@ -1,0 +1,10 @@
+{
+  "preview": {
+    "mcpUrl": "https://anify-web-preview.xsun.workers.dev/mcp",
+    "distTag": "preview"
+  },
+  "production": {
+    "mcpUrl": "https://anify.ai/mcp",
+    "distTag": "latest"
+  }
+}
