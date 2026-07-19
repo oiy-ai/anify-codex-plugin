@@ -64,16 +64,16 @@ After the Turn Operation Protocol reports no pending turn, run the normal active
 
 ### Persisted effect mapping
 
-Web markers are projections of the successful Engine commit, never substitutes for it:
+Engine mutations always precede their player-facing projection. `ITEM_GIVE` is the only persisted-effect Web marker:
 
 - Never send `revision` or `ruleDelta`; Engine applies its stored values. Never author HP, MP, EXP, gold, D20 inventory deltas, or D20 flags.
 - Put a GM-granted known world item in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Do not add names, descriptions, kinds, slots, or invented item IDs; Engine resolves all item metadata from the world catalog. Commit it, then emit the matching `ITEM_GIVE` marker.
-- Put a new dynamic quest in `resolution.questOffers`, commit it, then emit the matching `QUEST_OFFER` marker. The player accepts, rejects, or shelves it through Engine; never auto-accept it.
-- Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Commit the array, then emit a matching `FLAG_SET` marker for each player-visible persisted flag.
+- Put a new dynamic quest in `resolution.questOffers` and commit it. The Web task panel reads the canonical Engine quest; there is no quest marker. The player accepts, rejects, or shelves it through Engine; never auto-accept it.
+- Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Flags have no standalone Web marker.
 - Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.
-- Emit `STATUS_UPDATE` only as a projection of a numerical change confirmed in the successful Engine commit. Never use the marker to invent a mutation.
+- Numerical changes come only from Engine rule resolution and have no standalone Web marker.
 
-Never describe or emit an item, quest, flag, or status effect unless the same effect is already present in the successful `anify_apply_gm_resolution` response.
+Never describe an item, quest, flag, relationship, or numerical effect unless it is already present in the successful `anify_apply_gm_resolution` response. Never emit a marker outside the five exact shapes in `references/web-output-contract.md`.
 
 When a GM consequence starts combat, set `resolution.battle` to `{ "enemyId": "<Engine enemy id>" }`, set `resolution.choices` to `[]`, and commit that adventure resolution once through `anify_apply_gm_resolution`. Emit `BATTLE` only when the successful response already contains the matching `save.game.battleState` and `battle.await_action` checkpoint. Never follow it with `anify_game_action battle.start`; battle creation, narrative, turn log, and memories are one Engine commit.
 

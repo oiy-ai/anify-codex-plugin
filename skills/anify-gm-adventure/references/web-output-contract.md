@@ -19,18 +19,14 @@ Every marker must:
 - Use double-quoted JSON keys and strings, with no trailing commas, Markdown decoration, heading, bullet, or code fence.
 - Reflect Engine MCP state that was already resolved and persisted. Markers are Web UI projections; they never replace the required Engine MCP tool calls.
 
-The Web parser recognizes these exact shapes:
+The Web parser recognizes only these five exact shapes. Missing or extra payload keys make a marker invalid:
 
 ```text
 [CHOICES: ["Option 1","Option 2","Option 3"]]
 [BATTLE: {"enemyId":"enemy-id"}]
 [ADVENTURE_END: {"outcome":"success","flagsSet":["flag-id"]}]
-[QUEST_OFFER: {"id":"quest-id","name":"Quest name","description":"Quest description","completionConditions":[{"type":"flag_set","target":"flag-id"}]}]
-[QUEST_UPDATE: {"questId":"quest-id","title":"Updated title"}]
 [ITEM_GIVE: {"itemId":"item-id","quantity":1}]
-[FLAG_SET: {"key":"flag-id","value":true}]
 [SYSTEM_MESSAGE: {"tier":"critical_success","title":"Check title","description":"Player-visible result"}]
-[STATUS_UPDATE: {"hp":-5}]
 ```
 
 Use only markers justified by the current turn and only IDs returned by Engine context or resolution. `SYSTEM_MESSAGE.tier` must be `critical_success`, `success_with_cost`, or `failure`.
@@ -51,14 +47,12 @@ Set `title` to the exact Engine `ability`. Set `description` to `<total> vs DC <
 
 Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 — success.**` on Web, and do not duplicate the card result in prose. When `secret` is true, omit the marker and narrate only the consequence without the raw roll or DC.
 
-Effect markers must match the already successful Engine commit:
+`ITEM_GIVE` must match the already successful Engine commit:
 
 - `ITEM_GIVE` projects an entry confirmed in the successful commit, including a GM-authored `resolution.items` entry containing only the Engine world `itemId` and a positive integer `quantity`; Engine supplies its canonical metadata.
-- `QUEST_OFFER` projects an entry committed through `resolution.questOffers`; the player decides it through the Engine-backed task panel.
-- `FLAG_SET` projects a flag confirmed in the successful commit, including one submitted through the `resolution.flags` JSON string array. The marker payload remains the separate `{ "key": "flag-id", "value": true }` display projection.
-- `STATUS_UPDATE` projects a numerical change confirmed in the successful Engine commit; it never creates or changes that value.
+- Quest offers, quest updates, `resolution.flags` JSON string arrays, relationships, and numerical changes have no standalone marker. Web reads them from canonical Engine state through its task, character, inventory, and status surfaces.
 
-Never emit an effect marker only for display. If its matching mutation is absent from the successful `anify_apply_gm_resolution` response, omit the marker.
+Never emit `ITEM_GIVE` only for display. If its matching mutation is absent from the successful `anify_apply_gm_resolution` response, omit the marker. Never emit an unrecognized marker.
 
 ## Turn End Rules
 
@@ -89,4 +83,4 @@ When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`:
 [ADVENTURE_END: {"outcome":"success","flagsSet":["forest-cleared"]}]
 ```
 
-`outcome` must be `success`, `failure`, or `retreat`.
+`outcome` must be `success`, `failure`, or `retreat`. Always include `flagsSet`; use an empty array when the successful ending committed no flags.

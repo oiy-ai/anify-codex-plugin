@@ -222,7 +222,7 @@ test('GM commits battle creation atomically with one Engine-owned pending resolu
   assert.match(webOutput, /Never call `anify_game_action battle\.start` afterward/);
 });
 
-test('GM effect markers only project effects already persisted by Engine', () => {
+test('GM persists all effects in Engine and emits only the Web-consumed item projection', () => {
   assert.match(gmSkill, /Never send `revision` or `ruleDelta`/);
   assert.match(gmSkill, /`resolution\.items`/);
   assert.match(gmSkill, /"itemId"[\s\S]*"quantity"/);
@@ -236,9 +236,10 @@ test('GM effect markers only project effects already persisted by Engine', () =>
   assert.match(orchestration, /`flags` as a JSON string array/);
   assert.match(webOutput, /`resolution\.flags` JSON string array/);
   assert.match(gmSkill, /never auto-accept it/);
-  assert.match(orchestration, /A marker without the matching committed effect is forbidden/);
-  assert.match(webOutput, /Never emit an effect marker only for display/);
-  assert.match(webOutput, /`STATUS_UPDATE` projects a numerical change confirmed in the successful Engine commit/);
+  assert.match(orchestration, /`ITEM_GIVE` may project a committed item/);
+  assert.match(webOutput, /Never emit `ITEM_GIVE` only for display/);
+  assert.match(webOutput, /Quest offers, quest updates[\s\S]*have no standalone marker/);
+  assert.doesNotMatch(webOutput, /\[(?:QUEST_OFFER|QUEST_UPDATE|FLAG_SET|STATUS_UPDATE):/);
 });
 
 test('GM output contract uses the exact Web line marker grammar', () => {
@@ -251,12 +252,8 @@ test('GM output contract uses the exact Web line marker grammar', () => {
     ['CHOICES', ['Investigate', 'Advance', 'Wait']],
     ['BATTLE', { enemyId: 'corrupted-forest-wolf' }],
     ['ADVENTURE_END', { outcome: 'success', flagsSet: ['forest-cleared'] }],
-    ['QUEST_OFFER', { id: 'quest-id', name: 'Quest', description: 'Description', completionConditions: [] }],
-    ['QUEST_UPDATE', { questId: 'quest-id', title: 'Updated title' }],
     ['ITEM_GIVE', { itemId: 'item-id', quantity: 1 }],
-    ['FLAG_SET', { key: 'flag-id', value: true }],
     ['SYSTEM_MESSAGE', { tier: 'success_with_cost', title: 'Wisdom (Perception)', description: '15 vs DC 14 — success.' }],
-    ['STATUS_UPDATE', { hp: -5 }],
   ];
   for (const [marker] of markerPayloads) {
     assert.match(webOutput, new RegExp(`\\[${marker}:`));
