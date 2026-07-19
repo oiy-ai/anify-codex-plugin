@@ -175,6 +175,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /Never follow it with `anify_game_action battle\.start`/);
   assert.match(gmSkill, /matching `save\.game\.battleState` and `battle\.await_action` checkpoint/);
   assert.match(gmSkill, /x-anify-operation-id/);
+  assert.match(gmSkill, /Engine returns the unfinished operation ID when pending work exists/);
   assert.match(gmSkill, /Every mutating tool argument[\s\S]*must include the same top-level `operation_id`/);
   assert.match(gmSkill, /header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory/);
   assert.match(gmSkill, /pending `check`[\s\S]*exact returned `action`[\s\S]*full `check_result`/);

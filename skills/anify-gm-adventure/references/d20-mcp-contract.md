@@ -4,7 +4,7 @@ Anify requires D20 checks to be resolved outside the GM model. The MCP server is
 
 `roll_check` requires a valid Anify Firebase session. It must fail before rolling if the MCP request is not authenticated.
 
-At the start of every logical GM turn, call the read-only `anify_begin_operation` and retain its returned `operation_id`. Every mutation argument in that turn must contain that same required top-level field. Shell also supplies a trusted `x-anify-operation-id` header through `.mcp.json`; the header takes precedence when present, but it does not make the tool argument optional.
+At the start of every logical GM turn, call the read-only `anify_begin_operation` and retain its returned `operation_id`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Every mutation argument in that turn must contain that same required top-level field. Shell also supplies a trusted `x-anify-operation-id` header through `.mcp.json`; the header takes precedence when present, but it does not make the tool argument optional.
 
 Immediately after beginning the operation, call the read-only `anify_pending_turn_get`:
 

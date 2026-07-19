@@ -28,7 +28,7 @@ Engine MCP owns authenticated access, the canonical game state shared with Anify
 
 At the start of every logical GM turn, before loading state or making any mutation:
 
-1. Call the read-only `anify_begin_operation` and retain its returned `operation_id` for the entire turn.
+1. Call the read-only `anify_begin_operation` and retain its returned `operation_id` for the entire turn. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID.
 2. Call the read-only `anify_pending_turn_get` before creating a new check or resolution.
 3. If Engine reports a pending `check`, continue it by calling `anify_resolve_action` with the current turn's `operation_id`, exact returned `action`, and full `check_result`. Do not call `roll_check` again. Engine retains the resulting pending resolution internally.
 4. If Engine reports a pending `resolution`, read canonical save or world context if needed, then call `anify_apply_gm_resolution` with the current turn's `operation_id` and a presentation-only resolution containing narration, choices, and justified story effects. Engine binds its pending rule state atomically.

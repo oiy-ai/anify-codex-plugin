@@ -16,7 +16,7 @@ Use:
 
 Do not write `.anify` memory files. Do not create or inspect a local Anify user workspace.
 
-Start each logical user or GM turn with the read-only `anify_begin_operation` and retain its returned `operation_id`. Pass that ID as a required top-level argument to every mutation, including `anify_memory_remember`. Shell's trusted `x-anify-operation-id` header takes precedence when present, but the argument remains mandatory. Engine receipts make matching interrupted-run retries idempotent, including memory writes and an already committed GM turn.
+Start each logical user or GM turn with the read-only `anify_begin_operation` and retain its returned `operation_id`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Pass that ID as a required top-level argument to every mutation, including `anify_memory_remember`. Shell's trusted `x-anify-operation-id` header takes precedence when present, but the argument remains mandatory. Engine receipts make matching interrupted-run retries idempotent, including memory writes and an already committed GM turn.
 
 At the beginning of every GM turn, call `anify_pending_turn_get` after `anify_begin_operation`. Continue a returned pending check with its exact action and check result, or finish a pending resolution by submitting only GM-authored presentation fields to `anify_apply_gm_resolution`. Engine retains the pending rule state. Never reroll or discard pending work.
 
