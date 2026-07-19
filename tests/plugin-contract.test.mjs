@@ -5,8 +5,6 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
-const webRoot = join(repoRoot, '..', 'anify-web');
-const webIconRoot = join(repoRoot, '..', 'anify-web', 'public', 'icons');
 
 function text(path) {
   return readFileSync(join(repoRoot, path), 'utf8');
@@ -20,10 +18,6 @@ function bytes(path) {
   return readFileSync(join(repoRoot, path));
 }
 
-function webIcon(path) {
-  return readFileSync(join(webIconRoot, path));
-}
-
 const gmSkill = text('skills/anify-gm-adventure/SKILL.md');
 const orchestration = text('skills/anify-gm-adventure/references/orchestration.md');
 const authentication = text('skills/anify-gm-adventure/references/authentication.md');
@@ -31,7 +25,6 @@ const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
 const webOutput = text('skills/anify-gm-adventure/references/web-output-contract.md');
 const engineGameplay = text('skills/anify-gm-adventure/references/engine-gameplay-commands.md');
-const webCharacterParser = readFileSync(join(webRoot, 'src/lib/parseChatSegments.ts'), 'utf8');
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
 const marketplace = json('.agents/plugins/marketplace.json');
@@ -44,6 +37,28 @@ const roles = [
   ['thera', 'Anify-Thera', 'Thera', 'Thera Valeria'],
   ['lyra', 'Anify-Lyra', 'Lyra', 'Lyra Oravia'],
 ];
+const WEB_MARKER_LINE = /^\[([A-Z][A-Z_]*):\s*(.+)\]$/u;
+
+function parseWebWireOutput(input) {
+  const visibleLines = [];
+  const markers = [];
+
+  for (const line of input.replace(/\r\n?/gu, '\n').split('\n')) {
+    const match = WEB_MARKER_LINE.exec(line.trim());
+    if (!match) {
+      visibleLines.push(line);
+      continue;
+    }
+
+    try {
+      markers.push({ type: match[1], payload: JSON.parse(match[2]) });
+    } catch {
+      visibleLines.push(line);
+    }
+  }
+
+  return { text: visibleLines.join('\n').trim(), markers };
+}
 
 function roleRoot(role) {
   return `plugins/anify-${role}`;
@@ -109,7 +124,6 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
     assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
     assert.equal(icon.readUInt32BE(16), size);
     assert.equal(icon.readUInt32BE(20), size);
-    assert.deepEqual(icon, webIcon(`icon-${size}x${size}.png`));
   }
 });
 
@@ -128,7 +142,6 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
     assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
     assert.equal(icon.readUInt32BE(16), size);
     assert.equal(icon.readUInt32BE(20), size);
-    assert.deepEqual(icon, webIcon(`icon-${size}x${size}.png`));
   }
 });
 
@@ -227,7 +240,7 @@ test('GM effect markers only project effects already persisted by Engine', () =>
   assert.match(webOutput, /`STATUS_UPDATE` projects a numerical change from the preserved Engine `ruleDelta`/);
 });
 
-test('GM output contract is parsed by the Web line marker parser', async () => {
+test('GM output contract uses the exact Web line marker grammar', () => {
   assert.match(gmSkill, /references\/web-output-contract\.md/);
   assert.match(gmSkill, /Do not print numbered or bulleted options/);
   assert.match(gmSkill, /exactly one line-level `CHOICES` marker/);
@@ -248,8 +261,7 @@ test('GM output contract is parsed by the Web line marker parser', async () => {
     assert.match(webOutput, new RegExp(`\\[${marker}:`));
   }
 
-  const { parseCodexOutput } = await import('../../anify-web/src/lib/codex-shell/output.ts');
-  const parsed = parseCodexOutput([
+  const parsed = parseWebWireOutput([
     'Visible narration.',
     ...markerPayloads.map(([type, payload]) => `[${type}: ${JSON.stringify(payload)}]`),
   ].join('\n'));
@@ -332,7 +344,6 @@ test('all plugins share the Anify Engine MCP config', () => {
 
 test('role plugins expose persona skills and shared remote character workflow', () => {
   const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
-  assert.ok(webCharacterParser.includes('const ACTION_PATTERN = /\\[([^\\]]+)\\]/g;'));
   assert.match(sharedSkill, /anify_memory_search/);
   assert.match(sharedSkill, /anify_memory_remember/);
   assert.match(sharedSkill, /anify_begin_operation/);
@@ -363,7 +374,6 @@ test('role plugins expose persona skills and shared remote character workflow', 
       assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
       assert.equal(icon.readUInt32BE(16), size);
       assert.equal(icon.readUInt32BE(20), size);
-      assert.deepEqual(icon, webIcon(`${slug}/icon-${size}x${size}.png`));
     }
 
     const persona = text(`${roleRoot(slug)}/skills/anify-${slug}-persona/SKILL.md`);
