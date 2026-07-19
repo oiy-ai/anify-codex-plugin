@@ -1,7 +1,7 @@
 {
   "name": "anify-gm",
   "version": "0.2.1+codex.20260718232538",
-  "description": "Run Anify adventures as the GM with Engine-backed D20 checks and remote progress saves.",
+  "description": "Play Anify adventures on Web or as a native Codex text RPG backed by Engine MCP.",
   "author": {
     "name": "Local developer"
   },
@@ -19,8 +19,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify-GM",
-    "shortDescription": "Run Anify adventures with Engine-backed remote GM saves.",
-    "longDescription": "Anify-GM frames solo or party adventures, initializes or loads the user's remote campaign progress from Anify Engine MCP, resolves uncertain actions through Engine D20 tools, and writes updated adventure progress back through Engine MCP.",
+    "shortDescription": "Play Anify on Web or as an Engine-backed Codex text RPG.",
+    "longDescription": "Anify-GM runs solo or party adventures on Anify Web and as an independently playable native Codex text RPG. Both surfaces share one Engine MCP save for D20 checks, battles, inventory, equipment, character stats, quests, maps, travel, shops, and character memory.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [
@@ -31,7 +31,9 @@
     "defaultPrompt": [
       "\u767b\u5f55 Anify-GM \u5e76\u7ee7\u7eed\u6211\u7684\u5192\u9669\u3002",
       "\u4ece\u8fdc\u7a0b\u5b58\u6863\u5f00\u542f\u4e00\u6bb5 Anify \u5192\u9669\u3002",
-      "\u548c\u5df2\u5f15\u5165\u7684\u89d2\u8272\u4e00\u8d77\u8dd1 Anify \u5192\u9669\u3002"
+      "\u548c\u5df2\u5f15\u5165\u7684\u89d2\u8272\u4e00\u8d77\u8dd1 Anify \u5192\u9669\u3002",
+      "\u67e5\u770b\u6211\u7684\u80cc\u5305\u3001\u88c5\u5907\u548c\u89d2\u8272\u5c5e\u6027\u3002",
+      "\u67e5\u770b\u4efb\u52a1\u548c\u5730\u56fe\uff0c\u7136\u540e\u7ee7\u7eed\u63a2\u7d22\u3002"
     ],
     "brandColor": "#7C3AED",
     "composerIcon": "./assets/icon-192x192.png",

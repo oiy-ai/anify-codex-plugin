@@ -1,11 +1,11 @@
 # Anify Codex Plugins
 
-This repo packages local Codex plugins for Anify GM sessions and character chat.
+This repo packages Codex plugins for Anify GM sessions and character chat.
 
 ## Plugins
 
 - `Anify Installer`: verifies Engine login and initializes the remote GM save.
-- `Anify-GM`: runs single-player or party TRPG adventures with remote GM saves through Anify Engine MCP.
+- `Anify-GM`: runs single-player or party TRPG adventures on Anify Web or as an independent native Codex text RPG through Anify Engine MCP.
 - `Anify-Lynn`: private or group chat persona for Lynn Tale, with remote long-term character memory through Anify Engine MCP.
 - `Anify-Thera`: private or group chat persona for Thera Valeria, with remote long-term character memory through Anify Engine MCP.
 - `Anify-Lyra`: private or group chat persona for Lyra Oravia, with remote long-term character memory through Anify Engine MCP.
@@ -13,6 +13,8 @@ This repo packages local Codex plugins for Anify GM sessions and character chat.
 Shared character instructions live under `shared/anify-character/`. Role plugins keep only their local manifest, persona skill, synced shared workflow copy, and any future role-exclusive files. After editing shared character workflow, run `python3 scripts/sync_character_shared.py` so installed plugin archives include the same workflow.
 
 Use the `anify-gm-adventure` skill to start or continue a campaign. Use the role persona skills when chatting with characters directly or when adding them to a GM adventure. The public Codex plugins use standard MCP OAuth discovery only. Every logical turn begins with `anify_begin_operation`, and every mutation carries its returned `operation_id`. The Codex shell runtime also passes the caller's Firebase bearer token through shell-owned runtime config and maps its trusted run ID from `ANIFY_OPERATION_ID` to the Engine `x-anify-operation-id` header.
+
+Codex Shell explicitly selects the Anify Web presentation contract, including line-level UI markers. A directly installed Anify-GM plugin defaults to the native Codex text contract: adventures, text battles, inventory, equipment, character stats, quests, maps, travel, shops, and character continuity still use the same Engine save. Native Codex does not provide visual battle controls, Gaussian-splat exploration, or memory image/video generation.
 
 ## State Model
 

@@ -1,7 +1,7 @@
 {
   "name": "anify-installer",
   "version": "0.1.1+codex.20260718232538",
-  "description": "Initialize the local Anify Codex client environment before installing GM and character plugins.",
+  "description": "Connect the Codex client to Anify Engine and initialize its remote save.",
   "author": {
     "name": "Local developer"
   },
@@ -17,8 +17,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify Installer",
-    "shortDescription": "Prepare local Anify client runtime and saves.",
-    "longDescription": "Anify Installer performs the first client-side Anify setup: Engine login verification, long-term memory runtime deployment, local GM save initialization, and next-step usage guidance.",
+    "shortDescription": "Connect Anify Engine and initialize a remote save.",
+    "longDescription": "Anify Installer performs first-run Codex client setup by verifying Engine MCP login, initializing the shared remote Anify save, and explaining how to install the GM and character plugins.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [
@@ -27,9 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Initialize my local Anify client.",
-      "Set up Anify long-term memory.",
-      "Create my first local Anify save."
+      "Connect my Codex client to Anify.",
+      "Initialize my shared Anify save.",
+      "Prepare Anify-GM and character plugins."
     ],
     "brandColor": "#14B8A6",
     "composerIcon": "./assets/icon-192x192.png",

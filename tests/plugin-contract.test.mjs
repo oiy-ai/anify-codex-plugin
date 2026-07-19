@@ -30,6 +30,8 @@ const authentication = text('skills/anify-gm-adventure/references/authentication
 const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
 const webOutput = text('skills/anify-gm-adventure/references/web-output-contract.md');
+const codexClientOutput = text('skills/anify-gm-adventure/references/codex-client-output-contract.md');
+const codexClientGameplay = text('skills/anify-gm-adventure/references/codex-client-gameplay.md');
 const webCharacterParser = readFileSync(join(webRoot, 'src/lib/parseChatSegments.ts'), 'utf8');
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
@@ -100,6 +102,8 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
   assert.match(installerSkill, /header takes precedence inside Engine, but the argument is still mandatory/);
   assert.doesNotMatch(installerSkill, /cleanup-local-state/);
   assert.doesNotMatch(installerSkill, /install-runtime|mem0|local GM Markdown save/i);
+  assert.doesNotMatch(JSON.stringify(installerManifest), /local Anify|local GM|local save|memory runtime/i);
+  assert.match(installerManifest.interface.longDescription, /shared remote Anify save/);
 
   for (const size of [192, 512]) {
     const icon = bytes(`plugins/anify-installer/assets/icon-${size}x${size}.png`);
@@ -113,8 +117,9 @@ test('installer plugin initializes remote saves through Engine MCP', () => {
 test('GM plugin identity and assets match Anify-GM branding', () => {
   assert.equal(gmManifest.name, 'anify-gm');
   assert.equal(gmManifest.interface.displayName, 'Anify-GM');
-  assert.equal(gmManifest.interface.shortDescription, 'Run Anify adventures with Engine-backed remote GM saves.');
-  assert.match(gmManifest.interface.longDescription, /remote campaign progress/);
+  assert.equal(gmManifest.interface.shortDescription, 'Play Anify on Web or as an Engine-backed Codex text RPG.');
+  assert.match(gmManifest.interface.longDescription, /independently playable native Codex text RPG/);
+  assert.match(gmManifest.interface.longDescription, /battles, inventory, equipment, character stats, quests, maps, travel, shops/);
   assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
   assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
 
@@ -236,7 +241,7 @@ test('GM output contract is parsed by the Web line marker parser', async () => {
     ['QUEST_UPDATE', { questId: 'quest-id', title: 'Updated title' }],
     ['ITEM_GIVE', { itemId: 'item-id', quantity: 1 }],
     ['FLAG_SET', { key: 'flag-id', value: true }],
-    ['SYSTEM_MESSAGE', { tier: 'success_with_cost', title: 'Check', description: 'Result' }],
+    ['SYSTEM_MESSAGE', { tier: 'success_with_cost', title: 'Wisdom (Perception)', description: '15 vs DC 14 — success.' }],
     ['STATUS_UPDATE', { hp: -5 }],
   ];
   for (const [marker] of markerPayloads) {
@@ -263,6 +268,49 @@ test('GM output contract is parsed by the Web line marker parser', async () => {
   assert.match(webOutput, /end with `ADVENTURE_END` instead of `CHOICES`/);
   assert.match(webOutput, /Never print `NO_REPLY`/);
   assert.match(orchestration, /Never print `NO_REPLY`/);
+  assert.match(webOutput, /After every non-secret D20 turn is successfully committed, emit exactly one `SYSTEM_MESSAGE` marker/);
+  assert.match(webOutput, /`success` outcome → `success_with_cost` tier/);
+  assert.match(webOutput, /"title":"Wisdom \(Perception\)"/);
+  assert.match(webOutput, /"description":"15 vs DC 14 — success\."/);
+  assert.match(webOutput, /Do not render a Markdown line such as `\*\*Check:/);
+});
+
+test('GM skill selects Web markers only in Shell and remains independently playable in native Codex', () => {
+  assert.match(gmSkill, /host explicitly declares `Presentation surface: Anify Web`/);
+  assert.match(gmSkill, /Otherwise treat the runtime as the native Codex text client/);
+  assert.match(gmSkill, /Never mix Web markers with the native text format/);
+  assert.match(gmSkill, /inventory, equipment, character, quest, map, travel, shop, text exploration, and text battle/);
+
+  assert.match(codexClientOutput, /complete text interface over the same Engine save as Anify Web/);
+  assert.match(codexClientOutput, /Do not emit `CHOICES`, `SYSTEM_MESSAGE`, `BATTLE`, `ITEM_GIVE`/);
+  assert.match(codexClientOutput, /\*\*Wisdom \(Perception\): 15 vs DC 14 — success\.\*\*/);
+  assert.match(codexClientOutput, /exactly three numbered choices/);
+  assert.match(codexClientOutput, /visual battle controls, Gaussian-splat exploration scenes, or memory image\/video generation/);
+
+  for (const command of [
+    'character.show',
+    'character.equip <equipmentId>',
+    'inventory.show',
+    'inventory.use <itemId>',
+    'quest.active',
+    'quest.offer-accept <questId>',
+    'map.show',
+    'map.travel <areaId>',
+    'explore.show',
+    'explore.talk <characterId>',
+    'explore.buy <shopItemId>',
+    'battle.show',
+    'battle.attack [enemyId]',
+    'battle.skill <abilityId|number>',
+    'battle.item <itemId>',
+    'battle.flee',
+  ]) {
+    assert.match(codexClientGameplay, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(codexClientGameplay, /call `anify_game_action` once/);
+  assert.match(codexClientGameplay, /Do not call a read-only `\*\.show` command before a mutation/);
+  assert.match(codexClientGameplay, /Never use `quest\.force-complete` or any `state\.\*` command/);
+  assert.match(codexClientGameplay, /Never call `battle\.start` after a GM consequence/);
 });
 
 test('all plugins share the Anify Engine MCP config', () => {

@@ -96,4 +96,6 @@ Output:
 
 After `roll_check`, call `anify_resolve_action` with the same top-level `operation_id` so Engine can return rule advice, an immutable `resolution_packet`, and a canonical resolution for the current revision. Add only the player-facing narrative and next choices, then commit it with `anify_apply_gm_resolution`, that same operation ID, and the exact packet.
 
+After the commit succeeds, project a non-secret check through exactly one selected presentation contract. Anify Web emits the exact `SYSTEM_MESSAGE` check-card marker defined in `web-output-contract.md`; native Codex renders the compact text summary defined in `codex-client-output-contract.md`. Never print both formats, and never expose raw values for a secret check.
+
 Engine stores stage receipts and unfinished turn provenance in the authenticated user's SQLite Durable Object. Matching retries return the original check, packet, or committed apply result without rerolling or advancing revision again. A later logical turn must discover unfinished work through `anify_pending_turn_get` and continue the exact pending stage; reusing an operation ID with changed stage input fails closed.

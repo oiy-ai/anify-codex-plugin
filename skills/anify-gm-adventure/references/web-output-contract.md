@@ -35,6 +35,22 @@ The Web parser recognizes these exact shapes:
 
 Use only markers justified by the current turn and only IDs returned by Engine context or resolution. `SYSTEM_MESSAGE.tier` must be `critical_success`, `success_with_cost`, or `failure`.
 
+## D20 Check Card
+
+After every non-secret D20 turn is successfully committed, emit exactly one `SYSTEM_MESSAGE` marker for the Web check card. Use the exact `CheckResult` fields and this mapping:
+
+- `critical_success` outcome → `critical_success` tier.
+- `success` outcome → `success_with_cost` tier. This is the Web card's ordinary-success visual tier; do not invent a cost when Engine did not return one.
+- `failure` or `critical_failure` outcome → `failure` tier.
+
+Set `title` to the exact Engine `ability`. Set `description` to `<total> vs DC <dc> — <outcome>.` using the exact Engine values. Example:
+
+```text
+[SYSTEM_MESSAGE: {"tier":"success_with_cost","title":"Wisdom (Perception)","description":"15 vs DC 14 — success."}]
+```
+
+Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 — success.**` on Web, and do not duplicate the card result in prose. When `secret` is true, omit the marker and narrate only the consequence without the raw roll or DC.
+
 Effect markers must match the already successful Engine commit:
 
 - `ITEM_GIVE` projects an entry committed through `resolution.items` or the preserved Engine `ruleDelta.inventory`. A GM-authored `resolution.items` entry contains only the Engine world `itemId` and a positive integer `quantity`; Engine supplies its canonical metadata.

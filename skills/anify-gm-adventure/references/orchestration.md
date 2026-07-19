@@ -167,7 +167,7 @@ or this object:
 }
 ```
 
-This packet is internal orchestration data. Never print `NO_REPLY`, the JSON object, `memory_updates`, or `consistency_notes` in the final Web response. Convert a visible reaction into ordinary scene prose; omit it entirely for `NO_REPLY`.
+This packet is internal orchestration data. Never print `NO_REPLY`, the JSON object, `memory_updates`, or `consistency_notes` in player-facing output. Convert a visible reaction into ordinary scene prose; omit it entirely for `NO_REPLY`.
 
 ## Turn Execution
 
@@ -178,7 +178,7 @@ If `save.adventure.opening_pending` is true, commit the opening before returning
 1. Read fresh world context and the canonical save.
 2. Write the visible opening narration and exactly three choices.
 3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`. Omit `revision`, `resolution_packet`, and `turn_entry`; Engine owns those opening provenance fields.
-4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
+4. Only after the commit succeeds, return the same narration and choices through the selected Web or native Codex output contract.
 
 The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.
 
@@ -189,22 +189,22 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 3. Call `anify_save_get`.
 4. Call `anify_get_context` if fresh world context is needed.
 5. GM builds or updates `TurnPacket`.
-6. GM presents scene prose and emits exactly three options through the line-level `CHOICES` marker.
+6. GM prepares scene prose and exactly three options for the selected presentation surface.
 7. User chooses or writes a custom action.
 8. GM creates `CheckRequest`.
 9. Codex calls `roll_check` with the turn's `operation_id`.
 10. Codex calls `anify_resolve_action` with that same `operation_id`.
 11. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
 12. Codex preserves Engine's exact `ruleDelta`, adds visible narrative, choices, and only justified persisted effects to Engine's resolution, then calls `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
-13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
+13. GM presents the next scene and terminal state according to the selected Web or native Codex output contract.
 
-To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
+To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. Web may emit `BATTLE`, while native Codex renders text battle state, only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
 
 For deterministic actions inside an active battle, call `anify_game_action`. Codex-client attacks, skills, items, and flee operations use the same canonical state as Web's browser action endpoint.
 
 ## GM Narration Rules
 
-- Follow `web-output-contract.md` for every player-facing response; internal packets are never part of visible output.
+- Follow exactly one selected Web or native Codex output contract; internal packets are never part of visible output.
 - Make consequences follow both the check result and established fiction.
 - Let failures move the story forward with cost, complication, lost time, danger, resource pressure, or changed relationships.
 - Critical success should add a bonus beyond ordinary success.
