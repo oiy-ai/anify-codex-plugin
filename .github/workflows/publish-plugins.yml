@@ -42,7 +42,7 @@ jobs:
         run: |
           python3 scripts/sync_character_shared.py
           git diff --exit-code
-          node --test tests/build-plugin-packages.test.mjs
+          node --test tests/*.test.mjs
 
       - name: Build environment packages
         run: node scripts/build_plugin_packages.mjs --target "$TARGET" --version-id "$VERSION_ID"
