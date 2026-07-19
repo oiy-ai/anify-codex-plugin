@@ -67,7 +67,8 @@ After the Turn Operation Protocol reports no pending turn, run the normal active
 Engine mutations always precede their player-facing projection. `ITEM_GIVE` is the only persisted-effect Web marker:
 
 - Never send `revision` or `ruleDelta`; Engine applies its stored values. Never author HP, MP, EXP, gold, D20 inventory deltas, or D20 flags.
-- Put a GM-granted known world item in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Do not add names, descriptions, kinds, slots, or invented item IDs; Engine resolves all item metadata from the world catalog. Commit it, then emit the matching `ITEM_GIVE` marker.
+- Before granting any item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`. Select the exact `itemId` only from its `catalog_matches`; if there is no match, omit the inventory gain. Never search GitHub, plugin files, or asset manifests for item IDs.
+- Put the matched world item in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Do not add names, descriptions, kinds, slots, or invented item IDs; Engine resolves all item metadata from the world catalog. Commit it, then emit the matching `ITEM_GIVE` marker.
 - Put a new dynamic quest in `resolution.questOffers` and commit it. The Web task panel reads the canonical Engine quest; there is no quest marker. The player accepts, rejects, or shelves it through Engine; never auto-accept it.
 - Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Flags have no standalone Web marker.
 - Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.

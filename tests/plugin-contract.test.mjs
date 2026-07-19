@@ -227,7 +227,10 @@ test('GM persists all effects in Engine and emits only the Web-consumed item pro
   assert.match(gmSkill, /`resolution\.items`/);
   assert.match(gmSkill, /"itemId"[\s\S]*"quantity"/);
   assert.match(gmSkill, /Do not add names, descriptions, kinds, slots, or invented item IDs/);
+  assert.match(gmSkill, /`anify_get_context`[\s\S]*`catalog_query`[\s\S]*`catalog_matches`/);
+  assert.match(gmSkill, /Never search GitHub, plugin files, or asset manifests for item IDs/);
   assert.match(orchestration, /Never put names, descriptions, kinds, slots, or invented IDs in `items`/);
+  assert.match(orchestration, /`anify_get_context`[\s\S]*`catalog_query`[\s\S]*`catalog_matches`/);
   assert.match(webOutput, /Engine supplies its canonical metadata/);
   assert.match(gmSkill, /`resolution\.questOffers`/);
   assert.match(gmSkill, /`resolution\.flags`/);
