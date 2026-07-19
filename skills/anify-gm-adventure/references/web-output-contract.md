@@ -39,7 +39,7 @@ Effect markers must match the already successful Engine commit:
 
 - `ITEM_GIVE` projects an entry committed through `resolution.items` or the preserved Engine `ruleDelta.inventory`.
 - `QUEST_OFFER` projects an entry committed through `resolution.questOffers`; the player decides it through the Engine-backed task panel.
-- `FLAG_SET` projects a flag committed through `resolution.flags` or the preserved Engine `ruleDelta.flags`.
+- `FLAG_SET` projects a flag committed through the `resolution.flags` JSON string array or the preserved Engine `ruleDelta.flags`. The marker payload remains the separate `{ "key": "flag-id", "value": true }` display projection.
 - `STATUS_UPDATE` projects a numerical change from the preserved Engine `ruleDelta`; it never creates or changes that delta.
 
 Never emit an effect marker only for display. If its matching mutation is absent from the successful `anify_apply_gm_resolution` response, omit the marker.

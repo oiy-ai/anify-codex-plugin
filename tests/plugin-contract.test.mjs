@@ -208,6 +208,10 @@ test('GM effect markers only project effects already persisted by Engine', () =>
   assert.match(gmSkill, /`resolution\.items`/);
   assert.match(gmSkill, /`resolution\.questOffers`/);
   assert.match(gmSkill, /`resolution\.flags`/);
+  assert.match(gmSkill, /`resolution\.flags` as a JSON string array/);
+  assert.match(gmSkill, /Never send an object map/);
+  assert.match(orchestration, /`flags` as a JSON string array/);
+  assert.match(webOutput, /`resolution\.flags` JSON string array/);
   assert.match(gmSkill, /never auto-accept it/);
   assert.match(orchestration, /A marker without the matching committed effect is forbidden/);
   assert.match(webOutput, /Never emit an effect marker only for display/);

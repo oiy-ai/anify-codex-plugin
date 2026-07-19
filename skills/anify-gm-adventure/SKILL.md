@@ -68,7 +68,7 @@ Web markers are projections of the successful Engine commit, never substitutes f
 - Preserve the exact Engine-owned `resolution.ruleDelta`; never author or edit HP, MP, EXP, gold, D20 inventory deltas, or D20 flags.
 - Put a GM-granted known world item in `resolution.items`, commit it, then emit the matching `ITEM_GIVE` marker from the committed save.
 - Put a new dynamic quest in `resolution.questOffers`, commit it, then emit the matching `QUEST_OFFER` marker. The player accepts, rejects, or shelves it through the Engine-backed Web task panel; never auto-accept it.
-- Put a justified boolean story flag in `resolution.flags`, commit it, then emit the matching `FLAG_SET` marker.
+- Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Commit the array, then emit a matching `FLAG_SET` marker for each persisted flag.
 - Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.
 - Emit `STATUS_UPDATE` only as a projection of an Engine-owned `ruleDelta` confirmed in the successful commit. Never use the marker to invent a numerical mutation.
 
