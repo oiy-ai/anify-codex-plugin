@@ -110,7 +110,11 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
     "revision": 4,
     "narrative": "",
     "choices": [],
-    "flags": []
+    "ruleDelta": {
+      "player": {},
+      "inventory": [{ "itemId": "minor-clue", "quantity": 1 }],
+      "flags": ["clue-found"]
+    }
   },
   "resolution_packet": {
     "operation_id": "effective operation id",
@@ -136,7 +140,9 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 }
 ```
 
-The GM must not alter `resolution_packet`, `type`, `revision`, check data, or Engine-generated mechanical effects. It may add the visible `narrative`, exactly three normal-turn `choices`, and marker effects explicitly justified by Engine context. Submit the exact `resolution_packet` to `anify_apply_gm_resolution` and do not resubmit `turn_entry`; Engine commits its stored turn entry. `anify_apply_gm_resolution` is the only commit for this packet.
+The GM must not alter `resolution_packet`, `type`, `revision`, check data, or the Engine-owned `ruleDelta`. It may add the visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items, `questOffers` for player-selectable dynamic quests, `flags` for boolean story flags, and `relationChanges` for character relationships. Submit the exact `resolution_packet` to `anify_apply_gm_resolution` and do not resubmit `turn_entry`; Engine commits its stored turn entry. `anify_apply_gm_resolution` is the only commit for this packet.
+
+After a successful commit, Web markers may project those effects: `ITEM_GIVE` from committed `items`, `QUEST_OFFER` from committed `questOffers`, `FLAG_SET` from committed `flags`, and `STATUS_UPDATE` only from the preserved Engine `ruleDelta`. A marker without the matching committed effect is forbidden. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the GM never auto-accepts one.
 
 Every logical user or GM turn starts with the read-only `anify_begin_operation`. Retain the returned `operation_id` and pass it as a required top-level argument to every mutation in that turn. Shell additionally sends its trusted run ID through `x-anify-operation-id`; that header takes precedence inside Engine when present, but the argument remains required. Never invent or rotate an operation ID.
 
@@ -189,7 +195,7 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 9. Codex calls `roll_check` with the turn's `operation_id`.
 10. Codex calls `anify_resolve_action` with that same `operation_id`.
 11. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-12. Codex adds visible narrative and choices to Engine's resolution and calls `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
+12. Codex preserves Engine's exact `ruleDelta`, adds visible narrative, choices, and only justified persisted effects to Engine's resolution, then calls `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
 13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
 To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.

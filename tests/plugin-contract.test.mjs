@@ -203,6 +203,17 @@ test('GM commits battle creation atomically with one immutable resolution packet
   assert.match(webOutput, /Never call `anify_game_action battle\.start` afterward/);
 });
 
+test('GM effect markers only project effects already persisted by Engine', () => {
+  assert.match(gmSkill, /preserve its `ruleDelta` unchanged/);
+  assert.match(gmSkill, /`resolution\.items`/);
+  assert.match(gmSkill, /`resolution\.questOffers`/);
+  assert.match(gmSkill, /`resolution\.flags`/);
+  assert.match(gmSkill, /never auto-accept it/);
+  assert.match(orchestration, /A marker without the matching committed effect is forbidden/);
+  assert.match(webOutput, /Never emit an effect marker only for display/);
+  assert.match(webOutput, /`STATUS_UPDATE` projects a numerical change from the preserved Engine `ruleDelta`/);
+});
+
 test('GM output contract is parsed by the Web line marker parser', async () => {
   assert.match(gmSkill, /references\/web-output-contract\.md/);
   assert.match(gmSkill, /Do not print numbered or bulleted options/);

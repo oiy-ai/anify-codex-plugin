@@ -58,8 +58,21 @@ After the Turn Operation Protocol reports no pending turn, run the normal active
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check` with the turn's `operation_id`. The GM must not invent the D20 result.
 7. **Engine rule resolution**: call `anify_resolve_action` with the same `operation_id`, the user action, and exact full `roll_check` result. Preserve its returned `resolution_packet` without changing any field. Do not submit a client-authored save or call it without `check_result`.
 8. **Character AI reaction**: if Anify character plugins are active, let those persona instructions control character speech. If no character plugin is active, produce an NPC or companion reaction only when fiction calls for it; otherwise use the internal token `NO_REPLY`. Never expose `NO_REPLY` in the final Web output.
-9. **Commit the turn**: extend only the presentation fields of Engine's returned resolution—narrative, exactly three normal-turn choices, and justified marker effects—then call `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`. Do not resubmit `turn_entry`; Engine owns the D20 turn entry after `anify_resolve_action`. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
+9. **Commit the turn**: start from Engine's returned resolution, preserve its `ruleDelta` unchanged, add the narrative and exactly three normal-turn choices, and include only justified persisted effects under the effect mapping below. Then call `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`. Do not resubmit `turn_entry`; Engine owns the D20 turn entry after `anify_resolve_action`. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
 10. **GM advancement**: present the consequence and end with the next `CHOICES` marker, unless a mutually exclusive `BATTLE` or `ADVENTURE_END` marker ends the turn.
+
+### Persisted effect mapping
+
+Web markers are projections of the successful Engine commit, never substitutes for it:
+
+- Preserve the exact Engine-owned `resolution.ruleDelta`; never author or edit HP, MP, EXP, gold, D20 inventory deltas, or D20 flags.
+- Put a GM-granted known world item in `resolution.items`, commit it, then emit the matching `ITEM_GIVE` marker from the committed save.
+- Put a new dynamic quest in `resolution.questOffers`, commit it, then emit the matching `QUEST_OFFER` marker. The player accepts, rejects, or shelves it through the Engine-backed Web task panel; never auto-accept it.
+- Put a justified boolean story flag in `resolution.flags`, commit it, then emit the matching `FLAG_SET` marker.
+- Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.
+- Emit `STATUS_UPDATE` only as a projection of an Engine-owned `ruleDelta` confirmed in the successful commit. Never use the marker to invent a numerical mutation.
+
+Never emit `ITEM_GIVE`, `QUEST_OFFER`, `FLAG_SET`, or `STATUS_UPDATE` unless the same effect is already present in the successful `anify_apply_gm_resolution` response.
 
 When a GM consequence starts combat, set `resolution.battle` to `{ "enemyId": "<Engine enemy id>" }`, set `resolution.choices` to `[]`, and commit that adventure resolution once through `anify_apply_gm_resolution` with the exact `resolution_packet`. Emit `BATTLE` only when the successful response already contains the matching `save.game.battleState` and `battle.await_action` checkpoint. Never follow it with `anify_game_action battle.start`; battle creation, narrative, turn log, and memories are one Engine commit.
 
