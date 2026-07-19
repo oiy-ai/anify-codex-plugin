@@ -66,7 +66,7 @@ After the Turn Operation Protocol reports no pending turn, run the normal active
 Web markers are projections of the successful Engine commit, never substitutes for it:
 
 - Preserve the exact Engine-owned `resolution.ruleDelta`; never author or edit HP, MP, EXP, gold, D20 inventory deltas, or D20 flags.
-- Put a GM-granted known world item in `resolution.items`, commit it, then emit the matching `ITEM_GIVE` marker from the committed save.
+- Put a GM-granted known world item in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Do not add names, descriptions, kinds, slots, or invented item IDs; Engine resolves all item metadata from the world catalog. Commit it, then emit the matching `ITEM_GIVE` marker from the committed save.
 - Put a new dynamic quest in `resolution.questOffers`, commit it, then emit the matching `QUEST_OFFER` marker. The player accepts, rejects, or shelves it through the Engine-backed Web task panel; never auto-accept it.
 - Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Commit the array, then emit a matching `FLAG_SET` marker for each persisted flag.
 - Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.

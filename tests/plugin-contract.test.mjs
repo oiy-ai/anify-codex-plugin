@@ -206,6 +206,10 @@ test('GM commits battle creation atomically with one immutable resolution packet
 test('GM effect markers only project effects already persisted by Engine', () => {
   assert.match(gmSkill, /preserve its `ruleDelta` unchanged/);
   assert.match(gmSkill, /`resolution\.items`/);
+  assert.match(gmSkill, /"itemId"[\s\S]*"quantity"/);
+  assert.match(gmSkill, /Do not add names, descriptions, kinds, slots, or invented item IDs/);
+  assert.match(orchestration, /Never put names, descriptions, kinds, slots, or invented IDs in `items`/);
+  assert.match(webOutput, /Engine supplies its canonical metadata/);
   assert.match(gmSkill, /`resolution\.questOffers`/);
   assert.match(gmSkill, /`resolution\.flags`/);
   assert.match(gmSkill, /`resolution\.flags` as a JSON string array/);
