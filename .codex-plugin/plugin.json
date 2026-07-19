@@ -1,7 +1,7 @@
 {
   "name": "anify-gm",
   "version": "0.2.1+codex.20260718232538",
-  "description": "Play Anify adventures on Web or as a native Codex text RPG backed by Engine MCP.",
+  "description": "Play Engine-backed Anify adventures on Web or directly in Codex.",
   "author": {
     "name": "Local developer"
   },
@@ -19,8 +19,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Anify-GM",
-    "shortDescription": "Play Anify on Web or as an Engine-backed Codex text RPG.",
-    "longDescription": "Anify-GM runs solo or party adventures on Anify Web and as an independently playable native Codex text RPG. Both surfaces share one Engine MCP save for D20 checks, battles, inventory, equipment, character stats, quests, maps, travel, shops, and character memory.",
+    "shortDescription": "Play Engine-backed Anify on Web or directly in Codex.",
+    "longDescription": "Anify-GM runs solo or party adventures on Anify Web and as a directly installed Codex plugin. Both use the same Web wire-format output and one Engine MCP save for D20 checks, battles, inventory, equipment, character stats, quests, maps, travel, shops, and character memory.",
     "developerName": "Local developer",
     "category": "Entertainment",
     "capabilities": [

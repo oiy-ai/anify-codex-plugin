@@ -1,10 +1,10 @@
-# Native Codex Client Gameplay
+# Engine MCP Gameplay Commands
 
-Use this reference only for the native Codex text surface. It maps natural player requests to the same canonical Engine commands used by Anify Web controls.
+Use this reference when a player directly asks the Codex plugin to inspect or change deterministic gameplay state. These natural-language operations provide the same canonical Engine capabilities that Anify Web exposes through controls.
 
 ## Request Flow
 
-For every logical client turn:
+For every logical turn:
 
 1. Call `anify_begin_operation` and retain its `operation_id`.
 2. Call `anify_pending_turn_get` and finish pending GM work before any new request.
@@ -12,7 +12,7 @@ For every logical client turn:
 4. Use `anify_get_context` when a target ID or world fact is needed.
 5. For a read-only request, answer from `anify_save_get` and `anify_get_context`. A single matching `*.show` command below may be used when its Engine-formatted view is useful and no mutation is needed.
 6. For a deterministic mutation, call `anify_game_action` once with the retained `operation_id` and one command below.
-7. Render the canonical result under `codex-client-output-contract.md`.
+7. Render only clean player-visible prose and any justified markers under `web-output-contract.md`.
 
 For a composite read-only request such as “show my inventory, equipped gear, and stats,” use the one `anify_save_get` projection instead of issuing multiple `*.show` commands. Do not call a read-only `*.show` command before a mutation in the same logical turn: Engine permits one idempotent `game-action` stage per operation. Use `anify_save_get` and `anify_get_context` for preflight lookup, then execute the one mutation. The mutation response already contains the updated canonical save.
 
@@ -47,7 +47,7 @@ Use exact IDs from the canonical inventory. During battle, use `battle.item`, no
 
 Never use `quest.force-complete` or any `state.*` command; those are internal Engine bridges, not player capabilities.
 
-## Map, Travel, And Text Exploration
+## Map, Travel, And Non-Visual Exploration
 
 - View the current map: `map.show`
 - List worlds or realms: `map.worlds` or `map.realms`
@@ -61,9 +61,9 @@ Never use `quest.force-complete` or any `state.*` command; those are internal En
 - Buy from a present merchant: `explore.buy <shopItemId> [quantity]`
 - Sell to a present merchant: `explore.sell <itemId> [quantity]`
 
-Describe places and interactions as text. Never claim to render or control the Web Gaussian-splat scene.
+The direct Codex plugin does not render or control the Web Gaussian-splat scene. It still resolves the same exploration state through Engine MCP and returns the Web contract's clean visible prose.
 
-## Text Battle
+## Non-Visual Battle
 
 - View the active battle and valid options: `battle.show`
 - Basic attack: `battle.attack [enemyId]`
@@ -77,4 +77,4 @@ Never call `battle.start` after a GM consequence. Adventure combat begins only t
 
 ## Character Chat And Memory
 
-Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for text relationship continuity. This is separate from the unsupported Web memory image/video generation surface.
+Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for relationship continuity. This is separate from memory image/video generation, which is not offered by the direct Codex plugin.
