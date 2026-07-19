@@ -188,7 +188,7 @@ test('GM commits the one-time opening before exposing it to Web', () => {
   assert.match(gmSkill, /successful commit is what clears `opening_pending`/);
   assert.match(orchestration, /Never output an opening while `opening_pending` remains uncommitted/);
   assert.match(d20, /one-time opening is not a check/);
-  assert.match(gmSkill, /omit `resolution_packet`/);
+  assert.match(gmSkill, /Omit [^\n]*`resolution_packet`/);
 });
 
 test('GM commits battle creation atomically with one immutable resolution packet', () => {
@@ -283,6 +283,8 @@ test('role plugins expose persona skills and shared remote character workflow', 
   assert.match(sharedSkill, /ASCII square brackets/);
   assert.match(sharedSkill, /spoken dialogue outside the brackets/);
   assert.match(sharedSkill, /In private chat, do not prefix the reply with the character name/);
+  assert.match(sharedSkill, /literal plain-text line `Character Name:`/);
+  assert.match(sharedSkill, /Do not wrap the name or colon in Markdown/);
   assert.match(sharedSkill, /Do not emit GM markers/);
   assert.doesNotMatch(sharedSkill, /CODEX_HOME|mem0|qdrant|hook-events|transcripts/i);
 

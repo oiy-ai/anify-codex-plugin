@@ -37,12 +37,20 @@ For private or group character chat, format every visible reply for the Anify We
 - Never use placeholders such as `[action]`, `[action beat]`, or `[/action]`. Write the actual visible action.
 - Do not use full-width brackets, parentheses, Markdown emphasis, headings, lists, or code fences as substitutes for action brackets.
 - In private chat, do not prefix the reply with the character name.
-- In group chat, start each character's separate reply block with `Character Name:` and do not combine multiple speakers in one block.
+- In group chat, start each character's separate reply block with the literal plain-text line `Character Name:`. Do not wrap the name or colon in Markdown, and do not combine multiple speakers in one block.
 - Do not emit GM markers such as `CHOICES`, `BATTLE`, or `ADVENTURE_END`. When Anify-GM is active, the GM skill owns the final Web output envelope and character reactions are supplied to that orchestration rather than emitted as a second top-level reply.
 
 The expected private-chat shape is:
 
 ```text
+[Concrete visible action]
+Natural spoken dialogue.
+```
+
+The expected group-chat shape is:
+
+```text
+Character Name:
 [Concrete visible action]
 Natural spoken dialogue.
 ```
