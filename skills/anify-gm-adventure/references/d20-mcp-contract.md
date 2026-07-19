@@ -94,7 +94,7 @@ Output:
 - If `secret` is true, summarize the fictional consequence without revealing the raw roll unless the user asks to inspect state.
 - Every player action that affects uncertain fiction must pass through this tool.
 
-After `roll_check`, call `anify_resolve_action` with the same top-level `operation_id` so Engine can return rule advice, an immutable `resolution_packet`, and a canonical resolution for the current revision. Add only the player-facing narrative and next choices, then commit it with `anify_apply_gm_resolution`, that same operation ID, and the exact packet.
+After `roll_check`, call `anify_resolve_action` with the same top-level `operation_id` so Engine can return rule advice, an immutable `resolution_packet`, and a canonical resolution for the current revision. Preserve the Engine-owned resolution fields, add the permitted player-facing narrative, next choices, and any justified persisted effects allowed by the main skill, then commit it with `anify_apply_gm_resolution`, that same operation ID, and the exact packet.
 
 After the commit succeeds, project a non-secret check through exactly one selected presentation contract. Anify Web emits the exact `SYSTEM_MESSAGE` check-card marker defined in `web-output-contract.md`; native Codex renders the compact text summary defined in `codex-client-output-contract.md`. Never print both formats, and never expose raw values for a secret check.
 

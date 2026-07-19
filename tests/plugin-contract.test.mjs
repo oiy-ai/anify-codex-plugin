@@ -308,7 +308,10 @@ test('GM skill selects Web markers only in Shell and remains independently playa
     assert.match(codexClientGameplay, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(codexClientGameplay, /call `anify_game_action` once/);
+  assert.match(codexClientGameplay, /composite read-only request[\s\S]*use the one `anify_save_get` projection/);
   assert.match(codexClientGameplay, /Do not call a read-only `\*\.show` command before a mutation/);
+  assert.match(codexClientGameplay, /`equipmentId` is the exact canonical inventory `itemId`/);
+  assert.match(codexClientGameplay, /do not promise that a mutation will succeed/);
   assert.match(codexClientGameplay, /Never use `quest\.force-complete` or any `state\.\*` command/);
   assert.match(codexClientGameplay, /Never call `battle\.start` after a GM consequence/);
 });
