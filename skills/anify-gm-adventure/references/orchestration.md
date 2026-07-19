@@ -175,9 +175,9 @@ This packet is internal orchestration data. Never print `NO_REPLY`, the JSON obj
 
 If `save.adventure.opening_pending` is true, commit the opening before returning it:
 
-1. Read fresh world context and `save.game.resumeCheckpoint.revision`.
+1. Read fresh world context and the canonical save.
 2. Write the visible opening narration and exactly three choices.
-3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id`, an `adventure` resolution at that exact revision, and a compact opening `turn_entry`. Omit `resolution_packet` for this opening-only commit.
+3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`. Omit `revision`, `resolution_packet`, and `turn_entry`; Engine owns those opening provenance fields.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
 The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.

@@ -14,7 +14,7 @@ Immediately after beginning the operation, call the read-only `anify_pending_tur
 
 Do not call `roll_check` until the adventure has been started and `anify_save_get` returns an active `save.adventure` plus canonical `save.game` state.
 
-The one-time opening is not a check: when `save.adventure.opening_pending` is true, commit an opening `AdventureResolution` at the current revision through `anify_apply_gm_resolution`, without calling `roll_check` or `anify_resolve_action`. Normal D20 rules begin with the first player action after that committed opening.
+The one-time opening is not a check: when `save.adventure.opening_pending` is true, commit a minimal opening `AdventureResolution` containing only `type`, `narrative`, and `choices` through `anify_apply_gm_resolution`. Engine binds the revision and turn entry; do not call `roll_check` or `anify_resolve_action`. Normal D20 rules begin with the first player action after that committed opening.
 
 ## Tool
 
