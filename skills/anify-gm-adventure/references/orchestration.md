@@ -95,7 +95,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ### EngineResolution
 
-`anify_resolve_action` reads the authenticated canonical save and returns rule advice plus a revision-bound resolution. Codex may fill only its presentation fields before submitting it to `anify_apply_gm_resolution`:
+`anify_resolve_action` reads the authenticated canonical save, returns only the information needed for narration, and retains the revision-bound resolution inside Engine:
 
 ```json
 {
@@ -104,49 +104,17 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
   "checkResult": {
     "outcome": "success"
   },
-  "ruleAdvice": "Resolve investigate as successful and update the remote save.",
-  "resolution": {
-    "type": "adventure",
-    "revision": 4,
-    "narrative": "",
-    "choices": [],
-    "ruleDelta": {
-      "player": {},
-      "inventory": [{ "itemId": "minor-clue", "quantity": 1 }],
-      "flags": ["clue-found"]
-    }
-  },
-  "resolution_packet": {
-    "operation_id": "effective operation id",
-    "resolution_id": "uuid",
-    "check_id": "uuid",
-    "uid": "authenticated Firebase uid",
-    "adventure_session_id": "active adventure session id",
-    "revision": 4,
-    "type": "adventure",
-    "action": "Search the grove",
-    "action_kind": "investigate",
-    "outcome": "success"
-  },
-  "turn_entry": {
-    "action": "Search the grove",
-    "actionKind": "investigate",
-    "outcome": "success",
-    "check_result": {
-      "outcome": "success"
-    },
-    "rule_advice": "Resolve investigate as successful and update the canonical save."
-  }
+  "ruleAdvice": "Resolve investigate as successful and update the remote save."
 }
 ```
 
-The GM must not alter `resolution_packet`, `type`, `revision`, check data, or the Engine-owned `ruleDelta`. It may add the visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`, `questOffers` for player-selectable dynamic quests, `flags` as a JSON string array of boolean story-flag IDs such as `["violet-crystal-source-identified"]`, and `relationChanges` for character relationships. Never put names, descriptions, kinds, slots, or invented IDs in `items`; Engine owns item metadata. Never send `flags` as an object map. Submit the exact `resolution_packet` to `anify_apply_gm_resolution` and do not resubmit `turn_entry`; Engine commits its stored turn entry. `anify_apply_gm_resolution` is the only commit for this packet.
+The GM calls `anify_apply_gm_resolution` with a separate presentation-only resolution containing `type: "adventure"`, visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`, `questOffers` for player-selectable dynamic quests, `flags` as a JSON string array of boolean story-flag IDs such as `["violet-crystal-source-identified"]`, and `relationChanges` for character relationships. Never put names, descriptions, kinds, slots, or invented IDs in `items`; Engine owns item metadata. Never send `flags` as an object map. Engine merges the presentation resolution with its pending rule state in one atomic commit.
 
-After a successful commit, Web markers may project those effects: `ITEM_GIVE` from committed `items`, `QUEST_OFFER` from committed `questOffers`, `FLAG_SET` from committed `flags`, and `STATUS_UPDATE` only from the preserved Engine `ruleDelta`. A marker without the matching committed effect is forbidden. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the GM never auto-accepts one.
+After a successful commit, Web markers may project confirmed effects: `ITEM_GIVE` from committed items, `QUEST_OFFER` from committed quest offers, `FLAG_SET` from committed flags, and `STATUS_UPDATE` only from a confirmed numerical change. A marker without the matching committed effect is forbidden. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the GM never auto-accepts one.
 
 Every logical user or GM turn starts with the read-only `anify_begin_operation`. Retain the returned `operation_id` and pass it as a required top-level argument to every mutation in that turn. Shell additionally sends its trusted run ID through `x-anify-operation-id`; that header takes precedence inside Engine when present, but the argument remains required. Never invent or rotate an operation ID.
 
-Every GM turn then calls the read-only `anify_pending_turn_get` before loading or advancing the scene. A pending `check` must continue through `anify_resolve_action` with its exact returned `action` and full `check_result`. For a pending `resolution`, read canonical context if needed, add only the permitted presentation fields to its returned Engine resolution, and commit it through `anify_apply_gm_resolution` with the exact returned `resolution_packet`. Do not reroll, discard pending work, change provenance, or start a new normal turn while pending work exists.
+Every GM turn then calls the read-only `anify_pending_turn_get` before loading or advancing the scene. A pending `check` must continue through `anify_resolve_action` with its exact returned `action` and full `check_result`. For a pending `resolution`, read canonical context if needed and commit a presentation-only resolution through `anify_apply_gm_resolution`; Engine supplies its stored rule state. Do not reroll, discard pending work, or start a new normal turn while pending work exists.
 
 ### CharacterReaction
 
@@ -177,7 +145,7 @@ If `save.adventure.opening_pending` is true, commit the opening before returning
 
 1. Read fresh world context and the canonical save.
 2. Write the visible opening narration and exactly three choices.
-3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`. Omit `revision`, `resolution_packet`, and `turn_entry`; Engine owns those opening provenance fields.
+3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`; Engine owns the opening rule state and turn entry.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
 The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.
@@ -195,12 +163,12 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 9. Codex calls `roll_check` with the turn's `operation_id`.
 10. Codex calls `anify_resolve_action` with that same `operation_id`.
 11. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
-12. Codex preserves Engine's exact `ruleDelta`, adds visible narrative, choices, and only justified persisted effects to Engine's resolution, then calls `anify_apply_gm_resolution` with the same `operation_id` and exact `resolution_packet`, optionally including compact durable GM or party memories. Do not pass `turn_entry` on a D20 turn.
+12. Codex calls `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing visible narrative, choices, and justified persisted effects, optionally including compact durable GM or party memories. Engine binds its stored revision, rule delta, and turn entry.
 13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
 To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
 
-For deterministic actions inside an active battle, call `anify_game_action`. Codex-client attacks, skills, items, and flee operations use the same canonical state as Web's browser action endpoint.
+For deterministic actions inside an active battle, call `anify_game_action` only after fresh canonical state shows both a non-null `battleState` and `resumeCheckpoint.stateNode` exactly equal to `battle.await_action`. An enemy mentioned only in narration remains an uncertain adventure action and must use the D20 flow. Codex-client attacks, skills, items, and flee operations use the same canonical state as Web's browser action endpoint.
 
 ## GM Narration Rules
 

@@ -53,10 +53,10 @@ Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 
 
 Effect markers must match the already successful Engine commit:
 
-- `ITEM_GIVE` projects an entry committed through `resolution.items` or the preserved Engine `ruleDelta.inventory`. A GM-authored `resolution.items` entry contains only the Engine world `itemId` and a positive integer `quantity`; Engine supplies its canonical metadata.
+- `ITEM_GIVE` projects an entry confirmed in the successful commit, including a GM-authored `resolution.items` entry containing only the Engine world `itemId` and a positive integer `quantity`; Engine supplies its canonical metadata.
 - `QUEST_OFFER` projects an entry committed through `resolution.questOffers`; the player decides it through the Engine-backed task panel.
-- `FLAG_SET` projects a flag committed through the `resolution.flags` JSON string array or the preserved Engine `ruleDelta.flags`. The marker payload remains the separate `{ "key": "flag-id", "value": true }` display projection.
-- `STATUS_UPDATE` projects a numerical change from the preserved Engine `ruleDelta`; it never creates or changes that delta.
+- `FLAG_SET` projects a flag confirmed in the successful commit, including one submitted through the `resolution.flags` JSON string array. The marker payload remains the separate `{ "key": "flag-id", "value": true }` display projection.
+- `STATUS_UPDATE` projects a numerical change confirmed in the successful Engine commit; it never creates or changes that value.
 
 Never emit an effect marker only for display. If its matching mutation is absent from the successful `anify_apply_gm_resolution` response, omit the marker.
 
@@ -79,7 +79,7 @@ When combat begins, end with `BATTLE` instead of `CHOICES`:
 [BATTLE: {"enemyId":"corrupted-forest-wolf"}]
 ```
 
-Before emitting it, commit one adventure resolution with `battle: { "enemyId": "corrupted-forest-wolf" }`, `choices: []`, and the exact Engine `resolution_packet`. The successful apply response must already contain the matching active battle state. Never call `anify_game_action battle.start` afterward.
+Before emitting it, commit one adventure resolution with `battle: { "enemyId": "corrupted-forest-wolf" }` and `choices: []`. The successful apply response must already contain the matching active battle state. Never call `anify_game_action battle.start` afterward.
 
 Do not narrate the battle outcome, emit `CHOICES`, grant loot, or set defeat flags in the same turn as `BATTLE`.
 

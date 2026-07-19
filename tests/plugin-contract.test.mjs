@@ -161,6 +161,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
   }
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /anify_save_update|saveUpdateArguments/);
+    assert.doesNotMatch(source, /resolution_packet|turn_entry/);
   }
   assert.match(gmSkill, /save\.game/);
   assert.match(gmSkill, /save\.adventure/);
@@ -169,22 +170,21 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /session_intent: "new"/);
   assert.match(gmSkill, /session_intent: "resume"/);
   assert.match(gmSkill, /new host-provided logical GM thread ID/);
-  assert.match(gmSkill, /exact `resolution_packet`/);
-  assert.match(gmSkill, /Do not resubmit `turn_entry`/);
+  assert.match(gmSkill, /presentation-only resolution/);
+  assert.match(gmSkill, /Engine binds its pending rule state atomically/);
   assert.match(gmSkill, /Never follow it with `anify_game_action battle\.start`/);
   assert.match(gmSkill, /matching `save\.game\.battleState` and `battle\.await_action` checkpoint/);
   assert.match(gmSkill, /x-anify-operation-id/);
   assert.match(gmSkill, /Every mutating tool argument[\s\S]*must include the same top-level `operation_id`/);
   assert.match(gmSkill, /header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory/);
   assert.match(gmSkill, /pending `check`[\s\S]*exact returned `action`[\s\S]*full `check_result`/);
-  assert.match(gmSkill, /pending `resolution`[\s\S]*exact returned `resolution_packet`/);
-  assert.match(gmSkill, /Do not reroll, resolve again, discard the packet/);
+  assert.match(gmSkill, /pending `resolution`[\s\S]*presentation-only resolution/);
   assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
   assert.match(orchestration, /same successful `anify_apply_gm_resolution` response already contains the matching active battle state/);
   assert.doesNotMatch(orchestration, /successfully runs `battle\.start/);
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
   assert.match(d20, /rejects every missing, changed, or fabricated field/);
-  assert.match(d20, /original check, packet, or committed apply result/);
+  assert.match(d20, /original check or committed apply result/);
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.match(source, /anify_begin_operation/);
     assert.match(source, /anify_pending_turn_get/);
@@ -206,10 +206,10 @@ test('GM commits the one-time opening before exposing it to Web', () => {
   assert.match(gmSkill, /successful commit is what clears `opening_pending`/);
   assert.match(orchestration, /Never output an opening while `opening_pending` remains uncommitted/);
   assert.match(d20, /one-time opening is not a check/);
-  assert.match(gmSkill, /Omit [^\n]*`resolution_packet`/);
+  assert.match(gmSkill, /minimal `adventure` resolution containing only `type`, `narrative`, and `choices`/);
 });
 
-test('GM commits battle creation atomically with one immutable resolution packet', () => {
+test('GM commits battle creation atomically with one Engine-owned pending resolution', () => {
   for (const source of [gmSkill, orchestration, memory, webOutput]) {
     assert.match(source, /battle/i);
     assert.match(source, /resolution/i);
@@ -222,7 +222,7 @@ test('GM commits battle creation atomically with one immutable resolution packet
 });
 
 test('GM effect markers only project effects already persisted by Engine', () => {
-  assert.match(gmSkill, /preserve its `ruleDelta` unchanged/);
+  assert.match(gmSkill, /Never send `revision` or `ruleDelta`/);
   assert.match(gmSkill, /`resolution\.items`/);
   assert.match(gmSkill, /"itemId"[\s\S]*"quantity"/);
   assert.match(gmSkill, /Do not add names, descriptions, kinds, slots, or invented item IDs/);
@@ -237,7 +237,7 @@ test('GM effect markers only project effects already persisted by Engine', () =>
   assert.match(gmSkill, /never auto-accept it/);
   assert.match(orchestration, /A marker without the matching committed effect is forbidden/);
   assert.match(webOutput, /Never emit an effect marker only for display/);
-  assert.match(webOutput, /`STATUS_UPDATE` projects a numerical change from the preserved Engine `ruleDelta`/);
+  assert.match(webOutput, /`STATUS_UPDATE` projects a numerical change confirmed in the successful Engine commit/);
 });
 
 test('GM output contract uses the exact Web line marker grammar', () => {
@@ -326,6 +326,8 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   assert.match(engineGameplay, /do not promise that a mutation will succeed/);
   assert.match(engineGameplay, /Never use `quest\.force-complete` or any `state\.\*` command/);
   assert.match(engineGameplay, /Never call `battle\.start` after a GM consequence/);
+  assert.match(gmSkill, /stateNode` exactly equal to `battle\.await_action`/);
+  assert.match(gmSkill, /An enemy mentioned in narration does not establish battle state/);
 });
 
 test('all plugins share the Anify Engine MCP config', () => {
