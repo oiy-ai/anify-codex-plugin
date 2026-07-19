@@ -134,6 +134,12 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
   assert.match(gmManifest.interface.longDescription, /directly installed Codex plugin/);
   assert.match(gmManifest.interface.longDescription, /same Web wire-format output/);
   assert.match(gmManifest.interface.longDescription, /battles, inventory, equipment, character stats, quests, maps, travel, shops/);
+  assert.deepEqual(gmManifest.interface.defaultPrompt, [
+    '登录 Anify-GM 并从远程存档继续我的冒险。',
+    '和 Lynn 与 Lyra 一起开始一段新的 Anify 冒险。',
+    '查看我的角色属性、装备、背包、任务和地图。',
+  ]);
+  assert.ok(gmManifest.interface.defaultPrompt.length <= 3);
   assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
   assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
 
