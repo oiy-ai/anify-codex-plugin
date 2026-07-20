@@ -83,4 +83,4 @@ When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`:
 [ADVENTURE_END: {"outcome":"success","flagsSet":["forest-cleared"]}]
 ```
 
-`outcome` must be `success`, `failure`, or `retreat`. Always include `flagsSet`; use an empty array when the successful ending committed no flags.
+`outcome` must be `success`, `failure`, or `retreat`. Map Engine `adventureEnd.reason: "completed"` to `success` and `"death"` to `failure`; use `retreat` only after a successful deterministic `adventure.return`. Always include `flagsSet`; use an empty array when the successful ending committed no flags. The marker does not choose or mutate the destination; Web refreshes the Engine-owned location after the successful transition.

@@ -47,21 +47,22 @@ Use exact IDs from the canonical inventory. During battle, use `battle.item`, no
 
 Never use `quest.force-complete` or any `state.*` command; those are internal Engine bridges, not player capabilities.
 
-## Map, Travel, And Non-Visual Exploration
+## Map And Non-Visual Exploration
 
 - View the current map: `map.show`
 - List worlds or realms: `map.worlds` or `map.realms`
 - List regions in a realm: `map.regions <realmId>`
 - Inspect an area, region, or realm: `map.info <id>`
-- Enter a realm: `map.enter <realmId>`
-- Travel to an accessible location: `map.travel <areaId>`
 - View current-area interactions: `explore.show`
-- Talk to a present character: `explore.talk <characterId>`
-- Use an interaction point: `explore.interact <pointId>`
+- Start the selected adjacent adventure from a town: call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`; do not route this through `anify_game_action`
+- Inspect all items sold in the current town: `explore.shop`
 - Buy from a present merchant: `explore.buy <shopItemId> [quantity]`
 - Sell to a present merchant: `explore.sell <itemId> [quantity]`
+- Return from the active adventure by consuming a Return Scroll: `adventure.return`
 
 The direct Codex plugin does not render or control the Web Gaussian-splat scene. It still resolves the same exploration state through Engine MCP and returns the Web contract's clean visible prose.
+
+Town mode has no GM narration and no built-in character interaction. Character dialogue is available only through an installed matching Anify character plugin. There is no `explore.talk` command. Never call `map.travel`, `map.enter`, `state.*`, `adventure.enter`, or `adventure.leave`; starting an adjacent adventure, GM-settled completion or death, and `adventure.return` are the only location transitions.
 
 ## Non-Visual Battle
 
@@ -70,11 +71,9 @@ The direct Codex plugin does not render or control the Web Gaussian-splat scene.
 - Use a learned Engine ability: `battle.skill <abilityId|number> [enemyId]`
 - Use a battle item: `battle.item <itemId> [enemyId]`
 - Attempt to flee: `battle.flee`
-- After defeat, return to checkpoint: `battle.resolve-defeat town`
-- After defeat, consume an owned phoenix feather: `battle.resolve-defeat feather`
 
 Never call `battle.start` after a GM consequence. Adventure combat begins only through the battle object in the successful `anify_apply_gm_resolution` commit. Report HP, resources, enemies, available skills/items, cooldowns, rewards, victory, defeat, or escape only from the Engine response.
 
 ## Character Chat And Memory
 
-Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for relationship continuity. This is separate from memory image/video generation, which is not offered by the direct Codex plugin.
+Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for relationship continuity. Without a matching installed character plugin, the GM plugin must not simulate that party member's dialogue or reactions. This is separate from memory image/video generation, which is not offered by the direct Codex plugin.

@@ -12,9 +12,9 @@ Immediately after beginning the operation, call the read-only `anify_pending_tur
 - For a pending `resolution`, read canonical context if needed and submit only `type`, player-visible narrative, choices, and justified story effects to `anify_apply_gm_resolution` using the current turn's `operation_id`. Engine supplies revision, rule delta, and turn provenance. Do not rerun or discard pending work.
 - Only when no pending turn exists may the GM create a new D20 check.
 
-Do not call `roll_check` until the adventure has been started and `anify_save_get` returns an active `save.adventure` plus canonical `save.game` state.
+Do not call `roll_check` until the adventure has been started and `anify_save_get` returns an active `save.game.adventure`.
 
-The one-time opening is not a check: when `save.adventure.opening_pending` is true, commit a minimal opening `AdventureResolution` containing only `type`, `narrative`, and `choices` through `anify_apply_gm_resolution`. Engine binds the revision and turn entry; do not call `roll_check` or `anify_resolve_action`. Normal D20 rules begin with the first player action after that committed opening.
+The one-time opening is not a check: when `save.game.adventure.phase` is `opening`, commit a minimal opening `AdventureResolution` containing only `type`, `narrative`, and `choices` through `anify_apply_gm_resolution`. Engine binds the revision and turn entry; do not call `roll_check` or `anify_resolve_action`. Normal D20 rules begin with the first player action after that committed opening advances the phase to `active`.
 
 ## Tool
 
@@ -83,7 +83,7 @@ Output:
 
 ## GM Usage Rules
 
-- Call `anify_start_adventure` with `session_intent: "new"` for a fresh adventure, or once with `session_intent: "resume"` before continuing the active adventure. Never reuse new-session fields while resuming.
+- Call `anify_start_adventure` with `session_intent: "new"` and the exact adjacent `area_id` selected in the current town, or once with only `session_intent: "resume"` before continuing the active adventure. Never reuse new-session fields while resuming.
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - The GM must not alter `operation_id`, `uid`, `adventure_session_id`, `revision`, or any other provenance field.

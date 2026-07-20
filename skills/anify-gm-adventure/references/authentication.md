@@ -24,9 +24,9 @@ Before starting or continuing an adventure:
 1. Call `anify_begin_operation`, retain its `operation_id`, call `anify_pending_turn_get`, and finish any returned pending check or resolution before starting a new normal turn.
 2. Call `anify_save_get`.
 3. If the remote GM save is not initialized, call `anify_save_initialize` with that `operation_id` and a compact default player profile inferred from the request, then call `anify_save_get` again.
-4. Read canonical gameplay state from `save.game` and active-session metadata from `save.adventure`.
-5. If `save.adventure` is null or the user explicitly requests a fresh adventure, call `anify_start_adventure` with the same `operation_id` and `session_intent: "new"`, and continue only if it returns a new active canonical session. A Shell new session must carry a new host-provided logical thread ID; omit `gm_thread_id` for native sessions rather than inventing one.
-6. If `save.adventure` is active and the user continues it, call `anify_start_adventure` with the same `operation_id`, `session_intent: "resume"`, and no changed session fields. Continue only if Engine returns that same fixed session.
+4. Read location and active-session metadata only from `save.game.currentAreaId` and `save.game.adventure`.
+5. If `save.game.adventure` is null, load the current town and its adjacent unlocked adventure areas from Engine context. Do not produce GM narration or auto-select a destination. Only after the player selects an exact adjacent adventure ID, call `anify_start_adventure` with the same `operation_id`, `session_intent: "new"`, and `area_id`. A Shell new session must also carry its host-provided logical `gm_thread_id`; omit it for native sessions rather than inventing one. Send no party, world, or language fields.
+6. If `save.game.adventure` is active and the user continues it, call `anify_start_adventure` with only the same `operation_id` and `session_intent: "resume"`. Continue only if Engine returns that same fixed session.
 7. If an Engine MCP call fails because authorization is missing or the refresh grant is no longer valid, surface the failure directly and let the Codex host reconnect Anify.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.

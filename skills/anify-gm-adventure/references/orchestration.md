@@ -108,9 +108,9 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 }
 ```
 
-The GM calls `anify_apply_gm_resolution` with a separate presentation-only resolution containing `type: "adventure"`, visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`, `questOffers` for player-selectable dynamic quests, `flags` as a JSON string array of boolean story-flag IDs such as `["violet-crystal-source-identified"]`, and `relationChanges` for character relationships. Before adding an item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`, and use an exact ID from `catalog_matches`; when no match exists, omit the inventory gain. Never search GitHub, plugin files, or asset manifests for IDs. Never put names, descriptions, kinds, slots, or invented IDs in `items`; Engine owns item metadata. Never send `flags` as an object map. Engine merges the presentation resolution with its pending rule state in one atomic commit.
+The GM calls `anify_apply_gm_resolution` with a separate presentation-only resolution containing `type: "adventure"`, visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`, `questOffers` for player-selectable dynamic quests, `flags` as a JSON string array of boolean story-flag IDs such as `["violet-crystal-source-identified"]`, `relationChanges` for character relationships, and a positive integer `gold` award when the fiction justifies one. Before adding an item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`, and use an exact ID from `catalog_matches`; when no match exists, omit the inventory gain. Never search GitHub, plugin files, or asset manifests for IDs. Never put names, descriptions, kinds, slots, or invented IDs in `items`; Engine owns item metadata. Never send `flags` as an object map. Engine merges the presentation resolution with its pending rule state in one atomic commit.
 
-After a successful commit, `ITEM_GIVE` may project a committed item. It is the only persisted-effect Web marker and is forbidden without the matching committed item. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the Web task panel reads them from canonical state. Flags, relationships, quest state, and numerical changes have no standalone Web marker.
+After a successful commit, `ITEM_GIVE` may project a committed item. It is the only persisted-effect Web marker and is forbidden without the matching committed item. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the Web task panel reads them from canonical state. Flags, relationships, quest state, gold, and other numerical changes have no standalone Web marker.
 
 Every logical user or GM turn starts with the read-only `anify_begin_operation`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Retain that ID and pass it as a required top-level argument to every mutation in the turn. Shell additionally sends its trusted run ID through `x-anify-operation-id`; that header takes precedence inside Engine when present, but the argument remains required. Never invent or rotate an operation ID.
 
@@ -141,14 +141,14 @@ This packet is internal orchestration data. Never print `NO_REPLY`, the JSON obj
 
 ### One-time opening
 
-If `save.adventure.opening_pending` is true, commit the opening before returning it:
+If `save.game.adventure.phase` is `opening`, commit the opening before returning it:
 
 1. Read fresh world context and the canonical save.
 2. Write the visible opening narration and exactly three choices.
 3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`; Engine owns the opening rule state and turn entry.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
-The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while `opening_pending` remains uncommitted.
+The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while the `opening` phase remains uncommitted.
 
 ### Player action turns
 
@@ -162,7 +162,7 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 8. GM creates `CheckRequest`.
 9. Codex calls `roll_check` with the turn's `operation_id`.
 10. Codex calls `anify_resolve_action` with that same `operation_id`.
-11. Active character plugins return `NO_REPLY` or `CharacterReaction`; without active character plugins, GM may produce an NPC or companion reaction when appropriate.
+11. Active character plugins return `NO_REPLY` or `CharacterReaction`. Without the matching character plugin, never invent party-member speech, thoughts, or reactions; use `NO_REPLY`. The GM may narrate non-party NPCs when fiction requires them.
 12. Codex calls `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing visible narrative, choices, and justified persisted effects, optionally including compact durable GM or party memories. Engine binds its stored revision, rule delta, and turn entry.
 13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 

@@ -8,7 +8,7 @@ Use:
 
 - `anify_begin_operation`: create or recover the stable operation ID for one logical user or GM turn.
 - `anify_pending_turn_get`: inspect unfinished GM D20 work before advancing a turn.
-- `anify_save_get`: retrieve the profile, canonical `game` state, active `adventure`, GM memory, party memory, and recent turn log.
+- `anify_save_get`: retrieve the profile, canonical `game` state including `game.adventure`, GM memory, party memory, and recent turn log.
 - `anify_apply_gm_resolution`: atomically apply an Engine-validated narrative resolution and append its resolved turn entry and durable memories.
 - `anify_game_action`: run deterministic Engine commands, including every numerical battle action, against the same canonical state used by Web.
 - `anify_memory_search`: retrieve character-specific durable memories.
@@ -25,7 +25,7 @@ At the beginning of every GM turn, call `anify_pending_turn_get` after `anify_be
 After each resolved player action:
 
 - Commit the Engine resolution with `anify_apply_gm_resolution` so the turn entry and gameplay mutation succeed or fail together.
-- Let Engine update location, stats, inventory, flags, quests, and battle state. Never recreate those mutations as a plugin-authored patch.
+- Let Engine update location, adventure state, stats, inventory, gold, flags, quests, and battle state. Never recreate those mutations as a plugin-authored patch.
 - Add only durable GM facts to GM memory.
 - Add only party-known durable memories to party memory.
 - Express adventure completion and durable effects through the structured resolution, not a second save write.
@@ -69,6 +69,6 @@ For each turn, retrieve:
 
 - The canonical remote save from `anify_save_get`.
 - Fresh world context from `anify_get_context` only when needed.
-- Character memories from `anify_memory_search` when a role plugin is active or when the user references prior relationship/context.
+- Character memories from `anify_memory_search` only when the matching role plugin is active and the user or current adventure needs prior relationship context. Without that plugin, do not fabricate party dialogue or reactions.
 
 Keep the prompt small. Prefer relevant, high-salience memories over exhaustive history.
