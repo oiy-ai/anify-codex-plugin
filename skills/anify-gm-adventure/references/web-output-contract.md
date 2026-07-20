@@ -14,10 +14,13 @@ Anify Web consumes clean visible prose plus line-level structured markers. This 
 Every marker must:
 
 - Use ASCII square brackets and an uppercase marker name.
+- Use exactly one opening `[` and exactly one closing `]`. A doubled form such as `[[CHOICES: [...]]]` is invalid and must never be emitted.
 - Occupy its own line after any related visible prose.
 - Use the exact form `[TYPE: <valid-json>]` with the complete JSON value on the same line.
 - Use double-quoted JSON keys and strings, with no trailing commas, Markdown decoration, heading, bullet, or code fence.
 - Reflect Engine MCP state that was already resolved and persisted. Markers are Web UI projections; they never replace the required Engine MCP tool calls.
+
+Before sending the final response, inspect every marker line and correct it if it does not begin with exactly `[TYPE:` or if it ends with `]]`. Do not wrap markers in Markdown links, wiki-link syntax, or any additional delimiters.
 
 The Web parser recognizes only these five exact shapes. Missing or extra payload keys make a marker invalid:
 

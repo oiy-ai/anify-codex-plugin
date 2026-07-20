@@ -105,6 +105,7 @@ Never call or suggest `map.travel`, `map.enter`, `state.*`, `adventure.enter`, `
 The Web contract in `references/web-output-contract.md` is mandatory in both Codex Shell and directly installed Codex plugins. Keep the player-facing output compact:
 
 - Write a short scene paragraph as clean visible text.
+- Before sending, validate that every structured marker uses exactly one pair of ASCII square brackets. `[[CHOICES: [...]]]` and every other doubled-bracket marker are invalid; rewrite them to the exact single-bracket grammar in `references/web-output-contract.md`.
 - After every non-secret D20 check, emit exactly one `SYSTEM_MESSAGE` marker using the exact mapping in `references/web-output-contract.md`; never print a Markdown `Check:` summary.
 - Do not print numbered or bulleted options in prose.
 - End a normal adventure turn with exactly one line-level `CHOICES` marker containing exactly three strings.
