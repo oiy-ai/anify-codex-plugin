@@ -15,7 +15,6 @@ Before running or modifying an Anify session, read:
 - `references/orchestration.md`
 - `references/d20-mcp-contract.md`
 - `references/memory-and-consistency.md`
-- `references/web-output-contract.md`
 - `references/engine-gameplay-commands.md`
 
 ## Operating Model
@@ -76,7 +75,7 @@ Engine mutations always precede their player-facing projection. `ITEM_GIVE` is t
 - Put a justified positive integer in `resolution.gold` when the fiction awards gold, such as a discovered cache, negotiated reward, or completed objective. Engine validates and commits it. Gold has no standalone marker; mention the reward only after the successful commit confirms it.
 - Numerical changes come only from Engine rule resolution and have no standalone Web marker.
 
-Never describe an item, quest, flag, relationship, or numerical effect unless it is already present in the successful `anify_apply_gm_resolution` response. Never emit a marker outside the five exact shapes in `references/web-output-contract.md`.
+Never describe an item, quest, flag, relationship, or numerical effect unless it is already present in the successful `anify_apply_gm_resolution` response. Never emit a marker outside the five exact shapes in the Player-Facing Output contract below.
 
 When a GM consequence starts combat, set `resolution.battle` to `{ "enemyId": "<Engine enemy id>" }`, set `resolution.choices` to `[]`, and commit that adventure resolution once through `anify_apply_gm_resolution`. Emit `BATTLE` only when the successful response already contains the matching `save.game.battleState` and `battle.await_action` checkpoint. Never follow it with `anify_game_action battle.start`; battle creation, narrative, turn log, and memories are one Engine commit.
 
@@ -102,16 +101,45 @@ Never call or suggest `map.travel`, `map.enter`, `state.*`, `adventure.enter`, `
 
 ## Player-Facing Output
 
-The Web contract in `references/web-output-contract.md` is mandatory in both Codex Shell and directly installed Codex plugins. Keep the player-facing output compact:
+This single Web wire contract is mandatory in both Codex Shell and directly installed Codex plugins. Keep the player-facing output compact:
 
 - Write a short scene paragraph as clean visible text.
-- Before sending, validate that every structured marker uses exactly one pair of ASCII square brackets. `[[CHOICES: [...]]]` and every other doubled-bracket marker are invalid; rewrite them to the exact single-bracket grammar in `references/web-output-contract.md`.
-- After every non-secret D20 check, emit exactly one `SYSTEM_MESSAGE` marker using the exact mapping in `references/web-output-contract.md`; never print a Markdown `Check:` summary.
+- Output only player-visible narration and dialogue. Never print `NO_REPLY`, tool calls, internal packets, save writes, or reasoning.
 - Do not print numbered or bulleted options in prose.
 - End a normal adventure turn with exactly one line-level `CHOICES` marker containing exactly three strings.
 - Do not print a separate custom-action prompt; the Web input already accepts custom actions.
 - Fulfil direct Codex requests for inventory, equipment, character, quest, map, adjacent-adventure selection, shop, return, non-visual exploration, and non-visual battle through `references/engine-gameplay-commands.md`, while retaining this same Web output format.
 - Do not offer visual battle, Gaussian-splat exploration, or memory image/video generation in the directly installed Codex plugin.
+
+Every marker occupies its own line and uses exactly `[TYPE: <valid-json>]`, with one opening `[` and one closing `]`. `[[CHOICES: [...]]]`, key-value text such as `[SYSTEM_MESSAGE: check=success | ...]`, Markdown decoration, extra payload keys, and unrecognized markers are invalid. Only these five exact shapes are valid:
+
+```text
+[CHOICES: ["Option 1","Option 2","Option 3"]]
+[BATTLE: {"enemyId":"corrupted-forest-wolf"}]
+[ADVENTURE_END: {"outcome":"success","flagsSet":["flag-id"]}]
+[ITEM_GIVE: {"itemId":"item-id","quantity":1}]
+[SYSTEM_MESSAGE: {"tier":"critical_success","title":"Check title","description":"Player-visible result"}]
+```
+
+Before sending, inspect every marker line. It must begin with exactly `[TYPE:`; its payload must parse as JSON; and it must not end with `]]` unless the final payload itself is a JSON array, as in the single-bracket `CHOICES` example above.
+
+After every non-secret D20 turn is successfully committed, emit exactly one `SYSTEM_MESSAGE` marker. Copy the exact Engine `ability` into `title`, and format `description` as `<total> vs DC <dc> — <outcome>.` using the exact Engine values. Map outcomes exactly:
+
+- `critical_success` outcome → `critical_success` tier.
+- `success` outcome → `success_with_cost` tier.
+- `failure` or `critical_failure` outcome → `failure` tier.
+
+Ordinary success therefore has this exact form:
+
+```text
+[SYSTEM_MESSAGE: {"tier":"success_with_cost","title":"Wisdom (Perception)","description":"15 vs DC 14 — success."}]
+```
+
+Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 — success.**`, do not invent `check`, `body`, or other payload fields, and do not expose raw roll or DC values for a secret check.
+
+`ITEM_GIVE` may only project an item already confirmed by the successful commit. Engine supplies its canonical metadata. Never emit `ITEM_GIVE` only for display. Quest offers, quest updates, `resolution.flags` JSON string arrays, relationships, gold, and numerical changes have no standalone marker.
+
+`CHOICES` must be the final non-empty line of a normal turn. Its payload must be a JSON string array with exactly three items. Do not duplicate those choices in visible prose. When combat begins, end with `BATTLE` instead of `CHOICES`, and only after the same successful resolution created the matching Engine battle state. Never call `anify_game_action battle.start` afterward. When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`, and only after the Engine settlement succeeded. Always include `flagsSet`, using an empty array when no flag was committed.
 
 After the user acts and the D20 result is available, emit the Web check card, any justified character reaction, the consequence, and the next Web marker or terminal state.
 

@@ -172,7 +172,7 @@ For deterministic actions inside an active battle, call `anify_game_action` only
 
 ## GM Narration Rules
 
-- Follow `web-output-contract.md` for every player-facing response; internal packets are never part of visible output.
+- Follow the main Skill's Player-Facing Output contract for every player-facing response; internal packets are never part of visible output.
 - Make consequences follow both the check result and established fiction.
 - Let failures move the story forward with cost, complication, lost time, danger, resource pressure, or changed relationships.
 - Critical success should add a bonus beyond ordinary success.

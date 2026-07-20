@@ -23,7 +23,7 @@ const orchestration = text('skills/anify-gm-adventure/references/orchestration.m
 const authentication = text('skills/anify-gm-adventure/references/authentication.md');
 const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
-const webOutput = text('skills/anify-gm-adventure/references/web-output-contract.md');
+const webOutput = gmSkill;
 const engineGameplay = text('skills/anify-gm-adventure/references/engine-gameplay-commands.md');
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
@@ -259,7 +259,7 @@ test('GM persists all effects in Engine and emits only the Web-consumed item pro
 });
 
 test('GM output contract uses the exact Web line marker grammar', () => {
-  assert.match(gmSkill, /references\/web-output-contract\.md/);
+  assert.equal(existsSync(join(repoRoot, 'skills/anify-gm-adventure/references/web-output-contract.md')), false);
   assert.match(gmSkill, /Do not print numbered or bulleted options/);
   assert.match(gmSkill, /exactly one line-level `CHOICES` marker/);
   assert.doesNotMatch(gmSkill, /Exactly three numbered options|A line saying custom actions are allowed/);
@@ -302,14 +302,14 @@ test('GM output contract uses the exact Web line marker grammar', () => {
 });
 
 test('GM skill keeps one Web output contract while direct Codex play uses Engine gameplay commands', () => {
-  assert.match(gmSkill, /Web contract[\s\S]*mandatory in both Codex Shell and directly installed Codex plugins/);
+  assert.match(gmSkill, /Web wire contract[\s\S]*mandatory in both Codex Shell and directly installed Codex plugins/);
   assert.match(gmSkill, /references\/engine-gameplay-commands\.md/);
   assert.doesNotMatch(gmSkill, /Presentation surface:|selected surface|native text format/);
   assert.equal(existsSync(join(repoRoot, 'skills/anify-gm-adventure/references/codex-client-output-contract.md')), false);
   assert.equal(existsSync(join(repoRoot, 'skills/anify-gm-adventure/references/codex-client-gameplay.md')), false);
 
   assert.match(engineGameplay, /same canonical Engine capabilities that Anify Web exposes through controls/);
-  assert.match(engineGameplay, /Render only clean player-visible prose and any justified markers under `web-output-contract\.md`/);
+  assert.match(engineGameplay, /Render only clean player-visible prose and any justified markers under the main Skill's Player-Facing Output contract/);
   assert.match(engineGameplay, /does not render or control the Web Gaussian-splat scene/);
   assert.match(engineGameplay, /memory image\/video generation, which is not offered by the direct Codex plugin/);
 

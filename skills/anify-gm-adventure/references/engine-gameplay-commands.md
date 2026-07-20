@@ -12,7 +12,7 @@ For every logical turn:
 4. Use `anify_get_context` when a target ID or world fact is needed.
 5. For a read-only request, answer from `anify_save_get` and `anify_get_context`. A single matching `*.show` command below may be used when its Engine-formatted view is useful and no mutation is needed.
 6. For a deterministic mutation, call `anify_game_action` once with the retained `operation_id` and one command below.
-7. Render only clean player-visible prose and any justified markers under `web-output-contract.md`.
+7. Render only clean player-visible prose and any justified markers under the main Skill's Player-Facing Output contract.
 
 For a composite read-only request such as “show my inventory, equipped gear, and stats,” use the one `anify_save_get` projection instead of issuing multiple `*.show` commands. Do not call a read-only `*.show` command before a mutation in the same logical turn: Engine permits one idempotent `game-action` stage per operation. Use `anify_save_get` and `anify_get_context` for preflight lookup, then execute the one mutation. The mutation response already contains the updated canonical save.
 

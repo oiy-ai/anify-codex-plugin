@@ -95,6 +95,6 @@ Output:
 
 After `roll_check`, call `anify_resolve_action` with the same top-level `operation_id`. Engine returns rule advice and keeps the canonical pending resolution server-side. Build a presentation-only resolution with the permitted player-facing narrative, next choices, and justified persisted effects allowed by the main skill, then commit it with `anify_apply_gm_resolution` and that same operation ID.
 
-After the commit succeeds, emit every non-secret check through the exact `SYSTEM_MESSAGE` check-card marker defined in `web-output-contract.md`, including when the plugin runs directly in Codex. Never print a separate Markdown check summary, and never expose raw values for a secret check.
+After the commit succeeds, emit every non-secret check through the exact `SYSTEM_MESSAGE` check-card marker defined in the main Skill's Player-Facing Output contract, including when the plugin runs directly in Codex. Never print a separate Markdown check summary, and never expose raw values for a secret check.
 
 Engine stores stage receipts and unfinished turn provenance in the authenticated user's SQLite Durable Object. Matching retries return the original check or committed apply result without rerolling or advancing revision again. A later logical turn must discover unfinished work through `anify_pending_turn_get` and continue the exact pending stage; reusing an operation ID with changed stage input fails closed.
