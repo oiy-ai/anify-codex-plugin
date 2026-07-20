@@ -29,7 +29,7 @@ At the start of every logical GM turn, before loading state or making any mutati
 
 1. Call the read-only `anify_begin_operation` and retain its returned `operation_id` for the entire turn. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID.
 2. Call the read-only `anify_pending_turn_get` before creating a new check or resolution.
-3. If Engine reports a pending `check`, continue it by calling `anify_resolve_action` with the current turn's `operation_id`, exact returned `action`, and full `check_result`. Do not call `roll_check` again. Engine retains the resulting pending resolution internally.
+3. If Engine reports a pending `check`, continue it by calling `anify_resolve_action` with only the current turn's `operation_id`. Do not call `roll_check` again or resend the action/check payload. Engine owns the pending check and retains the resulting pending resolution internally.
 4. If Engine reports a pending `resolution`, read canonical save or world context if needed, then call `anify_apply_gm_resolution` with the current turn's `operation_id` and a presentation-only resolution containing narration, choices, and justified story effects. Engine binds its pending rule state atomically.
 5. Only when Engine reports no pending turn may the normal opening or player-action flow begin.
 
@@ -57,7 +57,7 @@ Only while `save.game.adventure` is active, after the Turn Operation Protocol re
 4. **GM options**: choose exactly three viable options and emit them only through the Web `CHOICES` marker.
 5. **User action**: wait for or parse the user's selected/custom action.
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check` with the turn's `operation_id`. The GM must not invent the D20 result.
-7. **Engine rule resolution**: call `anify_resolve_action` with the same `operation_id`, the user action, and exact full `roll_check` result. Engine returns the action kind, outcome, check result, and rule advice while retaining revision and rule deltas internally. Do not submit a client-authored save or call it without `check_result`.
+7. **Engine rule resolution**: call `anify_resolve_action` with only the same `operation_id`. Engine resolves its stored pending check and returns the action kind, outcome, check result, and rule advice while retaining revision and rule deltas internally. Do not resend the user action or `roll_check` result and do not submit a client-authored save.
 8. **Character AI reaction**: character or party dialogue belongs exclusively to active Anify character plugins. If no matching character plugin is active, do not fabricate Lynn, Lyra, or another party member's speech, thoughts, or reactions; use the internal token `NO_REPLY` and omit it from player-facing output. The GM may still narrate non-party NPCs inside an active adventure when fiction requires them.
 9. **Commit the turn**: call `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing `type`, narrative, exactly three normal-turn choices, and only justified persisted effects under the mapping below. Engine supplies the stored revision, rule delta, and turn entry. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
 10. **GM advancement**: present the consequence and end with the next `CHOICES`, `BATTLE`, or `ADVENTURE_END` marker under the Web output contract.

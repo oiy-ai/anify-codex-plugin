@@ -114,7 +114,7 @@ After a successful commit, `ITEM_GIVE` may project a committed item. It is the o
 
 Every logical user or GM turn starts with the read-only `anify_begin_operation`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Retain that ID and pass it as a required top-level argument to every mutation in the turn. Shell additionally sends its trusted run ID through `x-anify-operation-id`; that header takes precedence inside Engine when present, but the argument remains required. Never invent or rotate an operation ID.
 
-Every GM turn then calls the read-only `anify_pending_turn_get` before loading or advancing the scene. A pending `check` must continue through `anify_resolve_action` with its exact returned `action` and full `check_result`. For a pending `resolution`, read canonical context if needed and commit a presentation-only resolution through `anify_apply_gm_resolution`; Engine supplies its stored rule state. Do not reroll, discard pending work, or start a new normal turn while pending work exists.
+Every GM turn then calls the read-only `anify_pending_turn_get` before loading or advancing the scene. A pending `check` must continue through `anify_resolve_action` with only its operation ID; Engine consumes its stored action and check result. For a pending `resolution`, read canonical context if needed and commit a presentation-only resolution through `anify_apply_gm_resolution`; Engine supplies its stored rule state. Do not reroll, discard pending work, or start a new normal turn while pending work exists.
 
 ### CharacterReaction
 

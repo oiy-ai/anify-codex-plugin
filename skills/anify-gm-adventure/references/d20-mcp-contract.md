@@ -8,7 +8,7 @@ At the start of every logical GM turn, call the read-only `anify_begin_operation
 
 Immediately after beginning the operation, call the read-only `anify_pending_turn_get`:
 
-- For a pending `check`, pass its exact `action` and full `check_result` to `anify_resolve_action` with the current turn's `operation_id`. Do not call `roll_check` again or alter any check field. Engine retains the resulting resolution internally.
+- For a pending `check`, call `anify_resolve_action` with only the current turn's `operation_id`. Do not call `roll_check` again or resend any check field. Engine consumes its stored check and retains the resulting resolution internally.
 - For a pending `resolution`, read canonical context if needed and submit only `type`, player-visible narrative, choices, and justified story effects to `anify_apply_gm_resolution` using the current turn's `operation_id`. Engine supplies revision, rule delta, and turn provenance. Do not rerun or discard pending work.
 - Only when no pending turn exists may the GM create a new D20 check.
 
@@ -87,13 +87,13 @@ Output:
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - The GM must not alter `operation_id`, `uid`, `adventure_session_id`, `revision`, or any other provenance field.
-- Pass the turn's `operation_id`, user action, and exact full `CheckResult` to `anify_resolve_action`; it rejects every missing, changed, or fabricated field.
+- Pass only the turn's `operation_id` to `anify_resolve_action`; Engine reads the exact action and `CheckResult` it stored during `roll_check`.
 - Send only the GM-authored presentation resolution to `anify_apply_gm_resolution`; Engine binds its stored pending state.
 - Submit the GM-authored presentation resolution through `anify_apply_gm_resolution`; the same atomic commit persists the full check result, narrative, memories, rule effects, and any battle creation.
 - If `secret` is true, summarize the fictional consequence without revealing the raw roll unless the user asks to inspect state.
 - Every player action that affects uncertain fiction must pass through this tool.
 
-After `roll_check`, call `anify_resolve_action` with the same top-level `operation_id`. Engine returns rule advice and keeps the canonical pending resolution server-side. Build a presentation-only resolution with the permitted player-facing narrative, next choices, and justified persisted effects allowed by the main skill, then commit it with `anify_apply_gm_resolution` and that same operation ID.
+After `roll_check`, call `anify_resolve_action` with only the same top-level `operation_id`. Engine consumes the canonical pending check, returns rule advice, and keeps the canonical pending resolution server-side. Build a presentation-only resolution with the permitted player-facing narrative, next choices, and justified persisted effects allowed by the main skill, then commit it with `anify_apply_gm_resolution` and that same operation ID.
 
 After the commit succeeds, emit every non-secret check through the exact `SYSTEM_MESSAGE` check-card marker defined in the main Skill's Player-Facing Output contract, including when the plugin runs directly in Codex. Never print a separate Markdown check summary, and never expose raw values for a secret check.
 

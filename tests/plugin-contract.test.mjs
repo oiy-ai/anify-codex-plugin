@@ -188,13 +188,13 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /Engine returns the unfinished operation ID when pending work exists/);
   assert.match(gmSkill, /Every mutating tool argument[\s\S]*must include the same top-level `operation_id`/);
   assert.match(gmSkill, /header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory/);
-  assert.match(gmSkill, /pending `check`[\s\S]*exact returned `action`[\s\S]*full `check_result`/);
+  assert.match(gmSkill, /pending `check`[\s\S]*only the current turn's `operation_id`/);
   assert.match(gmSkill, /pending `resolution`[\s\S]*presentation-only resolution/);
   assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
   assert.match(orchestration, /same successful `anify_apply_gm_resolution` response already contains the matching active battle state/);
   assert.doesNotMatch(orchestration, /successfully runs `battle\.start/);
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
-  assert.match(d20, /rejects every missing, changed, or fabricated field/);
+  assert.match(d20, /Engine reads the exact action and `CheckResult` it stored during `roll_check`/);
   assert.match(d20, /original check or committed apply result/);
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.match(source, /anify_begin_operation/);
