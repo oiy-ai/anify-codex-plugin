@@ -31,6 +31,20 @@ The remote save contains one canonical Engine game state. Codex and Anify Web mu
 
 The source tree keeps one canonical plugin implementation. Environment-specific MCP URLs are generated only in npm package artifacts from `config/mcp-targets.json`:
 
+Verify shared skill synchronization, plugin contracts, build error handling, and production-resource reachability with:
+
+```bash
+python3 scripts/sync_character_shared.py
+node --experimental-test-coverage \
+  --test-coverage-include=scripts/build_plugin_packages.mjs \
+  --test-coverage-lines=95 \
+  --test-coverage-branches=80 \
+  --test-coverage-functions=100 \
+  --test tests/*.test.mjs
+```
+
+Build environment-specific packages with:
+
 ```bash
 node scripts/build_plugin_packages.mjs --target preview --version-id local-1
 node scripts/build_plugin_packages.mjs --target production --version-id local-1

@@ -42,9 +42,18 @@ async function writeJson(path, value) {
 }
 
 function versionBase(version) {
-  const match = String(version).match(/^(\d+\.\d+\.\d+)/u);
+  const match = String(version).match(
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u,
+  );
   if (!match) throw new Error(`Plugin version is not valid semver: ${version}`);
-  return match[1];
+  return `${match[1]}.${match[2]}.${match[3]}`;
+}
+
+function requiredString(value, field) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${field} must be a non-empty string`);
+  }
+  return value;
 }
 
 function normalizeVersionId(versionId) {
@@ -67,6 +76,11 @@ export async function buildPluginPackages({
   const targets = await readJson(join(repoRoot, "config", "mcp-targets.json"));
   const targetConfig = targets[target];
   if (!targetConfig) throw new Error(`Unsupported build target: ${target}`);
+  const mcpUrl = requiredString(targetConfig.mcpUrl, `${target}.mcpUrl`);
+  const distTag = requiredString(targetConfig.distTag, `${target}.distTag`);
+  if (new URL(mcpUrl).protocol !== "https:") {
+    throw new Error(`${target}.mcpUrl must use HTTPS`);
+  }
 
   const normalizedVersionId = normalizeVersionId(versionId ?? new Date().toISOString());
   const resolvedOutputRoot = resolve(outputRoot);
@@ -90,23 +104,29 @@ export async function buildPluginPackages({
     }
 
     const version = `${versionBase(pluginManifest.version)}-${target}.${normalizedVersionId}`;
+    const description = requiredString(pluginManifest.description, `${plugin.slug}.description`);
+    const license = requiredString(pluginManifest.license, `${plugin.slug}.license`);
     pluginManifest.version = version;
     await writeJson(pluginManifestPath, pluginManifest);
 
     const mcpPath = join(packageRoot, ".mcp.json");
     const mcp = await readJson(mcpPath);
-    if (!mcp.mcpServers?.anify) {
+    if (
+      !mcp.mcpServers?.anify
+      || typeof mcp.mcpServers.anify !== "object"
+      || Array.isArray(mcp.mcpServers.anify)
+    ) {
       throw new Error(`${plugin.slug} does not define mcpServers.anify`);
     }
-    mcp.mcpServers.anify.url = targetConfig.mcpUrl;
+    mcp.mcpServers.anify.url = mcpUrl;
     await writeJson(mcpPath, mcp);
 
     const packageName = `@oiy-ai/${plugin.slug}`;
     await writeJson(join(packageRoot, "package.json"), {
       name: packageName,
       version,
-      description: pluginManifest.description,
-      license: pluginManifest.license,
+      description,
+      license,
       private: false,
       repository: {
         type: "git",
@@ -128,8 +148,8 @@ export async function buildPluginPackages({
 
   const buildManifest = {
     target,
-    mcpUrl: targetConfig.mcpUrl,
-    distTag: targetConfig.distTag,
+    mcpUrl,
+    distTag,
     packages,
   };
   await writeJson(join(resolvedOutputRoot, "build-manifest.json"), buildManifest);
@@ -141,12 +161,12 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--target") {
-      options.target = argv[index + 1];
+      options.target = requiredOptionValue(argv, index, argument);
       index += 1;
       continue;
     }
     if (argument === "--version-id") {
-      options.versionId = argv[index + 1];
+      options.versionId = requiredOptionValue(argv, index, argument);
       index += 1;
       continue;
     }
@@ -154,6 +174,14 @@ function parseArgs(argv) {
   }
   if (!options.target) throw new Error("--target is required");
   return options;
+}
+
+function requiredOptionValue(argv, index, option) {
+  const value = argv[index + 1];
+  if (typeof value !== "string" || !value.trim() || value.startsWith("--")) {
+    throw new Error(`${option} requires a value`);
+  }
+  return value;
 }
 
 if (import.meta.url === pathToFileURL(resolve(process.argv[1] ?? "")).href) {

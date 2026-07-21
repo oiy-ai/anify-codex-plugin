@@ -42,7 +42,12 @@ jobs:
         run: |
           python3 scripts/sync_character_shared.py
           git diff --exit-code
-          node --test tests/*.test.mjs
+          node --experimental-test-coverage \
+            --test-coverage-include=scripts/build_plugin_packages.mjs \
+            --test-coverage-lines=95 \
+            --test-coverage-branches=80 \
+            --test-coverage-functions=100 \
+            --test tests/*.test.mjs
 
       - name: Build environment packages
         run: node scripts/build_plugin_packages.mjs --target "$TARGET" --version-id "$VERSION_ID"
