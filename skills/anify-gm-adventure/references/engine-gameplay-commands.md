@@ -43,9 +43,8 @@ Use exact IDs from the canonical inventory. During battle, use `battle.item`, no
 - Accept a pending GM offer: `quest.offer-accept <questId>`
 - Reject a pending GM offer: `quest.offer-reject <questId>`
 - Shelve a pending GM offer: `quest.offer-shelve <questId>`
-- Complete a currently completable quest: `quest.complete <questId>`
 
-There are no `quest.force-complete`, `quest.accept`, or `state.*` commands. Accept pending offers only through `quest.offer-accept`; persist GM-authored state only through the transactional resolution tools.
+There are no `quest.complete`, `quest.force-complete`, `quest.accept`, or `state.*` commands. Accept pending offers only through `quest.offer-accept`. Active quests complete and grant rewards automatically in the same Engine transaction that satisfies their conditions; persist GM-authored state only through the transactional resolution tools.
 
 ## Map And Non-Visual Exploration
 

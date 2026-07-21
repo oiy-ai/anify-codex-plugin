@@ -317,14 +317,24 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   for (const command of [
     'character.show',
     'character.equip <equipmentId>',
+    'character.unequip <equipmentId>',
     'inventory.show',
     'inventory.use <itemId>',
+    'inventory.drop <itemId>',
     'quest.active',
+    'quest.info <questId>',
     'quest.offer-accept <questId>',
+    'quest.offer-reject <questId>',
+    'quest.offer-shelve <questId>',
     'map.show',
+    'map.worlds',
+    'map.realms',
+    'map.regions <realmId>',
+    'map.info <id>',
     'explore.show',
     'explore.shop',
     'explore.buy <shopItemId>',
+    'explore.sell <itemId>',
     'adventure.show',
     'adventure.return',
     'battle.show',
@@ -340,8 +350,9 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   assert.match(engineGameplay, /Do not call a read-only `\*\.show` command before a mutation/);
   assert.match(engineGameplay, /`equipmentId` is the exact canonical inventory `itemId`/);
   assert.match(engineGameplay, /do not promise that a mutation will succeed/);
-  assert.match(engineGameplay, /There are no `quest\.force-complete`, `quest\.accept`, or `state\.\*` commands/);
+  assert.match(engineGameplay, /There are no `quest\.complete`, `quest\.force-complete`, `quest\.accept`, or `state\.\*` commands/);
   assert.match(engineGameplay, /Accept pending offers only through `quest\.offer-accept`/);
+  assert.match(engineGameplay, /Active quests complete and grant rewards automatically in the same Engine transaction/);
   assert.doesNotMatch(engineGameplay, /internal Engine bridges/);
   assert.match(engineGameplay, /call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`/);
   assert.match(engineGameplay, /there is no `explore\.interact` command/);
