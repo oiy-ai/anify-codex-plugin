@@ -410,20 +410,8 @@ test('role plugins expose persona skills and shared remote character workflow', 
     assert.doesNotMatch(persona, /CODEX_HOME\/anify\/users/);
 
     const localWorkflow = text(`${roleRoot(slug)}/skills/anify-character-chat/SKILL.md`);
-    assert.match(localWorkflow, /\.\.\/\.\.\/shared\/anify-character\/skills\/anify-character-chat\/SKILL\.md/);
+    assert.equal(localWorkflow, sharedSkill);
+    assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'shared')), false);
     assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'hooks', 'hooks.json')), false);
-  }
-});
-
-test('role packages carry synced shared character workflow for plugin cache installs', () => {
-  const sharedSkill = text('shared/anify-character/skills/anify-character-chat/SKILL.md');
-
-  for (const [slug] of roles) {
-    assert.equal(
-      text(`${roleRoot(slug)}/shared/anify-character/skills/anify-character-chat/SKILL.md`),
-      sharedSkill,
-    );
-    assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'shared/anify-character/hooks/anify_character_hooks.py')), false);
-    assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'shared/anify-character/hooks/anify_memory_runtime.sh')), false);
   }
 });

@@ -1,6 +1,6 @@
 ---
-name: anify-character-chat-shared
-description: Shared Anify character chat workflow for role plugins. Role plugins should reference this file from their local anify-character-chat skill.
+name: anify-character-chat
+description: Shared Anify character chat workflow for role plugins. Use for private chat, multi-character group chat, and character participation in Anify-GM adventures.
 ---
 
 # Anify Character Chat

@@ -19,17 +19,17 @@ export const PLUGIN_PACKAGES = [
   {
     slug: "anify-lynn",
     sourceRoot: "plugins/anify-lynn",
-    entries: [".codex-plugin", ".mcp.json", "assets", "skills", "shared"],
+    entries: [".codex-plugin", ".mcp.json", "assets", "skills"],
   },
   {
     slug: "anify-thera",
     sourceRoot: "plugins/anify-thera",
-    entries: [".codex-plugin", ".mcp.json", "assets", "skills", "shared"],
+    entries: [".codex-plugin", ".mcp.json", "assets", "skills"],
   },
   {
     slug: "anify-lyra",
     sourceRoot: "plugins/anify-lyra",
-    entries: [".codex-plugin", ".mcp.json", "assets", "skills", "shared"],
+    entries: [".codex-plugin", ".mcp.json", "assets", "skills"],
   },
 ];
 
