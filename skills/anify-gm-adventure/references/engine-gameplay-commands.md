@@ -45,7 +45,7 @@ Use exact IDs from the canonical inventory. During battle, use `battle.item`, no
 - Shelve a pending GM offer: `quest.offer-shelve <questId>`
 - Complete a currently completable quest: `quest.complete <questId>`
 
-There is no `quest.force-complete` command. Never use any `state.*` command; those are internal Engine bridges, not player capabilities.
+There are no `quest.force-complete`, `quest.accept`, or `state.*` commands. Accept pending offers only through `quest.offer-accept`; persist GM-authored state only through the transactional resolution tools.
 
 ## Map And Non-Visual Exploration
 
@@ -62,7 +62,7 @@ There is no `quest.force-complete` command. Never use any `state.*` command; tho
 
 The direct Codex plugin does not render or control the Web Gaussian-splat scene. It still resolves the same exploration state through Engine MCP and returns the Web contract's clean visible prose.
 
-Town mode has no GM narration and no built-in character interaction. Character dialogue is available only through an installed matching Anify character plugin. There is no `explore.talk` command. Never call `map.travel`, `map.enter`, `state.*`, `adventure.enter`, or `adventure.leave`; starting an adjacent adventure, GM-settled completion or death, and `adventure.return` are the only location transitions.
+Town mode has no GM narration and no built-in character interaction. Character dialogue is available only through an installed matching Anify character plugin. There are no `explore.talk`, `map.travel`, `map.enter`, `state.*`, `adventure.enter`, or `adventure.leave` commands; starting an adjacent adventure, GM-settled completion or death, and `adventure.return` are the only location transitions.
 
 ## Non-Visual Battle
 
