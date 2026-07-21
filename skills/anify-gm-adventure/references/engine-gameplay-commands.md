@@ -54,11 +54,12 @@ There are no `quest.force-complete`, `quest.accept`, or `state.*` commands. Acce
 - List regions in a realm: `map.regions <realmId>`
 - Inspect an area, region, or realm: `map.info <id>`
 - View current-area interactions: `explore.show`
-- Start the selected adjacent adventure from a town: call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`; do not route this through `anify_game_action`
+- Start the selected adjacent adventure from a town: call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`; there is no `explore.interact` command, so never route this through `anify_game_action`
 - Inspect all items sold in the current town: `explore.shop`
 - Buy from a present merchant: `explore.buy <shopItemId> [quantity]`
 - Sell to a present merchant: `explore.sell <itemId> [quantity]`
 - Return from the active adventure by consuming a Return Scroll: `adventure.return`
+- View the active adventure log and current choices: `adventure.show`
 
 The direct Codex plugin does not render or control the Web Gaussian-splat scene. It still resolves the same exploration state through Engine MCP and returns the Web contract's clean visible prose.
 

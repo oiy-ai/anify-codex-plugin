@@ -325,6 +325,7 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
     'explore.show',
     'explore.shop',
     'explore.buy <shopItemId>',
+    'adventure.show',
     'adventure.return',
     'battle.show',
     'battle.attack [enemyId]',
@@ -343,6 +344,8 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   assert.match(engineGameplay, /Accept pending offers only through `quest\.offer-accept`/);
   assert.doesNotMatch(engineGameplay, /internal Engine bridges/);
   assert.match(engineGameplay, /call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`/);
+  assert.match(engineGameplay, /there is no `explore\.interact` command/);
+  assert.match(gmSkill, /Never route adventure creation through `anify_game_action` or an `explore\.interact` command/);
   assert.match(engineGameplay, /Town mode has no GM narration and no built-in character interaction/);
   assert.match(engineGameplay, /There are no `explore\.talk`, `map\.travel`, `map\.enter`, `state\.\*`, `adventure\.enter`, or `adventure\.leave` commands/);
   assert.match(engineGameplay, /starting an adjacent adventure, GM-settled completion or death, and `adventure\.return` are the only location transitions/);
