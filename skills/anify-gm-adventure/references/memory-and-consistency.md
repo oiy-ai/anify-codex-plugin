@@ -29,7 +29,7 @@ After each resolved player action:
 - Add only durable GM facts to GM memory.
 - Add only party-known durable memories to party memory.
 - Express adventure completion and durable effects through the structured resolution, not a second save write.
-- When the consequence begins combat, include the battle trigger in that same resolution; do not perform a later `battle.start` write.
+- When the consequence begins combat, include the battle trigger in that same resolution; battle creation has no separate follow-up write.
 
 Keep updates compact and timestamped. Prefer facts that will matter later over exhaustive narration.
 

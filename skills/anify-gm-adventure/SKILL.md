@@ -77,7 +77,7 @@ Engine mutations always precede their player-facing projection. `ITEM_GIVE` is t
 
 Never describe an item, quest, flag, relationship, or numerical effect unless it is already present in the successful `anify_apply_gm_resolution` response. Never emit a marker outside the five exact shapes in the Player-Facing Output contract below.
 
-When a GM consequence starts combat, set `resolution.battle` to `{ "enemyId": "<Engine enemy id>" }`, set `resolution.choices` to `[]`, and commit that adventure resolution once through `anify_apply_gm_resolution`. Emit `BATTLE` only when the successful response already contains the matching `save.game.battleState` and `battle.await_action` checkpoint. Never follow it with `anify_game_action battle.start`; battle creation, narrative, turn log, and memories are one Engine commit.
+When a GM consequence starts combat, set `resolution.battle` to `{ "enemyId": "<Engine enemy id>" }`, set `resolution.choices` to `[]`, and commit that adventure resolution once through `anify_apply_gm_resolution`. Emit `BATTLE` only when the successful response already contains the matching `save.game.battleState` and `battle.await_action` checkpoint. There is no `battle.start` command: battle creation, narrative, turn log, and memories are one Engine commit.
 
 Call deterministic `battle.*` actions only when fresh `anify_save_get` state has both a non-null `save.game.battleState` and `save.game.resumeCheckpoint.stateNode` exactly equal to `battle.await_action`. An enemy mentioned in narration does not establish battle state. If this gate is false, treat an attempted strike or other uncertain action as an adventure D20 turn and never call `anify_game_action battle.*`. Codex-client battle commands and Web battle buttons therefore operate on the same canonical battle.
 
@@ -139,7 +139,7 @@ Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 
 
 `ITEM_GIVE` may only project an item already confirmed by the successful commit. Engine supplies its canonical metadata. Never emit `ITEM_GIVE` only for display. Quest offers, quest updates, `resolution.flags` JSON string arrays, relationships, gold, and numerical changes have no standalone marker.
 
-`CHOICES` must be the final non-empty line of a normal turn. Its payload must be a JSON string array with exactly three items. Do not duplicate those choices in visible prose. When combat begins, end with `BATTLE` instead of `CHOICES`, and only after the same successful resolution created the matching Engine battle state. Never call `anify_game_action battle.start` afterward. When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`, and only after the Engine settlement succeeded. Always include `flagsSet`, using an empty array when no flag was committed.
+`CHOICES` must be the final non-empty line of a normal turn. Its payload must be a JSON string array with exactly three items. Do not duplicate those choices in visible prose. When combat begins, end with `BATTLE` instead of `CHOICES`, and only after the same successful resolution created the matching Engine battle state. There is no separate battle-start action afterward. When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`, and only after the Engine settlement succeeded. Always include `flagsSet`, using an empty array when no flag was committed.
 
 After the user acts and the D20 result is available, emit the Web check card, any justified character reaction, the consequence, and the next Web marker or terminal state.
 

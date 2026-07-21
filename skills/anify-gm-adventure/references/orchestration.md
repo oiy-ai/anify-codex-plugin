@@ -166,7 +166,7 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 12. Codex calls `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing visible narrative, choices, and justified persisted effects, optionally including compact durable GM or party memories. Engine binds its stored revision, rule delta, and turn entry.
 13. GM presents the next scene and ends with `CHOICES`, `BATTLE`, or `ADVENTURE_END` according to the Web output contract.
 
-To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. Never issue a later `battle.start` command.
+To start combat as a GM consequence, add `battle: { "enemyId": "<Engine enemy id>" }` to the adventure resolution, set `choices` to `[]`, and apply that resolution once. A `BATTLE` marker is valid only when the same successful `anify_apply_gm_resolution` response already contains the matching active battle state. No later battle-start command exists.
 
 For deterministic actions inside an active battle, call `anify_game_action` only after fresh canonical state shows both a non-null `battleState` and `resumeCheckpoint.stateNode` exactly equal to `battle.await_action`. An enemy mentioned only in narration remains an uncertain adventure action and must use the D20 flow. Codex-client attacks, skills, items, and flee operations use the same canonical state as Web's browser action endpoint.
 

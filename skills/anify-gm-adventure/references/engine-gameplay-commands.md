@@ -72,7 +72,7 @@ Town mode has no GM narration and no built-in character interaction. Character d
 - Use a battle item: `battle.item <itemId> [enemyId]`
 - Attempt to flee: `battle.flee`
 
-Never call `battle.start` after a GM consequence. Adventure combat begins only through the battle object in the successful `anify_apply_gm_resolution` commit. Report HP, resources, enemies, available skills/items, cooldowns, rewards, victory, defeat, or escape only from the Engine response.
+There is no `battle.start` command. Adventure combat begins only through the battle object in the successful `anify_apply_gm_resolution` commit. Report HP, resources, enemies, available skills/items, cooldowns, rewards, victory, defeat, or escape only from the Engine response.
 
 ## Character Chat And Memory
 
