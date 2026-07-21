@@ -338,7 +338,8 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   assert.match(engineGameplay, /Do not call a read-only `\*\.show` command before a mutation/);
   assert.match(engineGameplay, /`equipmentId` is the exact canonical inventory `itemId`/);
   assert.match(engineGameplay, /do not promise that a mutation will succeed/);
-  assert.match(engineGameplay, /Never use `quest\.force-complete` or any `state\.\*` command/);
+  assert.match(engineGameplay, /There is no `quest\.force-complete` command/);
+  assert.match(engineGameplay, /Never use any `state\.\*` command/);
   assert.match(engineGameplay, /call `anify_start_adventure` with `session_intent: "new"` and that exact `area_id`/);
   assert.match(engineGameplay, /Town mode has no GM narration and no built-in character interaction/);
   assert.match(engineGameplay, /There is no `explore\.talk` command/);

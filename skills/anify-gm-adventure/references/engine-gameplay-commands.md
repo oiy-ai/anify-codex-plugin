@@ -45,7 +45,7 @@ Use exact IDs from the canonical inventory. During battle, use `battle.item`, no
 - Shelve a pending GM offer: `quest.offer-shelve <questId>`
 - Complete a currently completable quest: `quest.complete <questId>`
 
-Never use `quest.force-complete` or any `state.*` command; those are internal Engine bridges, not player capabilities.
+There is no `quest.force-complete` command. Never use any `state.*` command; those are internal Engine bridges, not player capabilities.
 
 ## Map And Non-Visual Exploration
 
