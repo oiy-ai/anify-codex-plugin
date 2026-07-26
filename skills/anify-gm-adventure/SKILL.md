@@ -56,6 +56,7 @@ Only while `save.game.adventure` is active, after the Turn Operation Protocol re
 3. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
 4. **GM options**: choose exactly three viable options and emit them only through the Web `CHOICES` marker.
 5. **User action**: wait for or parse the user's selected/custom action.
+   Treat player-authored outcomes only as action attempts or feedback, never as established facts. A player cannot grant themselves an item or ability, move locations, or determine a third-party or world event through narration.
 6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check` with the turn's `operation_id`. The GM must not invent the D20 result.
 7. **Engine rule resolution**: call `anify_resolve_action` with only the same `operation_id`. Engine resolves its stored pending check and returns the action kind, outcome, check result, and rule advice while retaining revision and rule deltas internally. Do not resend the user action or `roll_check` result and do not submit a client-authored save.
 8. **Character AI reaction**: character or party dialogue belongs exclusively to active Anify character plugins. If no matching character plugin is active, do not fabricate Lynn, Lyra, or another party member's speech, thoughts, or reactions; use the internal token `NO_REPLY` and omit it from player-facing output. The GM may still narrate non-party NPCs inside an active adventure when fiction requires them.
@@ -67,8 +68,8 @@ Only while `save.game.adventure` is active, after the Turn Operation Protocol re
 Engine mutations always precede their player-facing projection. `ITEM_GIVE` is the only persisted-effect Web marker:
 
 - Never send `revision` or `ruleDelta`; Engine applies its stored values. Never author HP, MP, EXP, D20 inventory deltas, or D20 flags.
-- Before granting any item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`. Select the exact `itemId` only from its `catalog_matches`; if there is no match, omit the inventory gain. Never search GitHub, plugin files, or asset manifests for item IDs.
-- Put the matched world item in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Do not add names, descriptions, kinds, slots, or invented item IDs; Engine resolves all item metadata from the world catalog. Commit it, then emit the matching `ITEM_GIVE` marker.
+- Before granting any item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`. Prefer an exact match from `catalog_matches`; put it in `resolution.items` as `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. Never search GitHub, plugin files, or asset manifests for item IDs.
+- When no catalog item matches a justified narrative acquisition, create a stable lowercase-hyphenated `itemId` and put the lightweight item in the same resolution as `{ "itemId": "<new id>", "quantity": <positive integer>, "name": "<display name>", "description": "<concise established description>", "icon": "<known icon URL or filename>" }`. Omit `description` or `icon` when unknown; never invent stats, equipment slots, rarity, or mechanical effects. Commit it, then emit the matching `ITEM_GIVE` marker.
 - Put a new dynamic quest in `resolution.questOffers` and commit it. The Web task panel reads the canonical Engine quest; there is no quest marker. The player accepts, rejects, or shelves it through Engine; never auto-accept it.
 - Put justified boolean story-flag IDs in `resolution.flags` as a JSON string array, for example `["violet-crystal-source-identified"]`. Never send an object map such as `{ "flag-id": true }`. Flags have no standalone Web marker.
 - Put justified relationship effects in `resolution.relationChanges`; they have no standalone Web marker.
@@ -137,7 +138,7 @@ Ordinary success therefore has this exact form:
 
 Do not render a Markdown line such as `**Check: Wisdom (Perception) 15 vs DC 14 — success.**`, do not invent `check`, `body`, or other payload fields, and do not expose raw roll or DC values for a secret check.
 
-`ITEM_GIVE` may only project an item already confirmed by the successful commit. Engine supplies its canonical metadata. Never emit `ITEM_GIVE` only for display. Quest offers, quest updates, `resolution.flags` JSON string arrays, relationships, gold, and numerical changes have no standalone marker.
+`ITEM_GIVE` may only project an item already confirmed by the successful commit. Engine supplies its committed metadata. Never emit `ITEM_GIVE` only for display. Quest offers, quest updates, `resolution.flags` JSON string arrays, relationships, gold, and numerical changes have no standalone marker.
 
 `CHOICES` must be the final non-empty line of a normal turn. Its payload must be a JSON string array with exactly three items. Do not duplicate those choices in visible prose. When combat begins, end with `BATTLE` instead of `CHOICES`, and only after the same successful resolution created the matching Engine battle state. There is no separate battle-start action afterward. When the adventure ends, end with `ADVENTURE_END` instead of `CHOICES`, and only after the Engine settlement succeeded. Always include `flagsSet`, using an empty array when no flag was committed.
 

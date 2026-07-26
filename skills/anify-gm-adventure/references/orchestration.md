@@ -108,7 +108,7 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 }
 ```
 
-The GM calls `anify_apply_gm_resolution` with a separate presentation-only resolution containing `type: "adventure"`, visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items` for known world items using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`, `questOffers` for player-selectable dynamic quests, `flags` as a JSON string array of boolean story-flag IDs such as `["violet-crystal-source-identified"]`, `relationChanges` for character relationships, and a positive integer `gold` award when the fiction justifies one. Before adding an item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`, and use an exact ID from `catalog_matches`; when no match exists, omit the inventory gain. Never search GitHub, plugin files, or asset manifests for IDs. Never put names, descriptions, kinds, slots, or invented IDs in `items`; Engine owns item metadata. Never send `flags` as an object map. Engine merges the presentation resolution with its pending rule state in one atomic commit.
+The GM calls `anify_apply_gm_resolution` with a separate presentation-only resolution containing `type: "adventure"`, visible `narrative`, exactly three normal-turn `choices`, and justified persisted effects: `items`, `questOffers`, `flags`, `relationChanges`, and positive integer `gold` awards. Before adding an item, call `anify_get_context` with the active `world_id` and a concise `catalog_query`; prefer an exact catalog match using only `{ "itemId": "<Engine world item id>", "quantity": <positive integer> }`. When no match exists, create a stable lowercase-hyphenated ID and send `{ "itemId": "<new id>", "quantity": <positive integer>, "name": "<display name>", "description": "<concise established description>", "icon": "<known icon URL or filename>" }` in the same resolution, omitting unknown optional fields and never inventing stats or other mechanical metadata. Never search GitHub, plugin files, or asset manifests for IDs. Send `flags` as a JSON string array such as `["violet-crystal-source-identified"]`, never as an object map. Engine merges the presentation resolution with its pending rule state in one atomic commit.
 
 After a successful commit, `ITEM_GIVE` may project a committed item. It is the only persisted-effect Web marker and is forbidden without the matching committed item. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the Web task panel reads them from canonical state. Flags, relationships, quest state, gold, and other numerical changes have no standalone Web marker.
 
@@ -159,6 +159,7 @@ The opening has no preceding player action, so it does not call `roll_check` or 
 5. GM builds or updates `TurnPacket`.
 6. GM presents scene prose and emits exactly three options through the line-level `CHOICES` marker.
 7. User chooses or writes a custom action.
+   Treat any player-authored outcome as an attempted action or feedback, not proof that an item, ability, location change, third-party action, or world event occurred.
 8. GM creates `CheckRequest`.
 9. Codex calls `roll_check` with the turn's `operation_id`.
 10. Codex calls `anify_resolve_action` with that same `operation_id`.
