@@ -83,7 +83,7 @@ Output:
 
 ## GM Usage Rules
 
-- Call `anify_start_adventure` with `session_intent: "new"` and the exact adjacent `area_id` selected in the current town, or once with only `session_intent: "resume"` before continuing the active adventure. Never reuse new-session fields while resuming.
+- Call `anify_start_adventure` with `session_intent: "new"` and the exact Engine-owned adventure `currentAreaId`, or once with only `session_intent: "resume"` before continuing the active adventure. Never reuse new-session fields while resuming.
 - The GM decides DC and modifier before calling the tool.
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - The GM must not alter `operation_id`, `uid`, `adventure_session_id`, `revision`, or any other provenance field.
