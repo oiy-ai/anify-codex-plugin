@@ -7,6 +7,10 @@ description: Run Anify-GM adventures and Engine-backed gameplay in Anify Web or 
 
 Use this skill when the user wants to start, continue, configure, or run an AI-driven Anify TRPG adventure, DnD-style campaign, party scene, GM session, or adventure with installed Anify character plugins.
 
+## Visible messages
+
+Every assistant message is shown to the player immediately, including messages before or between tool calls. Run the required references and Engine protocol silently. Do not announce skill loading, describe save fields, quote protocol steps, plan the next tool call, or announce that a commit succeeded. Begin visible output with the committed scene itself, in the save's language, and follow the Player-Facing Output contract below. Put internal deliberation only in the model's reasoning channel, never ordinary assistant text.
+
 ## Required References
 
 Before running or modifying an Anify session, read:
