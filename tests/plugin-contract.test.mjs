@@ -172,7 +172,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /save\.game/);
   assert.match(gmSkill, /save\.game\.adventure/);
   assert.match(gmSkill, /Never patch `save\.game` directly/);
-  assert.match(gmSkill, /Engine fixes the party to `lynn_tale` plus `lyra_oravia`/);
+  assert.match(gmSkill, /Engine copies the initial party from published `world\.initialPartyCharacterIds`/);
   assert.match(gmSkill, /session_intent: "new"/);
   assert.match(gmSkill, /session_intent: "resume"/);
   assert.match(gmSkill, /current area type is `adventure`/);
