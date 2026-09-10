@@ -336,7 +336,7 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
     'map.info <id>',
     'explore.show',
     'explore.shop',
-    'explore.buy <shopItemId>',
+    'explore.buy <itemId>',
     'explore.sell <itemId>',
     'adventure.show',
     'adventure.return',

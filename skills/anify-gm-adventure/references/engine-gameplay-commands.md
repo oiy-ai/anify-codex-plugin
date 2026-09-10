@@ -56,14 +56,16 @@ There are no `quest.complete`, `quest.force-complete`, `quest.accept`, or `state
 - In Web, entering an adjacent adventure area is an Engine-backed UI transition that updates `currentAreaId` before Anify-GM runs. When the current area is an adventure and no session is active, call `anify_start_adventure` with `session_intent: "new"` and that exact current `area_id`
 - In direct Codex town mode, show the Engine-backed adjacent adventure interactions and wait for the player to choose an exact destination; after that explicit choice, call `anify_start_adventure` with the selected adjacent `area_id`; never invent or auto-select one
 - Inspect all items sold in the current town: `explore.shop`
-- Buy from a present merchant: `explore.buy <shopItemId> [quantity]`
-- Sell to a present merchant: `explore.sell <itemId> [quantity]`
+- Buy from the current town's catalog: `explore.buy <itemId> [quantity]`
+- Sell an owned item: `explore.sell <itemId> [quantity]`
 - Return from the active adventure by consuming a Return Scroll: `adventure.return`
 - View the active adventure log and current choices: `adventure.show`
 
 The direct Codex plugin does not render or control the Web Gaussian-splat scene. It still resolves the same exploration state through Engine MCP and returns the Web contract's clean visible prose.
 
 Town mode has no GM narration and no built-in character interaction. Character dialogue is available only through an installed matching Anify character plugin. Determine town mode from the current area's Engine type, not from `save.game.adventure` alone. There is no `explore.interact` command. There are no `explore.talk`, `map.travel`, `map.enter`, `state.*`, `adventure.enter`, or `adventure.leave` commands; the Engine-backed Web entry transition, starting the exact current adventure area, GM-settled completion or death, and `adventure.return` are the only location transitions.
+
+For purchases, resolve the current town's `shopItemIds` against world `items` and pass the exact item ID. Do not invent a separate shop-entry ID or use a global shop list. Engine validates town availability, battle state, quantity, price and available gold. Use its response for the transaction result.
 
 ## Non-Visual Battle
 
