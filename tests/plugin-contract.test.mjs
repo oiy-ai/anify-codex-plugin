@@ -322,6 +322,7 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
     'character.equip <equipmentId>',
     'character.unequip <equipmentId>',
     'inventory.show',
+    'inventory.claim',
     'inventory.use <itemId>',
     'inventory.drop <itemId>',
     'quest.active',

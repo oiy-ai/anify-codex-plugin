@@ -30,7 +30,9 @@ These deterministic requests are administrative gameplay actions. Do not run a D
 
 ## Inventory
 
-- View inventory: `inventory.show`
+- View inventory and pending rewards: `inventory.show`
+- Claim pending rewards that fit: `inventory.claim`
+- Inventory has 100 slots. Stackable catalog items hold up to 100 per slot; equipment and nonstackable items occupy one slot each. Rewards that do not fit remain pending until claimed. Purchases require space for the entire quantity and do not charge on failure.
 - Use an out-of-battle consumable: `inventory.use <itemId>`
 - Drop items: `inventory.drop <itemId> [quantity]`
 
