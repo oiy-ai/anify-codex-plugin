@@ -4,13 +4,7 @@ Anify requires D20 checks to be resolved outside the GM model. The MCP server is
 
 `roll_check` requires a valid Anify Firebase session. It must fail before rolling if the MCP request is not authenticated.
 
-At the start of every logical GM turn, call the read-only `anify_begin_operation` and retain its returned `operation_id`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Every mutation argument in that turn must contain that same required top-level field. Shell also supplies a trusted `x-anify-operation-id` header through `.mcp.json`; the header takes precedence when present, but it does not make the tool argument optional.
-
-Immediately after beginning the operation, call the read-only `anify_pending_turn_get`:
-
-- For a pending `check`, call `anify_resolve_action` with only the current turn's `operation_id`. Do not call `roll_check` again or resend any check field. Engine consumes its stored check and retains the resulting resolution internally.
-- For a pending `resolution`, read canonical context if needed and submit only `type`, player-visible narrative, choices, and justified story effects to `anify_apply_gm_resolution` using the current turn's `operation_id`. Engine supplies revision, rule delta, and turn provenance. Do not rerun or discard pending work.
-- Only when no pending turn exists may the GM create a new D20 check.
+Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once per logical GM turn: `anify_begin_operation`, `anify_pending_turn_get`, and the retained `operation_id` are owned by that common entry flow. If it already ran, reuse its result; this reference does not start a second operation.
 
 Do not call `roll_check` until the adventure has been started and `anify_save_get` returns an active `save.game.adventure`.
 
@@ -88,8 +82,7 @@ Output:
 - The GM must not alter `rolls`, `kept_roll`, `total`, `margin`, or `outcome`.
 - The GM must not alter `operation_id`, `uid`, `adventure_session_id`, `revision`, or any other provenance field.
 - Pass only the turn's `operation_id` to `anify_resolve_action`; Engine reads the exact action and `CheckResult` it stored during `roll_check`.
-- Send only the GM-authored presentation resolution to `anify_apply_gm_resolution`; Engine binds its stored pending state.
-- Submit the GM-authored presentation resolution through `anify_apply_gm_resolution`; the same atomic commit persists the full check result, narrative, memories, rule effects, and any battle creation.
+- Submit only the GM-authored presentation resolution through `anify_apply_gm_resolution`; Engine binds its stored pending state and the same atomic commit persists the full check result, narrative, memories, rule effects, and any battle creation.
 - If `secret` is true, summarize the fictional consequence without revealing the raw roll unless the user asks to inspect state.
 - Every player action that affects uncertain fiction must pass through this tool.
 

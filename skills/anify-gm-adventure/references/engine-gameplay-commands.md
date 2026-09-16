@@ -6,9 +6,9 @@ Use this reference when a player directly asks the Codex plugin to inspect or ch
 
 For every logical turn:
 
-1. Call `anify_begin_operation` and retain its `operation_id`.
-2. Call `anify_pending_turn_get` and finish pending GM work before any new request.
-3. Call `anify_save_get` to read the canonical save.
+1. Follow the main Skill's [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once, reusing its `anify_begin_operation`, `anify_pending_turn_get`, and `operation_id` results if already available.
+2. If recovery committed a pending GM turn, present it and end the response as required by that protocol.
+3. Use this turn's fresh `anify_save_get` projection; call it only if not yet available or stale.
 4. Use `anify_get_context` when a target ID or world fact is needed.
 5. For a read-only request, answer from `anify_save_get` and `anify_get_context`. A single matching `*.show` command below may be used when its Engine-formatted view is useful and no mutation is needed.
 6. For a deterministic mutation, call `anify_game_action` once with the retained `operation_id` and one command below.

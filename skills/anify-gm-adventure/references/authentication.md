@@ -13,21 +13,9 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 
 The public Codex client uses normal remote MCP OAuth discovery. Codex stores the opaque Anify access and refresh tokens, while the Anify OAuth provider keeps the Firebase session encrypted in its grant state and refreshes it server-side. The Codex shell runtime continues to receive the caller's Firebase bearer token on `/v1/runs` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
 
-Every logical user or GM turn must first call the read-only `anify_begin_operation` and retain its returned `operation_id`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Every mutating tool call in that turn must include that same ID as the required top-level `operation_id` argument. Plugin MCP config also maps the Shell-owned `ANIFY_OPERATION_ID` environment variable to the trusted `x-anify-operation-id` header through `env_http_headers`; when present, the header takes precedence inside Engine, but the argument remains mandatory. Native Codex clients work without that environment variable because Engine issues the ID through `anify_begin_operation`. Never invent or rotate an ID between stages.
+Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once per logical GM turn: `anify_begin_operation`, `anify_pending_turn_get`, and the retained `operation_id` are owned by that common entry flow. If it already ran, reuse its result; this reference does not start a second operation.
 
-At the start of every GM turn, call the read-only `anify_pending_turn_get` immediately after `anify_begin_operation`. If it reports a pending check, call `anify_resolve_action` with only that operation ID; Engine consumes its stored action and check result. If it reports a pending resolution, use read-only canonical context as needed and submit only the presentation resolution through `anify_apply_gm_resolution`. Engine retains the pending revision, rule delta, and turn provenance. Never reroll or discard pending work. Only begin a new normal turn when no pending work exists.
-
-## Required Flow
-
-Before starting or continuing an adventure:
-
-1. Call `anify_begin_operation`, retain its `operation_id`, call `anify_pending_turn_get`, and finish any returned pending check or resolution before starting a new normal turn.
-2. Call `anify_save_get`.
-3. If the remote GM save is not initialized, call `anify_save_initialize` with that `operation_id` and a compact default player profile inferred from the request, then call `anify_save_get` again.
-4. Read location and active-session metadata only from `save.game.currentAreaId` and `save.game.adventure`, then load the exact current area's Engine context.
-5. If `save.game.adventure` is null and the current area is a town, a bare invocation returns only its Engine-backed interactions without GM narration or destination selection; a later exact player selection may start that adjacent area. If the current area is an adventure area, call `anify_start_adventure` with the same `operation_id`, `session_intent: "new"`, and `area_id` equal to `save.game.currentAreaId`. A Shell new session must also carry its host-provided logical `gm_thread_id`; omit it for native sessions rather than inventing one. Send no party, world, or language fields.
-6. If `save.game.adventure` is active and the user continues it, call `anify_start_adventure` with only the same `operation_id` and `session_intent: "resume"`. Continue only if Engine returns that same fixed session.
-7. If an Engine MCP call fails because authorization is missing or the refresh grant is no longer valid, surface the failure directly and let the Codex host reconnect Anify.
+For start, resume, initialization, and pending recovery, follow [Session Setup And Player Actions](../SKILL.md#session-setup-and-player-actions). If authorization is missing or expired, surface the failure and let the host reconnect Anify; do not repeatedly retry without an auth-state change.
 
 All adventure tools must enforce auth in MCP code. Prompt instructions are not enough.
 

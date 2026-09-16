@@ -16,9 +16,9 @@ Use:
 
 Do not write `.anify` memory files. Do not create or inspect a local Anify user workspace.
 
-Start each logical user or GM turn with the read-only `anify_begin_operation` and retain its returned `operation_id`. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID. Pass that ID as a required top-level argument to every mutation, including `anify_memory_remember`. Shell's trusted `x-anify-operation-id` header takes precedence when present, but the argument remains mandatory. Engine receipts make matching interrupted-run retries idempotent, including memory writes and an already committed GM turn.
+Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once per logical GM turn: `anify_begin_operation`, `anify_pending_turn_get`, and the retained `operation_id` are owned by that common entry flow. If it already ran, reuse its result; this reference does not start a second operation.
 
-At the beginning of every GM turn, call `anify_pending_turn_get` after `anify_begin_operation`. Continue a returned pending check with its exact action and check result, or finish a pending resolution by submitting only GM-authored presentation fields to `anify_apply_gm_resolution`. Engine retains the pending rule state. Never reroll or discard pending work.
+Character phases reuse the GM operation ID. Standalone character chat follows its own Skill entry flow. All memory mutations retain the required operation ID and Engine idempotency protections.
 
 ## Memory Update Rules
 
@@ -65,9 +65,9 @@ Character AI must not:
 
 ## Memory Retrieval
 
-For each turn, retrieve:
+For each turn, reuse fresh results already available; retrieve only missing or stale information:
 
-- The canonical remote save from `anify_save_get`.
+- The canonical remote save from this turn's `anify_save_get` or successful mutation response.
 - Fresh world context from `anify_get_context` only when needed.
 - Character memories from `anify_memory_search` only when the matching role plugin is active and the user or current adventure needs prior relationship context. Without that plugin, do not fabricate party dialogue or reactions.
 

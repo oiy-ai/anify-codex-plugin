@@ -1,6 +1,6 @@
 ---
 name: anify-character-chat
-description: Shared Anify character chat workflow for role plugins. Use for private chat, multi-character group chat, and character participation in Anify-GM adventures.
+description: "Shared workflow for actual private or group conversations with active Anify character plugins and their participation in Anify-GM player sessions. Do not use for generic chat, character-content authoring, code development, or reviewing these instructions."
 ---
 
 # Anify Character Chat
@@ -11,15 +11,15 @@ Use this shared workflow with the active character's persona skill. The persona 
 
 Character memory is stored by Anify Engine MCP. Do not read or write local files for character state.
 
-At the start of every logical user turn, call the read-only `anify_begin_operation` and retain its returned `operation_id` for the whole turn. Pass that same ID as the required top-level `operation_id` argument to every `anify_memory_remember` call. In Shell, the trusted `x-anify-operation-id` header takes precedence inside Engine, but the argument remains mandatory. Never ask the user for an ID, expose it, invent it, or rotate it during the turn; matching interrupted retries are handled by Engine receipts.
-
 Before responding:
 
-1. Call `anify_begin_operation` and retain its returned `operation_id`.
-2. Read the active persona skill.
-3. Call `anify_memory_search` with the active character name and the user's current message.
-4. Use only relevant returned memories; do not dump raw memory records unless the user asks to inspect memory.
-5. If the user establishes a durable preference, relationship fact, promise, unresolved story detail, or emotionally significant event, call `anify_memory_remember` for the active character with the retained `operation_id` before the turn is complete.
+1. In an Anify-GM turn, reuse the GM's retained `operation_id`; do not call `anify_begin_operation` again. For standalone character chat, call the read-only `anify_begin_operation` once at the start of the logical user turn and retain its ID.
+2. Read the active persona skill only when it is not already loaded or has changed.
+3. Call `anify_memory_search` with the active character name and the current message only when prior relationship or story context is needed and is not already available and current. Simple greetings and self-contained replies do not need a memory search.
+4. Use only relevant returned memories; do not dump raw records unless the user asks to inspect memory.
+5. If the user establishes a durable preference, relationship fact, promise, unresolved story detail, or emotionally significant event, call `anify_memory_remember` for the active character before the turn is complete. Do not write the same memory again if the GM commit already persisted it.
+
+Pass the retained ID as the required top-level `operation_id` argument to every `anify_memory_remember` call. In Shell, the trusted `x-anify-operation-id` header takes precedence inside Engine, but the argument remains mandatory. Never ask the user for an ID, expose it, invent it, or rotate it during the turn; matching interrupted retries are handled by Engine receipts.
 
 ## Chat Modes
 

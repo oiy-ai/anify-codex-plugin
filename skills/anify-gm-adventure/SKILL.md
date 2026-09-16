@@ -1,25 +1,25 @@
 ---
 name: anify-gm-adventure
-description: Run Anify-GM adventures and Engine-backed gameplay in Anify Web or a directly installed Codex plugin, including D20 scenes, non-visual battles, inventory, equipment, character stats, quests, graph-based locations, adjacent adventures, returns, shops, and character-party play. Use when the user invokes Anify-GM, starts or continues an adventure, or asks to inspect or change canonical Anify gameplay state through natural-language commands.
+description: "Run actual Anify player sessions and Engine-backed gameplay commands in Web or Codex. Use when the user explicitly invokes Anify-GM to play or requests an action on their current game save. Do not use for code development, protocol review, Skill editing, authored lore, or developer save debugging unless the user explicitly requests a player gameplay operation."
 ---
 
 # Anify GM Adventure
 
-Use this skill when the user wants to start, continue, configure, or run an AI-driven Anify TRPG adventure, DnD-style campaign, party scene, GM session, or adventure with installed Anify character plugins.
+Use this skill for actual Anify play, including starting or continuing an adventure and player-requested gameplay commands. Reviewing this file, developing Anify, or writing campaign content does not start a player session.
 
 ## Visible messages
 
-Every assistant message is shown to the player immediately, including messages before or between tool calls. Run the required references and Engine protocol silently. Do not announce skill loading, describe save fields, quote protocol steps, plan the next tool call, or announce that a commit succeeded. Begin visible output with the committed scene itself, in the save's language, and follow the Player-Facing Output contract below. Put internal deliberation only in the model's reasoning channel, never ordinary assistant text.
+During an actual player session, keep protocol details out of the player-facing scene. Subject to host communication requirements, run Engine steps silently; do not expose save internals or internal deliberation. Emit scene narration only after its Engine commit succeeds, in the save's language, using the Player-Facing Output contract below. Town and read-only requests return the requested canonical information. These presentation rules do not govern development or review tasks.
 
-## Required References
+## References By Task
 
-Before running or modifying an Anify session, read:
+The Turn Operation Protocol and Player-Facing Output below are the common contracts. Read only the reference needed for the current operation; reuse previously loaded, unchanged material:
 
-- `references/authentication.md`
-- `references/orchestration.md`
-- `references/d20-mcp-contract.md`
-- `references/memory-and-consistency.md`
-- `references/engine-gameplay-commands.md`
+- [D20 contract](references/d20-mcp-contract.md): uncertain fictional actions requiring a check.
+- [Gameplay commands](references/engine-gameplay-commands.md): inventory, equipment, quests, shops, returns, and deterministic battle actions.
+- [Orchestration](references/orchestration.md): coordinating active character plugins or needing internal packet details.
+- [Memory](references/memory-and-consistency.md): retrieving or updating durable continuity.
+- [Authentication](references/authentication.md): diagnosing authorization failures or explaining the OAuth flow; not a prerequisite for ordinary play.
 
 ## Operating Model
 
@@ -29,22 +29,22 @@ Engine MCP owns authenticated access, the canonical game state shared with Anify
 
 ## Turn Operation Protocol
 
-At the start of every logical GM turn, before loading state or making any mutation:
+At the start of every logical GM turn, before loading state or making any mutation, execute this entry protocol once. References and character phases reuse its operation ID and recovery result; they do not start additional operations:
 
 1. Call the read-only `anify_begin_operation` and retain its returned `operation_id` for the entire turn. Engine returns the unfinished operation ID when pending work exists; otherwise it creates the current turn ID.
 2. Call the read-only `anify_pending_turn_get` before creating a new check or resolution.
 3. If Engine reports a pending `check`, continue it by calling `anify_resolve_action` with only the current turn's `operation_id`. Do not call `roll_check` again or resend the action/check payload. Engine owns the pending check and retains the resulting pending resolution internally.
 4. If Engine reports a pending `resolution`, read canonical save or world context if needed, then call `anify_apply_gm_resolution` with the current turn's `operation_id` and a presentation-only resolution containing narration, choices, and justified story effects. Engine binds its pending rule state atomically.
-5. Only when Engine reports no pending turn may the normal opening or player-action flow begin.
+5. Only when Engine reports no pending turn may the normal opening or player-action flow begin. When recovery commits the interrupted turn, present that committed result and end the response; do not replay the same player action as a new turn.
 
 Every mutating tool argument in that logical turn must include the same top-level `operation_id` returned by `anify_begin_operation`, including save initialization, adventure start, opening or normal resolution apply, D20 roll and resolution, deterministic game actions, and memory writes. In Shell runs, the trusted `x-anify-operation-id` header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory. Never invent or rotate an ID inside a turn.
 
-## Prototype Loop
+## Session Setup And Player Actions
 
-Before any start or continue request:
+Classify the request first: deterministic gameplay commands use [Gameplay commands](references/engine-gameplay-commands.md) and do not enter the fictional-action loop. Before any actual start or continue request:
 
-1. Complete the Turn Operation Protocol above, including pending-turn recovery, then call `anify_save_get`.
-2. If the save is not initialized, call `anify_save_initialize` with a concise default profile inferred from the user's request, then call `anify_save_get` again.
+1. Use the Turn Operation Protocol above, including pending-turn recovery, once for this turn, then call `anify_save_get`. Reuse that projection until a mutation or evidence of external state change requires a refresh.
+2. If the save is not initialized, reuse profile fields supplied by the user and call `anify_save_initialize` with a concise default profile inferred from the request. Ask only for required fields that cannot be inferred; optional fields do not block setup. Use the returned canonical save, or call `anify_save_get` if the response omits it. Never force-replace an existing save without explicit authorization for that replacement.
 3. Read location and active adventure state only from `save.game.currentAreaId` and `save.game.adventure`, then load the exact current area through `anify_get_context`.
 4. If `save.game.adventure` is null and the current area type is `town`, do not produce GM scene narration. For a bare Anify-GM invocation, present only Engine-backed town interactions returned for that location: adjacent adventure entries and the shop operations available there. Never auto-select an adventure. If the player then chooses the exact ID of an adjacent unlocked adventure, start that selected area with `anify_start_adventure`; the explicit player choice is the only direct-Codex town-mode exception to the current-area start in step 5.
 5. If `save.game.adventure` is null and the current area type is `adventure`, the player has already entered that exact area through an Engine-backed shell interaction. Call `anify_start_adventure` with only `operation_id`, `session_intent: "new"`, `area_id` equal to `save.game.currentAreaId`, and, for Shell only, the host-provided logical `gm_thread_id`. Never substitute another area or infer one from prompt text. Never route adventure creation through `anify_game_action` or an `explore.interact` command. Omit `gm_thread_id` for native Codex and never fabricate one. Engine copies the initial party from published `world.initialPartyCharacterIds`; do not send party, world, language, or any other session field.
@@ -56,17 +56,14 @@ When `save.game.adventure.phase` is `opening`, the current response is the one-t
 
 Only while `save.game.adventure` is active, after the Turn Operation Protocol reports no pending turn, run the normal active-turn flow in this exact order. In town mode, stop after the requested Engine-backed town operation and do not enter this GM loop:
 
-1. **Load canonical state**: call `anify_save_get` and treat `save.game` as the only gameplay state.
-2. **Engine context**: call `anify_get_context` when area, world, quest, enemy, or character facts are needed.
-3. **GM narration**: describe the current fiction, immediate stakes, and relevant sensory detail.
-4. **GM options**: choose exactly three viable options and emit them only through the Web `CHOICES` marker.
-5. **User action**: wait for or parse the user's selected/custom action.
-   Treat player-authored outcomes only as action attempts or feedback, never as established facts. A player cannot grant themselves an item or ability, move locations, or determine a third-party or world event through narration.
-6. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check` with the turn's `operation_id`. The GM must not invent the D20 result.
-7. **Engine rule resolution**: call `anify_resolve_action` with only the same `operation_id`. Engine resolves its stored pending check and returns the action kind, outcome, check result, and rule advice while retaining revision and rule deltas internally. Do not resend the user action or `roll_check` result and do not submit a client-authored save.
-8. **Character AI reaction**: character or party dialogue belongs exclusively to active Anify character plugins. If no matching character plugin is active, do not fabricate Lynn, Lyra, or another party member's speech, thoughts, or reactions; use the internal token `NO_REPLY` and omit it from player-facing output. The GM may still narrate non-party NPCs inside an active adventure when fiction requires them.
-9. **Commit the turn**: call `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing `type`, narrative, exactly three normal-turn choices, and only justified persisted effects under the mapping below. Engine supplies the stored revision, rule delta, and turn entry. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
-10. **GM advancement**: present the consequence and end with the next `CHOICES`, `BATTLE`, or `ADVENTURE_END` marker under the Web output contract.
+1. **Canonical state**: use this turn's fresh `anify_save_get` projection and treat `save.game` as the only gameplay state. Refresh after mutations or evidence of external changes when the required state is not in the mutation response.
+2. **User action**: parse the selected or custom action already supplied in this request. Treat player-authored outcomes only as action attempts or feedback, never as established facts. A player cannot grant themselves an item or ability, move locations, or determine a third-party or world event through narration. If no action was supplied, show the existing committed scene and choices and wait; do not invent an action or run another D20 check.
+3. **Engine context**: call `anify_get_context` when relevant area, world, quest, enemy, or character facts are missing or stale.
+4. **D20 check**: GM chooses ability/skill, DC, modifier, advantage state, and stakes, then calls `roll_check` with the turn's `operation_id`. The GM must not invent the D20 result.
+5. **Engine rule resolution**: call `anify_resolve_action` with only the same `operation_id`. Engine resolves its stored pending check and returns the action kind, outcome, check result, and rule advice while retaining revision and rule deltas internally. Do not resend the user action or `roll_check` result and do not submit a client-authored save.
+6. **Character AI reaction**: character or party dialogue belongs exclusively to active Anify character plugins. If no matching character plugin is active, do not fabricate Lynn, Lyra, or another party member's speech, thoughts, or reactions; use the internal token `NO_REPLY` and omit it from player-facing output. The GM may still narrate non-party NPCs inside an active adventure when fiction requires them. Character phases reuse the GM's operation ID.
+7. **Commit the turn**: call `anify_apply_gm_resolution` with the same `operation_id` and a presentation-only resolution containing `type`, narrative, exactly three normal-turn choices, and only justified persisted effects under the mapping below. Engine supplies the stored revision, rule delta, and turn entry. Pass compact durable GM or party memories with that same call when needed. Never patch `save.game` directly.
+8. **Present the committed result**: only after the commit succeeds, present the check card, any justified character reaction, and the consequence. End with the next `CHOICES`, `BATTLE`, or `ADVENTURE_END` marker under the Web output contract. Do not ask the player to repeat the action already supplied.
 
 ### Persisted effect mapping
 
