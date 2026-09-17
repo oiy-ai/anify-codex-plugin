@@ -11,6 +11,8 @@ Use this skill for actual Anify play, including starting or continuing an advent
 
 During an actual player session, keep protocol details out of the player-facing scene. Subject to host communication requirements, run Engine steps silently; do not expose save internals or internal deliberation. Emit scene narration only after its Engine commit succeeds, in the save's language, using the Player-Facing Output contract below. Town and read-only requests return the requested canonical information. These presentation rules do not govern development or review tasks.
 
+Redisplaying an already committed scene and its choices is a player-facing presentation request, even when the player calls it read-only or mentions the save. Read it with `anify_save_get` and render the committed narration and applicable marker using Player-Facing Output; do not begin an operation or advance the game. Reserve technical reports for explicit requests to inspect save structure, protocol behavior, or implementation, not for showing the story again.
+
 ## References By Task
 
 The Turn Operation Protocol and Player-Facing Output below are the common contracts. Read only the reference needed for the current operation; reuse previously loaded, unchanged material:
