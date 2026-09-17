@@ -117,6 +117,7 @@ This single Web wire contract is mandatory in both Codex Shell and directly inst
 - End a normal adventure turn with exactly one line-level `CHOICES` marker containing exactly three strings.
 - Do not print a separate custom-action prompt; the Web input already accepts custom actions.
 - Fulfil direct Codex requests for inventory, equipment, character, quest, map, adjacent-adventure selection, shop, return, non-visual exploration, and non-visual battle through `references/engine-gameplay-commands.md`, while retaining this same Web output format.
+- For deterministic command results, report the gameplay outcome and relevant visible values in the save's language (for example, task completed, gold gained, remaining HP). Use player labels instead of save-property names or storage timestamps; do not explain transactions or why a rendering marker is present or absent. A test-looking quest name does not turn a player's command into a developer report.
 - Do not offer visual battle, Gaussian-splat exploration, or memory image/video generation in the directly installed Codex plugin.
 
 Every marker occupies its own line and uses exactly `[TYPE: <valid-json>]`, with one opening `[` and one closing `]`. `[[CHOICES: [...]]]`, key-value text such as `[SYSTEM_MESSAGE: check=success | ...]`, Markdown decoration, extra payload keys, and unrecognized markers are invalid. Only these five exact shapes are valid:

@@ -18,7 +18,7 @@ For a composite read-only request such as “show my inventory, equipped gear, a
 
 If the user requests multiple state changes at once, do not silently execute a partial batch. Ask them to choose the first change because Engine mutations are one deliberate action per turn.
 
-These deterministic requests are administrative gameplay actions. Do not run a D20 check or an adventure resolution for them.
+These deterministic requests are player gameplay actions. Do not run a D20 check or an adventure resolution for them; present their results with the main Skill's player-facing labels, not an implementation report.
 
 ## Character And Equipment
 
