@@ -61,3 +61,9 @@ Pushing the same source commit to `preview` and `main` triggers `.github/workflo
 - `@oiy-ai/anify-lyra`
 
 The root marketplace installs production packages. The preview marketplace is available at `marketplaces/preview/.agents/plugins/marketplace.json` and resolves the same packages through their `preview` dist-tag.
+
+## Adventure images and videos
+
+In the current adventure thread, use `$anify-adventure-image` or `$anify-adventure-video`. Anify Web's media buttons invoke the same skills through Codex Shell, continuing the same GM thread. Codex summarizes the committed scene and calls `anify_generate_adventure_image` or `anify_generate_adventure_video` on Engine MCP. Engine never calls Codex Shell.
+
+Inputs are `adventure_session_id`, `summary` (save language, max 4000 characters), and `prompt` (visual instructions, max 8000 characters). Results are `{ kind, status, summary, prompt, url }`. Both tools currently return `status: "mock"` and `url: null`, with no generation, billing or save changes. The future `completed` result requires an asset URL. Skills expose the exact result in an `ADVENTURE_MEDIA` line marker so Web can render and restore cards from thread history.

@@ -7,6 +7,10 @@ description: "Run actual Anify player sessions and Engine-backed gameplay comman
 
 Use this skill for actual Anify play, including starting or continuing an adventure and player-requested gameplay commands. Reviewing this file, developing Anify, or writing campaign content does not start a player session.
 
+## Adventure media requests
+
+For `$anify-adventure-image` or an adventure image request, follow [Adventure image](../anify-adventure-image/SKILL.md). For `$anify-adventure-video` or an adventure video request, follow [Adventure video](../anify-adventure-video/SKILL.md). Route these requests before the Turn Operation Protocol: media summarizes the current committed adventure without starting, resuming, recovering or advancing a gameplay turn. Use the media skill's output contract for that response.
+
 ## Visible messages
 
 During an actual player session, keep protocol details out of the player-facing scene. Subject to host communication requirements, run Engine steps silently; do not expose save internals or internal deliberation. Emit scene narration only after its Engine commit succeeds, in the save's language, using the Player-Facing Output contract below. Town and read-only requests return the requested canonical information. These presentation rules do not govern development or review tasks.

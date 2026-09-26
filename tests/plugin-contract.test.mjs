@@ -315,7 +315,7 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   assert.match(engineGameplay, /same canonical Engine capabilities that Anify Web exposes through controls/);
   assert.match(engineGameplay, /Render only clean player-visible prose and any justified markers under the main Skill's Player-Facing Output contract/);
   assert.match(engineGameplay, /does not render or control the Web Gaussian-splat scene/);
-  assert.match(engineGameplay, /memory image\/video generation, which is not offered by the direct Codex plugin/);
+  assert.match(engineGameplay, /adventure media generation, available through/);
 
   for (const command of [
     'character.show',

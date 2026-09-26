@@ -81,4 +81,4 @@ There is no `battle.start` command. Adventure combat begins only through the bat
 
 ## Character Chat And Memory
 
-Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for relationship continuity. Without a matching installed character plugin, the GM plugin must not simulate that party member's dialogue or reactions. This is separate from memory image/video generation, which is not offered by the direct Codex plugin.
+Installed character plugins continue to use `anify_memory_search` and `anify_memory_remember` for relationship continuity. Without a matching installed character plugin, the GM plugin must not simulate that party member's dialogue or reactions. This is separate from adventure media generation, available through `$anify-adventure-image` and `$anify-adventure-video`.
