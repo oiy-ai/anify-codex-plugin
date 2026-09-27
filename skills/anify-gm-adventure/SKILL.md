@@ -113,7 +113,7 @@ Never call or suggest `map.travel`, `map.enter`, `state.*`, `adventure.enter`, `
 
 This single Web wire contract is mandatory in both Codex Shell and directly installed Codex plugins. Keep the player-facing output compact:
 
-- Assemble the final answer from the successfully committed narration and the applicable markers below. Start directly with the scene; stop after the terminal marker. A successful tool receipt is evidence for this answer, not text to summarize to the player.
+- Assemble the final answer from the successfully committed narration and the applicable markers below. For a non-secret D20 turn, put the `SYSTEM_MESSAGE` check-card marker on the first non-empty line, before any narration or dialogue, then present any justified character reaction and the consequence. Opening turns and secret checks start directly with the scene without a check card. Stop after the terminal marker. A successful tool receipt is evidence for this answer, not text to summarize to the player.
 - Keep protocol checks silent. Do not introduce the scene with a commit report or an explanation of the output format, and do not append a completion report. This also applies when actual gameplay is being exercised in a regression test; a request to perform a player turn still produces the player-facing turn. A separate request to inspect or review a test may receive a technical report.
 - Write a short scene paragraph as clean visible text.
 - Output only player-visible narration and dialogue. Never print `NO_REPLY`, tool calls, internal packets, save writes, or reasoning.
