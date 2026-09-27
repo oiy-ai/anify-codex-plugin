@@ -13,7 +13,7 @@ Anify Codex uses the same Firebase Auth project as the Anify web app:
 
 The public Codex client uses normal remote MCP OAuth discovery. Codex stores the opaque Anify access and refresh tokens, while the Anify OAuth provider keeps the Firebase session encrypted in its grant state and refreshes it server-side. The Codex shell runtime continues to receive the caller's Firebase bearer token on `/v1/runs` and passes it through shell-owned runtime config, not through the public plugin `.mcp.json`.
 
-Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once per logical GM turn: `anify_begin_operation`, `anify_pending_turn_get`, and the retained `operation_id` are owned by that common entry flow. If it already ran, reuse its result; this reference does not start a second operation.
+Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol): active actions enter through the combined `roll_check`; `anify_begin_operation` returns save and pending state together only for setup, explicit recovery or deterministic mutations. `anify_pending_turn_get` is for explicit recovery inspection. Reuse the retained `operation_id` and canonical projection; this reference does not repeat entry or state lookups.
 
 For start, resume, initialization, and pending recovery, follow [Session Setup And Player Actions](../SKILL.md#session-setup-and-player-actions). If authorization is missing or expired, surface the failure and let the host reconnect Anify; do not repeatedly retry without an auth-state change.
 
@@ -36,4 +36,4 @@ Do not ask the user to paste Firebase email/password into Codex.
 
 ## Save Authority
 
-Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`; every mutation argument must include the logical turn's `operation_id`. Codex must not create or maintain a local Anify user workspace or submit arbitrary gameplay patches.
+Engine MCP is the save authority. Codex must use `anify_save_initialize`, `anify_save_get`, `anify_apply_gm_resolution`, and `anify_game_action`; after the combined `roll_check` creates or recovers an active turn, subsequent mutation arguments must include its returned `operation_id`; setup and deterministic operations obtain their ID from `anify_begin_operation`. Codex must not create or maintain a local Anify user workspace or submit arbitrary gameplay patches.

@@ -12,7 +12,7 @@ This repo packages Codex plugins for Anify GM sessions and character chat.
 
 Shared character instructions live under `shared/anify-character/`. Role plugins keep only their local manifest, persona skill, synced character-chat skill, and any future role-exclusive files. After editing the shared character workflow, run `python3 scripts/sync_character_shared.py` so every installed role plugin exposes the same workflow directly from its `skills/` directory.
 
-Use the `anify-gm-adventure` skill to start or continue a campaign. Use the role persona skills when chatting with characters directly or when adding them to a GM adventure. The public Codex plugins use standard MCP OAuth discovery only. Every logical turn begins with `anify_begin_operation`, and every mutation carries its returned `operation_id`. The Codex shell runtime also passes the caller's Firebase bearer token through shell-owned runtime config and maps its trusted run ID from `ANIFY_OPERATION_ID` to the Engine `x-anify-operation-id` header.
+Use the `anify-gm-adventure` skill to start or continue a campaign. Use the role persona skills when chatting with characters directly or when adding them to a GM adventure. The public Codex plugins use standard MCP OAuth discovery only. Active adventure turns use `roll_check` (entry, recovery, session/revision validation, D20 and rules) followed by `anify_apply_gm_resolution`. Reuse the last committed save across turns. Setup and deterministic mutations use `anify_begin_operation`, which returns save and pending state together. Subsequent mutations carry the entry tool's returned `operation_id`. The Codex shell runtime also passes the caller's Firebase bearer token through shell-owned runtime config and maps its trusted run ID from `ANIFY_OPERATION_ID` to the Engine `x-anify-operation-id` header.
 
 Codex Shell and directly installed plugins use the same Anify Web wire contract, including line-level UI markers. Direct Codex use is intended for internal play and AI regression testing, so it emits those markers without a separate human-friendly adapter. Inventory, equipment, character stats, quests, graph-based locations, adjacent adventures, Return Scrolls, shops, non-visual exploration, non-visual battle, and character continuity still use the same Engine save. Direct Codex does not provide visual battle controls or Gaussian-splat exploration. Adventure image/video requests use Engine media tasks; queued tasks are checked with `anify_adventure_media_status`.
 
@@ -23,7 +23,7 @@ Anify Codex plugins do not maintain local user workspaces. GM saves and role mem
 - Operation tools: `anify_begin_operation`, `anify_pending_turn_get`.
 - Canonical save tools: `anify_save_initialize`, `anify_save_get`.
 - Character memory tools: `anify_memory_search`, `anify_memory_remember`.
-- Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_resolve_action`, `anify_apply_gm_resolution`, `anify_game_action`.
+- Gameplay tools: `anify_start_adventure`, `anify_get_context`, `roll_check`, `anify_apply_gm_resolution`, `anify_game_action`.
 
 The remote save contains one canonical Engine game state. Codex and Anify Web mutate that same state through Engine-owned operations; plugins never submit arbitrary game-state patches. Engine receipts make a retried Shell run replay the original committed tool stages instead of rerolling or duplicating a turn.
 

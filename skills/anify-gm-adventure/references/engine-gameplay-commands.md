@@ -4,15 +4,14 @@ Use this reference when a player directly asks the Codex plugin to inspect or ch
 
 ## Request Flow
 
-For every logical turn:
+Classify the request before entering a transaction:
 
-1. Follow the main Skill's [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once, reusing its `anify_begin_operation`, `anify_pending_turn_get`, and `operation_id` results if already available.
-2. If recovery committed a pending GM turn, present it and end the response as required by that protocol.
-3. Use this turn's fresh `anify_save_get` projection; call it only if not yet available or stale.
-4. Use `anify_get_context` when a target ID or world fact is needed.
-5. For a read-only request, answer from `anify_save_get` and `anify_get_context`. A single matching `*.show` command below may be used when its Engine-formatted view is useful and no mutation is needed.
-6. For a deterministic mutation, call `anify_game_action` once with the retained `operation_id` and one command below.
-7. Render only clean player-visible prose and any justified markers under the main Skill's Player-Facing Output contract.
+1. For a read-only request, call `anify_save_get` once when a fresh canonical view is needed and answer from that projection; do not begin an operation or recover/advance a gameplay turn. Use `anify_get_context` only for missing facts.
+2. For a deterministic mutation, call `anify_begin_operation` once and reuse its returned save, pending state and `operation_id` from the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol). Do not separately call `anify_pending_turn_get` or `anify_save_get`.
+3. If recovery committed a pending GM turn, present it and end the response.
+4. Use `anify_get_context` when a target ID or world fact is missing or stale.
+5. Call `anify_game_action` once with the retained `operation_id` and one command below.
+6. Render only clean player-visible prose and any justified markers under the main Skill's Player-Facing Output contract. Reuse the mutation response's canonical save; no verification read is needed.
 
 For a composite read-only request such as “show my inventory, equipped gear, and stats,” use the one `anify_save_get` projection instead of issuing multiple `*.show` commands. Do not call a read-only `*.show` command before a mutation in the same logical turn: Engine permits one idempotent `game-action` stage per operation. Use `anify_save_get` and `anify_get_context` for preflight lookup, then execute the one mutation. The mutation response already contains the updated canonical save.
 

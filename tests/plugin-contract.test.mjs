@@ -133,7 +133,6 @@ test('GM skill uses Engine remote save and memory tools', () => {
     'anify_start_adventure',
     'anify_get_context',
     'roll_check',
-    'anify_resolve_action',
     'anify_apply_gm_resolution',
     'anify_game_action',
   ]) {
@@ -169,15 +168,21 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(gmSkill, /matching `save\.game\.battleState` and `battle\.await_action` checkpoint/);
   assert.match(gmSkill, /x-anify-operation-id/);
   assert.match(gmSkill, /Engine returns the unfinished operation ID when pending work exists/);
-  assert.match(gmSkill, /Every mutating tool argument[\s\S]*must include the same top-level `operation_id`/);
-  assert.match(gmSkill, /header takes precedence inside Engine, but the `operation_id` tool argument is still mandatory/);
-  assert.match(gmSkill, /pending `check`[\s\S]*only the current turn's `operation_id`/);
+  assert.match(gmSkill, /All subsequent mutation arguments must include the same top-level `operation_id`/);
+  assert.match(gmSkill, /header binds the run to its original or recovered operation inside Engine/);
+  assert.match(gmSkill, /Normal active turns use \*\*two tools\*\*/);
+  assert.match(gmSkill, /Do not call `anify_begin_operation`, `anify_pending_turn_get`, `anify_save_get`, or `anify_start_adventure` as routine per-turn preflight/);
+  assert.match(gmSkill, /status: "state_changed"[\s\S]*no dice were rolled/);
+  assert.match(gmSkill, /status: "recovered"[\s\S]*do not execute this request as a second action/);
+  assert.match(gmSkill, /Omit `operation_id` for a new active turn/);
+  assert.match(gmSkill, /do not read the save again to verify a successful commit/);
   assert.match(gmSkill, /pending `resolution`[\s\S]*presentation-only resolution/);
   assert.match(orchestration, /canonical gameplay state shared by Codex and Web/i);
   assert.match(orchestration, /same successful `anify_apply_gm_resolution` response already contains the matching active battle state/);
   assert.doesNotMatch(orchestration, /successfully runs `battle\.start/);
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
-  assert.match(d20, /Engine reads the exact action and `CheckResult` it stored during `roll_check`/);
+  assert.match(d20, /Engine uses the exact action and `CheckResult` in the same `roll_check` transaction/);
+  assert.doesNotMatch([gmSkill, d20, memory, orchestration, engineGameplay].join('\n'), /anify_resolve_action/);
   assert.match(d20, /original check or committed apply result/);
   assert.match(gmSkill, /anify_save_initialize/);
   assert.doesNotMatch(gmSkill, /run Anify Installer/);
@@ -186,7 +191,7 @@ test('GM skill uses Engine remote save and memory tools', () => {
 test('GM commits the one-time opening before exposing it to Web', () => {
   assert.match(gmSkill, /save\.game\.adventure\.phase` is `opening`/);
   assert.match(gmSkill, /call `anify_apply_gm_resolution` directly/);
-  assert.match(gmSkill, /Do not roll a D20 and do not call `anify_resolve_action`/);
+  assert.match(gmSkill, /Do not roll a D20 for this opening-only turn/);
   assert.match(gmSkill, /successful commit advances the phase to `active`/);
   assert.match(orchestration, /Never output an opening while the `opening` phase remains uncommitted/);
   assert.match(d20, /one-time opening is not a check/);
@@ -302,7 +307,7 @@ test('GM skill keeps one Web output contract while direct Codex play uses Engine
   ]) {
     assert.match(engineGameplay, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(engineGameplay, /call `anify_game_action` once/);
+  assert.match(engineGameplay, /[Cc]all `anify_game_action` once/);
   assert.match(engineGameplay, /composite read-only request[\s\S]*use the one `anify_save_get` projection/);
   assert.match(engineGameplay, /Do not call a read-only `\*\.show` command before a mutation/);
   assert.match(engineGameplay, /`equipmentId` is the exact canonical inventory `itemId`/);

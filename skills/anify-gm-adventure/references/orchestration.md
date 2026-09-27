@@ -95,15 +95,16 @@ The D20 MCP returns this shape. Persist it without rewriting roll fields.
 
 ### EngineResolution
 
-`anify_resolve_action` reads the authenticated canonical save, returns only the information needed for narration, and retains the revision-bound resolution inside Engine:
+`roll_check` validates the cached session/revision against the authenticated canonical save, returns only the information needed for narration, and retains the revision-bound resolution inside Engine:
 
 ```json
 {
   "actionKind": "investigate",
   "outcome": "success",
-  "checkResult": {
-    "outcome": "success"
-  },
+  "status": "resolved",
+  "operation_id": "Engine-issued ID",
+  "total": 15,
+  "dc": 14,
   "ruleAdvice": "Resolve investigate as successful and update the remote save."
 }
 ```
@@ -112,7 +113,7 @@ The GM calls `anify_apply_gm_resolution` with a separate presentation-only resol
 
 After a successful commit, `ITEM_GIVE` may project a committed item. It is the only persisted-effect Web marker and is forbidden without the matching committed item. Quest offers remain pending until the player accepts, rejects, or shelves them through Engine; the Web task panel reads them from canonical state. Flags, relationships, quest state, gold, and other numerical changes have no standalone Web marker.
 
-Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol) once per logical GM turn: `anify_begin_operation`, `anify_pending_turn_get`, and the retained `operation_id` are owned by that common entry flow. If it already ran, reuse its result; this reference does not start a second operation.
+Follow the [Turn Operation Protocol](../SKILL.md#turn-operation-protocol): active actions enter through the combined `roll_check`; `anify_begin_operation` returns save and pending state together only for setup, explicit recovery or deterministic mutations. `anify_pending_turn_get` is for explicit recovery inspection. Reuse the retained `operation_id` and canonical projection; this reference does not repeat entry or state lookups.
 
 ### CharacterReaction
 
@@ -146,7 +147,7 @@ If `save.game.adventure.phase` is `opening`, commit the opening before returning
 3. Call `anify_apply_gm_resolution` with the logical turn's `operation_id` and a minimal `adventure` resolution containing only `type`, `narrative`, and `choices`; Engine owns the opening rule state and turn entry.
 4. Only after the commit succeeds, return the same narration followed by the matching `CHOICES` marker.
 
-The opening has no preceding player action, so it does not call `roll_check` or `anify_resolve_action`. Never output an opening while the `opening` phase remains uncommitted.
+The opening has no preceding player action, so it does not call `roll_check`. Never output an opening while the `opening` phase remains uncommitted.
 
 ### Player action turns
 
