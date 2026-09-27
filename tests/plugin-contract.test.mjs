@@ -23,7 +23,6 @@ const orchestration = text('skills/anify-gm-adventure/references/orchestration.m
 const authentication = text('skills/anify-gm-adventure/references/authentication.md');
 const d20 = text('skills/anify-gm-adventure/references/d20-mcp-contract.md');
 const memory = text('skills/anify-gm-adventure/references/memory-and-consistency.md');
-const webOutput = gmSkill;
 const engineGameplay = text('skills/anify-gm-adventure/references/engine-gameplay-commands.md');
 const gmManifest = json('.codex-plugin/plugin.json');
 const installerManifest = json('plugins/anify-installer/.codex-plugin/plugin.json');
@@ -37,28 +36,6 @@ const roles = [
   ['thera', 'Anify-Thera', 'Thera', 'Thera Valeria'],
   ['lyra', 'Anify-Lyra', 'Lyra', 'Lyra Oravia'],
 ];
-const WEB_MARKER_LINE = /^\[([A-Z][A-Z_]*):\s*(.+)\]$/u;
-
-function parseWebWireOutput(input) {
-  const visibleLines = [];
-  const markers = [];
-
-  for (const line of input.replace(/\r\n?/gu, '\n').split('\n')) {
-    const match = WEB_MARKER_LINE.exec(line.trim());
-    if (!match) {
-      visibleLines.push(line);
-      continue;
-    }
-
-    try {
-      markers.push({ type: match[1], payload: JSON.parse(match[2]) });
-    } catch {
-      visibleLines.push(line);
-    }
-  }
-
-  return { text: visibleLines.join('\n').trim(), markers };
-}
 
 function roleRoot(role) {
   return `plugins/anify-${role}`;
@@ -139,7 +116,6 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
     '和 Lynn 与 Lyra 一起开始一段新的 Anify 冒险。',
     '查看我的角色属性、装备、背包、任务和地图。',
   ]);
-  assert.ok(gmManifest.interface.defaultPrompt.length <= 3);
   assert.equal(gmManifest.interface.composerIcon, './assets/icon-192x192.png');
   assert.equal(gmManifest.interface.logo, './assets/icon-512x512.png');
 
@@ -153,8 +129,6 @@ test('GM plugin identity and assets match Anify-GM branding', () => {
 
 test('GM skill uses Engine remote save and memory tools', () => {
   for (const tool of [
-    'anify_begin_operation',
-    'anify_pending_turn_get',
     'anify_save_get',
     'anify_start_adventure',
     'anify_get_context',
@@ -168,6 +142,12 @@ test('GM skill uses Engine remote save and memory tools', () => {
   for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
     assert.doesNotMatch(source, /anify_save_update|saveUpdateArguments/);
     assert.doesNotMatch(source, /resolution_packet|turn_entry/);
+    assert.match(source, /anify_begin_operation/);
+    assert.match(source, /anify_pending_turn_get/);
+    assert.match(source, /operation_id/);
+    assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
+    assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
+    assert.match(source, /remote|Engine MCP|anify_/i);
   }
   assert.match(gmSkill, /save\.game/);
   assert.match(gmSkill, /save\.game\.adventure/);
@@ -199,16 +179,6 @@ test('GM skill uses Engine remote save and memory tools', () => {
   assert.match(memory, /Never recreate those mutations as a plugin-authored patch/);
   assert.match(d20, /Engine reads the exact action and `CheckResult` it stored during `roll_check`/);
   assert.match(d20, /original check or committed apply result/);
-  for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
-    assert.match(source, /anify_begin_operation/);
-    assert.match(source, /anify_pending_turn_get/);
-    assert.match(source, /operation_id/);
-  }
-  for (const source of [gmSkill, orchestration, authentication, d20, memory]) {
-    assert.doesNotMatch(source, /CODEX_HOME\/anify\/users|users\/[^/]+\/GM|save\.md|gm-memory\.md|party-memory\.md|turn-log\.md/);
-    assert.doesNotMatch(source, /local Markdown|local GM|Markdown save/i);
-    assert.match(source, /remote|Engine MCP|anify_/i);
-  }
   assert.match(gmSkill, /anify_save_initialize/);
   assert.doesNotMatch(gmSkill, /run Anify Installer/);
 });
@@ -224,7 +194,7 @@ test('GM commits the one-time opening before exposing it to Web', () => {
 });
 
 test('GM commits battle creation atomically with one Engine-owned pending resolution', () => {
-  for (const source of [gmSkill, orchestration, memory, webOutput]) {
+  for (const source of [gmSkill, orchestration, memory]) {
     assert.match(source, /battle/i);
     assert.match(source, /resolution/i);
     assert.doesNotMatch(source, /first call `anify_game_action` with `battle\.start/);
@@ -232,7 +202,7 @@ test('GM commits battle creation atomically with one Engine-owned pending resolu
   assert.match(gmSkill, /set `resolution\.battle`/);
   assert.match(gmSkill, /set `resolution\.choices` to `\[\]`/);
   assert.match(gmSkill, /battle creation, narrative, turn log, and memories are one Engine commit/);
-  assert.match(webOutput, /There is no separate battle-start action afterward/);
+  assert.match(gmSkill, /There is no separate battle-start action afterward/);
 });
 
 test('GM persists all effects in Engine and emits only the Web-consumed item projection', () => {
@@ -245,21 +215,21 @@ test('GM persists all effects in Engine and emits only the Web-consumed item pro
   assert.match(gmSkill, /Never search GitHub, plugin files, or asset manifests for item IDs/);
   assert.match(orchestration, /create a stable lowercase-hyphenated ID/);
   assert.match(orchestration, /`anify_get_context`[\s\S]*`catalog_query`[\s\S]*exact catalog match/);
-  assert.match(webOutput, /Engine supplies its committed metadata/);
+  assert.match(gmSkill, /Engine supplies its committed metadata/);
   assert.match(gmSkill, /`resolution\.questOffers`/);
   assert.match(gmSkill, /`resolution\.flags`/);
   assert.match(gmSkill, /`resolution\.flags` as a JSON string array/);
   assert.match(gmSkill, /Never send an object map/);
   assert.match(orchestration, /`flags` as a JSON string array/);
-  assert.match(webOutput, /`resolution\.flags` JSON string array/);
+  assert.match(gmSkill, /`resolution\.flags` JSON string array/);
   assert.match(gmSkill, /never auto-accept it/);
   assert.match(gmSkill, /`resolution\.gold`/);
   assert.match(gmSkill, /Gold has no standalone marker/);
   assert.match(orchestration, /positive integer `gold` award/);
   assert.match(orchestration, /`ITEM_GIVE` may project a committed item/);
-  assert.match(webOutput, /Never emit `ITEM_GIVE` only for display/);
-  assert.match(webOutput, /Quest offers, quest updates[\s\S]*have no standalone marker/);
-  assert.doesNotMatch(webOutput, /\[(?:QUEST_OFFER|QUEST_UPDATE|FLAG_SET|STATUS_UPDATE):/);
+  assert.match(gmSkill, /Never emit `ITEM_GIVE` only for display/);
+  assert.match(gmSkill, /Quest offers, quest updates[\s\S]*have no standalone marker/);
+  assert.doesNotMatch(gmSkill, /\[(?:QUEST_OFFER|QUEST_UPDATE|FLAG_SET|STATUS_UPDATE):/);
 });
 
 test('GM output contract uses the exact Web line marker grammar', () => {
@@ -268,41 +238,24 @@ test('GM output contract uses the exact Web line marker grammar', () => {
   assert.match(gmSkill, /exactly one line-level `CHOICES` marker/);
   assert.doesNotMatch(gmSkill, /Exactly three numbered options|A line saying custom actions are allowed/);
 
-  const markerPayloads = [
-    ['CHOICES', ['Investigate', 'Advance', 'Wait']],
-    ['BATTLE', { enemyId: 'corrupted-forest-wolf' }],
-    ['ADVENTURE_END', { outcome: 'success', flagsSet: ['forest-cleared'] }],
-    ['ITEM_GIVE', { itemId: 'item-id', quantity: 1 }],
-    ['SYSTEM_MESSAGE', { tier: 'success_with_cost', title: 'Wisdom (Perception)', description: '15 vs DC 14 — success.' }],
-  ];
-  for (const [marker] of markerPayloads) {
-    assert.match(webOutput, new RegExp(`\\[${marker}:`));
+  for (const marker of ['CHOICES', 'BATTLE', 'ADVENTURE_END', 'ITEM_GIVE', 'SYSTEM_MESSAGE']) {
+    assert.match(gmSkill, new RegExp(`\\[${marker}:`));
   }
 
-  const parsed = parseWebWireOutput([
-    'Visible narration.',
-    ...markerPayloads.map(([type, payload]) => `[${type}: ${JSON.stringify(payload)}]`),
-  ].join('\n'));
-  assert.equal(parsed.text, 'Visible narration.');
-  assert.deepEqual(
-    parsed.markers,
-    markerPayloads.map(([type, payload]) => ({ type, payload })),
-  );
-
-  assert.match(webOutput, /\[CHOICES: \["Option 1","Option 2","Option 3"\]\]/);
-  assert.match(webOutput, /`CHOICES` must be the final non-empty line/);
-  assert.match(webOutput, /payload must be a JSON string array with exactly three items/);
-  assert.match(webOutput, /Do not duplicate those choices in visible prose/);
-  assert.match(webOutput, /end with `BATTLE` instead of `CHOICES`/);
-  assert.match(webOutput, /\[BATTLE: \{"enemyId":"corrupted-forest-wolf"\}\]/);
-  assert.match(webOutput, /end with `ADVENTURE_END` instead of `CHOICES`/);
-  assert.match(webOutput, /Never print `NO_REPLY`/);
+  assert.match(gmSkill, /\[CHOICES: \["Option 1","Option 2","Option 3"\]\]/);
+  assert.match(gmSkill, /`CHOICES` must be the final non-empty line/);
+  assert.match(gmSkill, /payload must be a JSON string array with exactly three items/);
+  assert.match(gmSkill, /Do not duplicate those choices in visible prose/);
+  assert.match(gmSkill, /end with `BATTLE` instead of `CHOICES`/);
+  assert.match(gmSkill, /\[BATTLE: \{"enemyId":"corrupted-forest-wolf"\}\]/);
+  assert.match(gmSkill, /end with `ADVENTURE_END` instead of `CHOICES`/);
+  assert.match(gmSkill, /Never print `NO_REPLY`/);
   assert.match(orchestration, /Never print `NO_REPLY`/);
-  assert.match(webOutput, /After every non-secret D20 turn is successfully committed, emit exactly one `SYSTEM_MESSAGE` marker/);
-  assert.match(webOutput, /`success` outcome → `success_with_cost` tier/);
-  assert.match(webOutput, /"title":"Wisdom \(Perception\)"/);
-  assert.match(webOutput, /"description":"15 vs DC 14 — success\."/);
-  assert.match(webOutput, /Do not render a Markdown line such as `\*\*Check:/);
+  assert.match(gmSkill, /After every non-secret D20 turn is successfully committed, emit exactly one `SYSTEM_MESSAGE` marker/);
+  assert.match(gmSkill, /`success` outcome → `success_with_cost` tier/);
+  assert.match(gmSkill, /"title":"Wisdom \(Perception\)"/);
+  assert.match(gmSkill, /"description":"15 vs DC 14 — success\."/);
+  assert.match(gmSkill, /Do not render a Markdown line such as `\*\*Check:/);
 });
 
 test('GM skill keeps one Web output contract while direct Codex play uses Engine gameplay commands', () => {
