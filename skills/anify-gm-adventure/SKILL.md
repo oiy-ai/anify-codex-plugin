@@ -53,7 +53,7 @@ All subsequent mutation arguments must include the same top-level `operation_id`
 
 ## Session Setup And Player Actions
 
-Classify the request first: deterministic gameplay commands use [Gameplay commands](references/engine-gameplay-commands.md) and do not enter the fictional-action loop. Run session setup only on first entry, after losing canonical context, or when explicitly reconnecting an adventure. A normal action in the same active thread goes directly to the active-turn flow below:
+Classify the request first: Web `Use item: {"itemId":"…","name":"…"}` / `使用道具：{"itemId":"…","name":"…"}` inputs are deterministic item-use requests, including Return Scrolls, and require no D20. Deterministic gameplay commands use [Gameplay commands](references/engine-gameplay-commands.md) and do not enter the fictional-action loop. Run session setup only on first entry, after losing canonical context, or when explicitly reconnecting an adventure. A normal action in the same active thread goes directly to the active-turn flow below:
 
 1. Use the setup entry in the Turn Operation Protocol once and reuse its returned canonical save and pending-turn recovery result. No separate `anify_save_get` is needed.
 2. If the save is not initialized, reuse profile fields supplied by the user and call `anify_save_initialize` with a concise default profile inferred from the request. Ask only for required fields that cannot be inferred; optional fields do not block setup. Use the returned canonical save, or call `anify_save_get` if the response omits it. Never force-replace an existing save without explicit authorization for that replacement.

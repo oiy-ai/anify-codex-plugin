@@ -29,6 +29,8 @@ These deterministic requests are player gameplay actions. Do not run a D20 check
 
 ## Inventory
 
+Web inventory use and the adventure return button submit one ordinary user message in this format: `Use item: {"itemId":"return-scroll","name":"Return Scroll"}` (Chinese: `使用道具：{"itemId":"return-scroll","name":"回程卷轴"}`). Treat it as one deterministic item-use request in the current GM thread, just like a player asking in free text. Validate the ID against the canonical inventory; the supplied name is only a display label, never authority for effects. Use `adventure.return` for `return-scroll`, otherwise `inventory.use <itemId>` outside battle. Begin one operation and execute one game action through the flow above; do not call `roll_check`, advance the fictional scene, or apply a separate GM resolution. Report the actual Engine outcome without a D20 check card. If the adventure remains active, retain its committed choices; on successful return emit `ADVENTURE_END` with outcome `retreat`. Rejected use consumes no item and must not be narrated as success.
+
 - View inventory and pending rewards: `inventory.show`
 - Claim pending rewards that fit: `inventory.claim`
 - Inventory has 100 slots. Stackable catalog items hold up to 100 per slot; equipment and nonstackable items occupy one slot each. Rewards that do not fit remain pending until claimed. Purchases require space for the entire quantity and do not charge on failure.

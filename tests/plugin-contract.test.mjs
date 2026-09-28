@@ -394,3 +394,14 @@ test('role plugins expose persona skills and shared remote character workflow', 
     assert.equal(existsSync(join(repoRoot, roleRoot(slug), 'hooks', 'hooks.json')), false);
   }
 });
+
+
+test('Web item-use inputs are one deterministic action without a D20 or fictional turn', () => {
+  assert.match(gmSkill, /Use item:.*使用道具：.*require no D20/u);
+  assert.match(engineGameplay, /Use item:.*"itemId":"return-scroll"/u);
+  assert.match(engineGameplay, /name is only a display label/u);
+  assert.match(engineGameplay, /Begin one operation and execute one game action/u);
+  assert.match(engineGameplay, /do not call `roll_check`, advance the fictional scene, or apply a separate GM resolution/u);
+  assert.match(engineGameplay, /retain its committed choices/u);
+  assert.match(engineGameplay, /Rejected use consumes no item/u);
+});
